@@ -1,3 +1,4 @@
+
 ************windows系统下安装rabbitMQ************
 1.安装Erlang语言(http://www.erlang.org/downloads)，根据系统版本下载；
     # 添加bin目录至系统环境;
