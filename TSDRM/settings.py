@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 import djcelery
-
+import pymysql.cursors
+import xml.dom.minidom
+from xml.dom.minidom import parse, parseString
 
 # SQLApi
 sql_credit = {
@@ -22,6 +24,61 @@ sql_credit = {
     "database": "CommServ",
 }
 
+db_host = '192.168.100.154'
+db_name = "js_tesudrm"
+db_user = "root"
+db_password = "password"
+
+# commvault 账户
+connection = pymysql.connect(host=db_host,
+                             user=db_user,
+                             password=db_password,
+                             db=db_name,
+                             charset='utf8mb4',
+                             cursorclass=pymysql.cursors.DictCursor)
+
+result = {}
+try:
+    with connection.cursor() as cursor:
+        # Read a single record
+        sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        print(result)
+finally:
+    connection.close()
+
+webaddr = ""
+port = ""
+usernm = ""
+passwd = ""
+if result:
+    doc = parseString(result["content"])
+    try:
+        webaddr = (doc.getElementsByTagName("webaddr"))[0].childNodes[0].data
+    except:
+        pass
+    try:
+        port = (doc.getElementsByTagName("port"))[0].childNodes[0].data
+    except:
+        pass
+    try:
+        usernm = (doc.getElementsByTagName("username"))[0].childNodes[0].data
+    except:
+        pass
+    try:
+        passwd = (doc.getElementsByTagName("passwd"))[0].childNodes[0].data
+    except:
+        pass
+
+CVApi_credit = {
+    "web_addr": webaddr,
+    "port": port,
+    "username": usernm,
+    "pass_wd": passwd,
+    "token": "",
+    "last_login": 0
+}
 
 djcelery.setup_loader()
 # BROKER_URL = 'django://'
@@ -111,10 +168,10 @@ WSGI_APPLICATION = 'TSDRM.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'js_tesudrm',
-        'USER': 'root',
-        'PASSWORD': 'password',
-        'HOST': '192.168.100.154',
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
         'PORT': '3306',
     }
 }

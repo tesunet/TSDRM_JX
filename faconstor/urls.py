@@ -130,4 +130,16 @@ urlpatterns = [
     # 服务器信息配置
     url(r'^serverconfig/$', serverconfig, {'funid': '72'}),
     url(r'^serverconfigsave/$', serverconfigsave),
+
+    # 备份内容
+    url(r'^backup_content/$', backup_content, {'funid': '74'}),
+    url(r'^get_backup_content/$', get_backup_content),
+
+    # 计划策略
+    url(r'^schedule_policy/$', schedule_policy, {'funid': '75'}),
+    url(r'^get_schedule_policy/$', get_schedule_policy),
+
+    # 存储策略
+    url(r'^storage_policy/$', storage_policy, {'funid': '76'}),
+    url(r'^get_storage_policy/$', get_storage_policy),
 ]
