@@ -6004,3 +6004,59 @@ def hosts_manage_del(request):
                 })
     else:
         return HttpResponseRedirect("/login")
+
+
+def serverconfig(request, funid):
+    if request.user.is_authenticated() and request.session['isadmin']:
+        cvvendor = Vendor.objects.first()
+        id = 0
+        webaddr = ""
+        port = ""
+        usernm = ""
+        passwd = ""
+        if cvvendor:
+            id = cvvendor.id
+            doc = parseString(cvvendor.content)
+            try:
+                webaddr = (doc.getElementsByTagName("webaddr"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                port = (doc.getElementsByTagName("port"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                usernm = (doc.getElementsByTagName("username"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                passwd = (doc.getElementsByTagName("passwd"))[0].childNodes[0].data
+            except:
+                pass
+        return render(request, 'serverconfig.html',
+                      {'username': request.user.userinfo.fullname, "serverconfigpage": True, "id": id,
+                       "webaddr": webaddr, "port": port, "usernm": usernm, "passwd": passwd,
+                       "pagefuns": getpagefuns(funid, request=request)})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def serverconfigsave(request):
+    if request.method == 'POST':
+        result = ""
+        id = request.POST.get('id', '')
+        webaddr = request.POST.get('webaddr', '')
+        port = request.POST.get('port', '')
+        usernm = request.POST.get('usernm', '')
+        passwd = request.POST.get('passwd', '')
+        cvvendor = Vendor.objects.first()
+        if cvvendor:
+            cvvendor.content = "<?xml version=\"1.0\" ?><vendor><webaddr>" + webaddr + "</webaddr><port>" + port + "</port><username>" + usernm + "</username><passwd>" + passwd + "</passwd></vendor>"
+            cvvendor.save()
+            result = "保存成功。"
+        else:
+            cvvendor = Vendor()
+            cvvendor.content = "<?xml version=\"1.0\" ?><vendor><webaddr>" + webaddr + "</webaddr><port>" + port + "</port><username>" + usernm + "</username><passwd>" + passwd + "</passwd></vendor>"
+            cvvendor.save()
+            result = "保存成功。"
+        return HttpResponse(result)
