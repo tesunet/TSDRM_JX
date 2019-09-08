@@ -29,7 +29,7 @@ db_name = "js_tesudrm"
 db_user = "root"
 db_password = "password"
 
-# commvault 账户
+# commvault账户
 connection = pymysql.connect(host=db_host,
                              user=db_user,
                              password=db_password,
