@@ -6100,11 +6100,43 @@ def serverconfigsave(request):
 
 
 @login_required
+def get_backup_status(request):
+    whole_list = []
+    try:
+        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+
+        dm = SQLApi.CustomFilter(settings.sql_credit)
+
+        whole_list = dm.custom_concrete_job_list(tmp_client_manage)
+    except Exception as e:
+        return JsonResponse({
+            "ret": 0,
+            "data": "获取备份状态信息失败。",
+        })
+    return JsonResponse({
+        "ret": 1,
+        "data": whole_list,
+    })
+
+
+@login_required
+def backup_status(request, funid):
+    return render(request, "backup_status.html", {
+        'username': request.user.userinfo.fullname,
+        "pagefuns": getpagefuns(funid, request),
+    })
+
+
+@login_required
 def get_backup_content(request):
     whole_list = []
     try:
+        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+
         dm = SQLApi.CustomFilter(settings.sql_credit)
-        ret, row_dict = dm.custom_all_backup_content()
+        ret, row_dict = dm.custom_all_backup_content(tmp_client_manage)
         for content in ret:
             content_dict = OrderedDict()
             content_dict["clientName"] = content["clientname"]
@@ -6141,8 +6173,11 @@ def backup_content(request, funid):
 def get_storage_policy(request):
     whole_list = []
     try:
+        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+
         dm = SQLApi.CustomFilter(settings.sql_credit)
-        ret, row_dict = dm.custom_all_storages()
+        ret, row_dict = dm.custom_all_storages(tmp_client_manage)
         for storage in ret:
             storage_dict = OrderedDict()
             storage_dict["clientName"] = storage["clientname"]
@@ -6187,8 +6222,11 @@ def schedule_policy(request, funid):
 def get_schedule_policy(request):
     whole_list = []
     try:
+        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+
         dm = SQLApi.CustomFilter(settings.sql_credit)
-        ret, row_dict = dm.custom_all_schedules()
+        ret, row_dict = dm.custom_all_schedules(tmp_client_manage)
         for schedule in ret:
             schedule_dict = OrderedDict()
             schedule_dict["clientName"] = schedule["clientName"]

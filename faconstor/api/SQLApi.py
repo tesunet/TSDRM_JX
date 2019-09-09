@@ -769,10 +769,15 @@ class CVApi(DataMonitor):
 
 
 class CustomFilter(CVApi):
-    def custom_all_backup_content(self):
+    def custom_all_backup_content(self, client_manage_list):
         whole_content_list = []
 
-        all_clients = self.get_all_install_clients()
+        tmp_clients = self.get_all_install_clients()
+
+        all_clients = []
+        for client_manage in tmp_clients:
+            if client_manage["client_name"] in client_manage_list:
+                all_clients.append(client_manage)
 
         # 所有备份内容的列表
         all_content_list = self.get_all_backup_content()
@@ -869,10 +874,15 @@ class CustomFilter(CVApi):
         }
         return whole_content_list, row_dict
 
-    def custom_all_storages(self):
+    def custom_all_storages(self, client_manage_list):
         whole_storage_list = []
 
-        all_clients = self.get_all_install_clients()
+        tmp_clients = self.get_all_install_clients()
+
+        all_clients = []
+        for client_manage in tmp_clients:
+            if client_manage["client_name"] in client_manage_list:
+                all_clients.append(client_manage)
 
         all_storage_list = self.get_all_storage()
 
@@ -958,10 +968,15 @@ class CustomFilter(CVApi):
         }
         return whole_storage_list, row_dict
 
-    def custom_all_schedules(self):
+    def custom_all_schedules(self, client_manage_list):
         whole_schedule_list = []
         # 1.排序
-        all_clients = self.get_all_install_clients()
+        tmp_clients = self.get_all_install_clients()
+
+        all_clients = []
+        for client_manage in tmp_clients:
+            if client_manage["client_name"] in client_manage_list:
+                all_clients.append(client_manage)
 
         # 2.所有schedule的列表
         all_schedule_list = self.get_all_schedules()
@@ -1070,7 +1085,7 @@ class CustomFilter(CVApi):
         }
         return whole_schedule_list, row_dict
 
-    def custom_concrete_job_list(self):
+    def custom_concrete_job_list(self, client_manage_list):
         """
         并发请求所有agent下的job
         :param cv_api:
@@ -1084,7 +1099,13 @@ class CustomFilter(CVApi):
                        "Completed w/ one or more warnings": "已完成，但有一个或多个警告", "Success": "成功"}
         whole_list = []
         job_list = self.get_all_backup_jobs()
-        all_clients = self.get_all_install_clients()
+        tmp_clients = self.get_all_install_clients()
+
+        all_clients = []
+        for client_manage in tmp_clients:
+            if client_manage["client_name"] in client_manage_list:
+                all_clients.append(client_manage)
+
         all_auxcopys = self.get_all_auxcopys()
         for client in all_clients:
             agent_job_list = []

@@ -147,4 +147,8 @@ urlpatterns = [
     # 存储策略
     url(r'^storage_policy/$', storage_policy, {'funid': '76'}),
     url(r'^get_storage_policy/$', get_storage_policy),
+
+    # 备份状态
+    url(r'^backup_status/$', backup_status, {'funid': '78'}),
+    url(r'^get_backup_status/$', get_backup_status),
 ]
