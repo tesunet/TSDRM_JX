@@ -48,6 +48,11 @@ urlpatterns = [
     url(r'^origin_save/$', origin_save),
     url(r'^origin_del/$', origin_del),
 
+    url(r'^client_manage/$', client_manage, {'funid': '77'}),
+    url(r'^client_save/$', client_save),
+    url(r'^client_manage_data/$', client_manage_data),
+    url(r'^client_manage_del/$', client_manage_del),
+
     # 主机管理
     url(r'^hosts_manage/$', hosts_manage, {'funid': '68'}),
     url(r'^host_save/$', host_save),

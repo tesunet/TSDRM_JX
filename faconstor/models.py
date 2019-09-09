@@ -202,3 +202,13 @@ class KnowledgeFileDownload(models.Model):
 class Vendor(models.Model):
     content = models.TextField("内容", blank=True, null=True)
     status = models.CharField("状态", blank=True, null=True, max_length=20)
+
+
+class ClientManage(models.Model):
+    client_id = models.IntegerField("客户端ID", blank=True, null=True)
+    client_name = models.CharField("客户端名称", blank=True, null=True, max_length=64)
+    client_os = models.CharField("操作系统", blank=True, null=True, max_length=64)
+    install_time = models.DateTimeField("安装时间", blank=True, null=True)
+    state = models.CharField("状态", blank=True, null=True, max_length=20)
+
+

@@ -5586,9 +5586,22 @@ def target(request, funid):
         dm = SQLApi.CustomFilter(settings.sql_credit)
         oracle_data = dm.get_instance_from_oracle()
 
+        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+
+        oracle_data_list = []
+        for od in oracle_data:
+            if od["clientname"] in tmp_client_manage:
+                oracle_data_list.append({
+                    "clientid": od["clientid"],
+                    "clientname": od["clientname"],
+                    "agent": od["agent"],
+                    "instance": od["instance"]
+                })
+
         return render(request, 'target.html',
                       {'username': request.user.userinfo.fullname,
-                       "oracle_data": json.dumps(oracle_data),
+                       "oracle_data": json.dumps(oracle_data_list),
                        "pagefuns": getpagefuns(funid, request=request)})
     else:
         return HttpResponseRedirect("/login")
@@ -5724,12 +5737,25 @@ def origin(request, funid):
         dm = SQLApi.CustomFilter(settings.sql_credit)
         oracle_data = dm.get_instance_from_oracle()
 
+        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+
+        oracle_data_list = []
+        for od in oracle_data:
+            if od["clientname"] in tmp_client_manage:
+                oracle_data_list.append({
+                    "clientid": od["clientid"],
+                    "clientname": od["clientname"],
+                    "agent": od["agent"],
+                    "instance": od["instance"]
+                })
+
         # 所有关联终端
         all_target = Target.objects.exclude(state="9")
 
         return render(request, 'origin.html',
                       {'username': request.user.userinfo.fullname,
-                       "oracle_data": json.dumps(oracle_data),
+                       "oracle_data": json.dumps(oracle_data_list),
                        "all_target": all_target,
                        "pagefuns": getpagefuns(funid, request=request)})
     else:
@@ -6198,3 +6224,140 @@ def get_schedule_policy(request):
                 "row_dict": row_dict,
             },
         })
+
+
+def client_manage(request, funid):
+    if request.user.is_authenticated():
+        # 获取包含oracle模块所有客户端
+        dm = SQLApi.CustomFilter(settings.sql_credit)
+        installed_client = dm.get_all_install_clients()
+        oracle_client = []
+        for client in installed_client:
+            sub_list = dm.get_installed_sub_clients_for_info(client["client_name"])
+            for sub in sub_list:
+                if "Oracle Database" in sub["idataagent"]:
+                    oracle_client.append({
+                        "client_name": client["client_name"],
+                        "client_id": client["client_id"],
+                        "client_os": client["os"],
+                        "install_time": client["install_time"]
+                    })
+                    break
+        return render(request, 'client_manage.html',
+                      {'username': request.user.userinfo.fullname,
+                       "pagefuns": getpagefuns(funid, request=request),
+                       "oracle_client": oracle_client, "oracle_client_info": json.dumps(oracle_client)})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def client_save(request):
+    if request.user.is_authenticated():
+        client_manage_id = request.POST.get("client_manage_id", "")
+        client_id = request.POST.get("client_id", "")
+        client_name = request.POST.get("client_name", "")
+        client_os = request.POST.get("client_os", "")
+        install_time = request.POST.get("install_time", "")
+        ret = 0
+        info = ""
+        try:
+            client_manage_id = int(client_manage_id)
+            client_id = int(client_id)
+        except:
+            ret = 0
+            info = "网络错误。"
+        else:
+            print(install_time)
+            if client_manage_id == 0:
+                # 判断主机是否已经存在
+                check_client_manage = ClientManage.objects.filter(client_id=client_id)
+                if check_client_manage.exists():
+                    ret = 0
+                    info = "主机已经存在，请勿重复添加。"
+                else:
+                    try:
+                        cur_host_manage = ClientManage()
+                        cur_host_manage.client_id = client_id
+                        cur_host_manage.client_name = client_name
+                        cur_host_manage.client_os = client_os
+                        cur_host_manage.install_time = datetime.datetime.strptime(install_time,
+                                                                                  "%m/%d/%Y %H:%M:%S") if install_time else None
+                        cur_host_manage.save()
+                    except Exception as e:
+                        print("add ClientManage{0}".format(e))
+                        ret = 0
+                        info = "服务器异常。"
+                    else:
+                        ret = 1
+                        info = "新增主机成功。"
+            else:
+                # 修改
+                try:
+                    cur_host_manage = ClientManage.objects.get(id=client_manage_id)
+                    cur_host_manage.client_id = client_id
+                    cur_host_manage.client_name = client_name
+                    cur_host_manage.client_os = client_os
+                    cur_host_manage.install_time = datetime.datetime.strptime(install_time,
+                                                                              "%m/%d/%Y %H:%M:%S") if install_time else None
+                    cur_host_manage.save()
+
+                    ret = 1
+                    info = "主机信息修改成功。"
+                except Exception as e:
+                    print("modify ClientManage{0}".format(e))
+                    ret = 0
+                    info = "服务器异常。"
+
+            return JsonResponse({
+                "ret": ret,
+                "info": info
+            })
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def client_manage_data(request):
+    if request.user.is_authenticated():
+        all_client_manage = ClientManage.objects.exclude(state="9")
+        all_cm_list = []
+        for client_manage in all_client_manage:
+            all_cm_list.append({
+                "client_manage_id": client_manage.id,
+                "client_id": client_manage.client_id,
+                "client_name": client_manage.client_name,
+                "client_os": client_manage.client_os,
+                "install_time": "{:%Y-%m-%d %H:%M:%S}".format(
+                    client_manage.install_time) if client_manage.install_time else "",
+            })
+        return JsonResponse({"data": all_cm_list})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def client_manage_del(request):
+    if request.user.is_authenticated():
+        host_id = request.POST.get("host_id", "")
+
+        try:
+            cur_host_manage = HostsManage.objects.get(id=int(host_id))
+        except:
+            return JsonResponse({
+                "ret": 0,
+                "info": "当前网络异常"
+            })
+        else:
+            try:
+                cur_host_manage.state = "9"
+                cur_host_manage.save()
+            except:
+                return JsonResponse({
+                    "ret": 0,
+                    "info": "服务器网络异常。"
+                })
+            else:
+                return JsonResponse({
+                    "ret": 1,
+                    "info": "删除成功。"
+                })
+    else:
+        return HttpResponseRedirect("/login")
