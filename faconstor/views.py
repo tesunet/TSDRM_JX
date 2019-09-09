@@ -1899,7 +1899,8 @@ def script(request, funid):
 
         return render(request, 'script.html',
                       {'username': request.user.userinfo.fullname, "pagefuns": getpagefuns(funid, request=request),
-                       "errors": errors, "all_hosts_manage": all_hosts_manage, "all_origins": all_origins, "commv_file_list": commv_file_list})
+                       "errors": errors, "all_hosts_manage": all_hosts_manage, "all_origins": all_origins,
+                       "commv_file_list": commv_file_list})
     else:
         return HttpResponseRedirect("/login")
 
@@ -3356,7 +3357,7 @@ def falconstor_run_invited(request):
                 current_process_run.state = "RUN"
                 current_process_run.target_id = target
                 current_process_run.recover_time = datetime.datetime.strptime(recovery_time,
-                                                                       "%Y-%m-%d %H:%M:%S") if recovery_time else None
+                                                                              "%Y-%m-%d %H:%M:%S") if recovery_time else None
 
                 current_process_run.save()
 
@@ -5883,6 +5884,7 @@ def host_save(request):
     if request.user.is_authenticated():
         host_id = request.POST.get("host_id", "")
         host_ip = request.POST.get("host_ip", "")
+        host_name = request.POST.get("host_name", "")
         host_os = request.POST.get("os", "")
         connect_type = request.POST.get("type", "")
         username = request.POST.get("username", "")
@@ -5896,60 +5898,66 @@ def host_save(request):
             info = "网络错误。"
         else:
             if host_ip.strip():
-                if host_os.strip():
-                    if connect_type.strip():
-                        if username.strip():
-                            if password.strip():
-                                # 新增
-                                if host_id == 0:
-                                    # 判断主机是否已经存在
-                                    check_host_manage = HostsManage.objects.filter(host_ip=host_ip)
-                                    if check_host_manage.exists():
-                                        ret = 0
-                                        info = "主机已经存在，请勿重复添加。"
+                if host_name.strip():
+                    if host_os.strip():
+                        if connect_type.strip():
+                            if username.strip():
+                                if password.strip():
+                                    # 新增
+                                    if host_id == 0:
+                                        # 判断主机是否已经存在
+                                        check_host_manage = HostsManage.objects.filter(host_ip=host_ip)
+                                        if check_host_manage.exists():
+                                            ret = 0
+                                            info = "主机已经存在，请勿重复添加。"
+                                        else:
+                                            try:
+                                                cur_host_manage = HostsManage()
+                                                cur_host_manage.host_ip = host_ip
+                                                cur_host_manage.host_name = host_name
+                                                cur_host_manage.os = host_os
+                                                cur_host_manage.type = connect_type
+                                                cur_host_manage.username = username
+                                                cur_host_manage.password = password
+                                                cur_host_manage.save()
+                                            except:
+                                                ret = 0
+                                                info = "服务器异常。"
+                                            else:
+                                                ret = 1
+                                                info = "新增主机成功。"
                                     else:
+                                        # 修改
                                         try:
-                                            cur_host_manage = HostsManage()
+                                            cur_host_manage = HostsManage.objects.get(id=host_id)
                                             cur_host_manage.host_ip = host_ip
+                                            cur_host_manage.host_name = host_name
                                             cur_host_manage.os = host_os
                                             cur_host_manage.type = connect_type
                                             cur_host_manage.username = username
                                             cur_host_manage.password = password
                                             cur_host_manage.save()
+
+                                            ret = 1
+                                            info = "主机信息修改成功。"
                                         except:
                                             ret = 0
                                             info = "服务器异常。"
-                                        else:
-                                            ret = 1
-                                            info = "新增主机成功。"
                                 else:
-                                    # 修改
-                                    try:
-                                        cur_host_manage = HostsManage.objects.get(id=host_id)
-                                        cur_host_manage.host_ip = host_ip
-                                        cur_host_manage.os = host_os
-                                        cur_host_manage.type = connect_type
-                                        cur_host_manage.username = username
-                                        cur_host_manage.password = password
-                                        cur_host_manage.save()
-
-                                        ret = 1
-                                        info = "主机信息修改成功。"
-                                    except:
-                                        ret = 0
-                                        info = "服务器异常。"
+                                    ret = 0
+                                    info = "密码未填写。"
                             else:
                                 ret = 0
-                                info = "密码未填写。"
+                                info = "用户名未填写。"
                         else:
                             ret = 0
-                            info = "用户名未填写。"
+                            info = "连接类型未选择。"
                     else:
                         ret = 0
-                        info = "连接类型未选择。"
+                        info = "系统未选择。"
                 else:
                     ret = 0
-                    info = "系统未选择。"
+                    info = "主机名称不能为空。"
             else:
                 ret = 0
                 info = "主机IP未填写。"
@@ -5969,6 +5977,7 @@ def hosts_manage_data(request):
             all_hm_list.append({
                 "host_id": host_manage.id,
                 "host_ip": host_manage.host_ip,
+                "host_name": host_manage.host_name,
                 "os": host_manage.os,
                 "type": host_manage.type,
                 "username": host_manage.username,
@@ -6189,4 +6198,3 @@ def get_schedule_policy(request):
                 "row_dict": row_dict,
             },
         })
-

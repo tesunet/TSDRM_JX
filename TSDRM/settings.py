@@ -44,7 +44,6 @@ try:
         sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
         cursor.execute(sql)
         result = cursor.fetchone()
-        print(result)
 finally:
     connection.close()
 
