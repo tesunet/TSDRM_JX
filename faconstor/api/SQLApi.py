@@ -479,7 +479,6 @@ class CVApi(DataMonitor):
         backupset_content_list = []
         for i in backupset_content:
             if i[1] in ["Mysql", "Windows File System", "Linux File System"]:
-                # 虚机备份的是vmdk
                 backupset_content_list.append({
                     "clientname": i[0],
                     "idataagent": i[1],
@@ -781,7 +780,6 @@ class CustomFilter(CVApi):
 
         # 所有备份内容的列表
         all_content_list = self.get_all_backup_content()
-
         client_row_list = []
         agent_row_list = []
         backupset_row_list = []

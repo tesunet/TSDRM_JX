@@ -151,4 +151,8 @@ urlpatterns = [
     # 备份状态
     url(r'^backup_status/$', backup_status, {'funid': '78'}),
     url(r'^get_backup_status/$', get_backup_status),
+
+    # 自主恢复
+    url(r'^manualrecovery/$', manualrecovery, {'funid': '79'}),
+    url(r'^manualrecoverydata/$', manualrecoverydata),
 ]

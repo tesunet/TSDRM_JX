@@ -6399,3 +6399,31 @@ def client_manage_del(request):
                 })
     else:
         return HttpResponseRedirect("/login")
+
+
+def manualrecovery(request, funid):
+    if request.user.is_authenticated():
+        return render(request, 'manualrecovery.html',
+                      {'username': request.user.userinfo.fullname, "manualrecoverypage": True,
+                      "pagefuns": getpagefuns(funid, request=request),})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def manualrecoverydata(request):
+    if request.user.is_authenticated():
+        result = []
+        all_client_manage = ClientManage.objects.exclude(state="9")
+        for client_manage in all_client_manage:
+            result.append({
+                "client_manage_id": client_manage.id,
+                "client_name": client_manage.client_name,
+                "client_id": client_manage.client_id,
+                "client_os": client_manage.client_os,
+                "model": "Oracle Database"
+            })
+
+
+        return JsonResponse({"data": result})
+    else:
+        return HttpResponseRedirect("/login")
