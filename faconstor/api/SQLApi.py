@@ -766,6 +766,23 @@ class CVApi(DataMonitor):
 
         return commserv_info
 
+    def get_oracle_backup_job_list(self, client_name):
+        oracle_backup_sql = """SELECT [jobid],[backuplevel],[startdate],[enddate],[instance]
+                            FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
+                            WHERE [jobstatus]='Success' AND [clientname]='{0}';""".format(client_name)
+        print(oracle_backup_sql)
+        content = self.fetch_all(oracle_backup_sql)
+        oracle_backuplist = []
+        for i in content:
+            oracle_backuplist.append({
+                "jobId": i[0],
+                "jobType": "Backup",
+                "Level": i[1],
+                "StartTime": "{:%Y-%m-%d %H:%M:%M}".format(i[2]) if i[2] else "",
+                "LastTime":  "{:%Y-%m-%d %H:%M:%M}".format(i[3]) if i[3] else "",
+                "instance": i[4]
+            })
+        return oracle_backuplist
 
 class CustomFilter(CVApi):
     def custom_all_backup_content(self, client_manage_list):
@@ -1206,7 +1223,7 @@ if __name__ == '__main__':
     # ret = dm.get_DDB_info()
     # print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
-    ret = dm.get_installed_sub_clients_for_info()
+    # ret = dm.get_installed_sub_clients_for_info()
     # ret = dm.custom_all_backup_content()
     # ret = dm.get_schedules(client="cv-server")
     # ret, row_dict = dm.custom_all_schedules()
@@ -1217,6 +1234,8 @@ if __name__ == '__main__':
     # ret = dm.get_all_auxcopys()
     # ret = dm.custom_concrete_job_list()
     # ret = dm.get_all_schedules()
+    
+    ret = dm.get_oracle_backup_job_list("win-2qls3b7jx3v.hzx")
     print(ret)
     # for i in ret:
     #     print(i)

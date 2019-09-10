@@ -6422,8 +6422,77 @@ def manualrecoverydata(request):
                 "client_os": client_manage.client_os,
                 "model": "Oracle Database"
             })
-
-
         return JsonResponse({"data": result})
     else:
         return HttpResponseRedirect("/login")
+
+
+def oraclerecovery(request, client_manage_id):
+    if request.user.is_authenticated():
+        try:
+            client_manage_id = int(client_manage_id)
+        except:
+            raise Http404()
+        try:
+            cur_client_manage = ClientManage.objects.get(id=client_manage_id)
+        except ClientManage.DoesNotExist as e:
+            raise Http404()
+        else:
+            client_name = cur_client_manage.client_name
+            dest_client = ClientManage.objects.exclude(state="9")
+            instalce_name = ""
+        # myhost = ClientHost.objects.filter(id=id)
+        # if len(myhost) > 0:
+        #     if myhost[0].owernID == request.user.userinfo.userGUID:
+        #         alldataset = DataSet.objects.filter(clientGUID=myhost[0].clientGUID, agentType='Oracle').exclude(
+        #             status="9")
+        #         if len(alldataset) > 0:
+        #             allhost = ClientHost.objects.exclude(status="9").filter(Q(hostType="physical box") & (
+        #                     Q(owernID=request.user.userinfo.userGUID) | Q(
+        #                 userinfo__id=request.user.userinfo.id))).filter(
+        #                 agentTypeList__contains="<agentType>Oracle</agentType>")
+        #             destClient = []
+        #             for host in allhost:
+        #                 destClient.append(host.clientName)
+            return render(request, 'oraclerecovery.html', {'username': request.user.userinfo.fullname,
+                                                            "instalce_name": instalce_name,  # 获取实例名alldataset
+                                                            "client_name": client_name,
+                                                            "dest_client": dest_client,
+                                                            "manualrecoverypage": True})
+    else:
+        return HttpResponseRedirect("/index")
+
+
+def dooraclerecovery(request):
+    if request.user.is_authenticated():
+        if request.method == 'POST':
+            sourceClient = request.POST.get('sourceClient', '')
+            destClient = request.POST.get('destClient', '')
+            restoreTime = request.POST.get('restoreTime', '')
+            instanceName = request.POST.get('instanceName', '')
+
+            oraRestoreOperator = {"restoreTime": restoreTime, "restorePath": None}
+
+            cvToken = CV_RestApi_Token()
+            cvToken.login(info)
+            cvAPI = CV_API(cvToken)
+            if cvAPI.restoreOracleBackupset(sourceClient, destClient, instanceName, oraRestoreOperator):
+                return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
+            else:
+                return HttpResponse(u"恢复任务启动失败。" + cvAPI.msg)
+        else:
+            return HttpResponse("恢复任务启动失败。")
+
+
+def oraclerecoverydata(request):
+    if request.user.is_authenticated():
+        client_name = request.GET.get('clientName', '')
+        result = []
+
+        dm = SQLApi.CustomFilter(settings.sql_credit)
+        RET = dm.get_oracle_backup_job_list(client_name)
+        print(RET)
+        return JsonResponse({"data": result})
+    else:
+        return HttpResponseRedirect("/login")
+        
