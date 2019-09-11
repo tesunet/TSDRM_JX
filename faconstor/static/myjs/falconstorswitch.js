@@ -378,6 +378,8 @@ $(document).ready(function () {
 
                 $("#static04").modal("hide");
             });
+        } else {
+            $("#recovery_time").val("");
         }
     });
 });

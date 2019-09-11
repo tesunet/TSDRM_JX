@@ -1,19 +1,19 @@
-$(document).ready(function() {
+$(document).ready(function () {
     $('#client_manage_dt').dataTable({
         "bAutoWidth": true,
         "bSort": false,
         "bProcessing": true,
         "ajax": "../manualrecoverydata/",
         "columns": [
-            { "data": "client_name" },
-            { "data": "model" },
-            { "data": "client_os" },
+            {"data": "client_name"},
+            {"data": "model"},
+            {"data": "client_os"},
 
         ],
 
         "columnDefs": [{
             "targets": 0,
-            "mRender": function(data, type, full) {
+            "mRender": function (data, type, full) {
                 return "<a id='edit' data-toggle='modal' data-target='#static1'>" + data + "</a>"
             }
         }],
@@ -35,7 +35,7 @@ $(document).ready(function() {
         }
     });
 
-    $('#static1').on('show.bs.modal', function(e) {
+    $('#static1').on('show.bs.modal', function (e) {
         var el = e.relatedTarget;
         $("#sourceClient").val(el.innerText);
         var datatable = $("#backup_point").dataTable();
@@ -46,12 +46,12 @@ $(document).ready(function() {
             "bProcessing": true,
             "ajax": "../../oraclerecoverydata?clientName=" + $('#sourceClient').val(),
             "columns": [
-                { "data": "jobId" },
-                { "data": "jobType" },
-                { "data": "Level" },
-                { "data": "StartTime" },
-                { "data": "LastTime" },
-                { "data": null },
+                {"data": "jobId"},
+                {"data": "jobType"},
+                {"data": "Level"},
+                {"data": "StartTime"},
+                {"data": "LastTime"},
+                {"data": null},
             ],
             "columnDefs": [{
                 "targets": -1,
@@ -76,7 +76,7 @@ $(document).ready(function() {
 
             }
         });
-        $('#backup_point tbody').on('click', 'button#select', function() {
+        $('#backup_point tbody').on('click', 'button#select', function () {
             var table = $('#backup_point').DataTable();
             var data = table.row($(this).parents('tr')).data();
             $("#datetimepicker").val(data.LastTime);
@@ -85,13 +85,19 @@ $(document).ready(function() {
 
             $("#ora_instance").val(data.instance);
         });
+
+        $("#recovery_time_redio_group").click(function () {
+            if ($("input[name='optionsRadios']:checked").val() == 1) {
+                $("#datetimepicker").val("");
+            }
+        });
     });
 
     $('#datetimepicker').datetimepicker({
         format: 'yyyy-mm-dd hh:ii:ss',
         pickerPosition: 'top-right'
     });
-    $('#recovery').click(function() {
+    $('#recovery').click(function () {
         if ($("input[name='optionsRadios']:checked").val() == "2" && $('#datetimepicker').val() == "")
             alert("请输入时间。");
         else {
@@ -110,16 +116,14 @@ $(document).ready(function() {
                         destClient: $('#destClient').val(),
                         restoreTime: myrestoreTime,
                     },
-                    success: function(data) {
+                    success: function (data) {
                         alert(data);
                     },
-                    error: function(e) {
+                    error: function (e) {
                         alert("恢复失败，请于客服联系。");
                     }
                 });
             }
         }
-    })
-
-
+    });
 });
