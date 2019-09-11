@@ -295,7 +295,7 @@
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>启动人</label>
                                 <div class="col-md-10">
-                                    <input id="runperson" type="text" name="runperson" class="form-control "
+                                    <input id="runperson_invited" type="text" name="runperson_invited" class="form-control "
                                            placeholder="" value="{{ request.user.userinfo.fullname }}" readonly>
 
                                     <div class="form-control-focus"></div>
@@ -306,20 +306,11 @@
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>启动时间</label>
                                 <div class="col-md-10">
-                                    <input id="runtime" type="text" name="runtime" class="form-control"
+                                    <input id="runtime_invited" type="text" name="runtime_invited" class="form-control"
                                            placeholder="" readonly>
                                     <div class="form-control-focus"></div>
 
                                 </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-md-2 control-label"><span
-                                    style="color:red; "></span>源客户端</label>
-                            <div class="col-md-10">
-                                <input id="origin" autocomplete="off" type="text" readonly
-                                       name="origin" class="form-control" value="{{ origin.client_name }}">
-                                <div class="form-control-focus"></div>
                             </div>
                         </div>
                         <!-- 选择时间点/选择恢复终端 -->
@@ -327,21 +318,30 @@
                             <label class="col-md-2 control-label"><span
                                     style="color:red; ">*</span>恢复时间点</label>
                             <div class="col-md-10">
-                                <div class="input-group" id="recovery_time_redio_group">
+                                <div class="input-group" id="recovery_time_redio_group_invited">
                                      <span class="input-group-addon">
-                                        <input type="radio" name="recovery_time_redio" value="1" checked> 最新时间点
-                                        <input type="radio" name="recovery_time_redio" value="2">选择时间
+                                        <input type="radio" name="recovery_time_redio_invited" value="1" checked> 最新时间点
+                                        <input type="radio" name="recovery_time_redio_invited" value="2">选择时间
                                      </span>
-                                    <input id="recovery_time" autocomplete="off" type="datetime"
-                                           name="recovery_time" class="form-control">
+                                    <input id="recovery_time_invited" autocomplete="off" type="datetime"
+                                           name="recovery_time_invited" class="form-control">
                                 </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span
+                                    style="color:red; "></span>源客户端</label>
+                            <div class="col-md-10">
+                                <input id="origin_invited" autocomplete="off" type="text" readonly
+                                       name="origin_invited" class="form-control" value="{{ origin.client_name }}">
+                                <div class="form-control-focus"></div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-md-2 control-label"><span
                                     style="color:red; "></span>选择目标客户端</label>
                             <div class="col-md-10">
-                                <select name="target" id="target" class="form-control">
+                                <select name="target_invited" id="target_invited" class="form-control">
                                     {% for target in all_targets %}
                                         <option value="{{ target.id }}">{{ target.client_name }}</option>
                                     {% endfor %}
@@ -354,7 +354,7 @@
                             <label class="col-md-2 control-label">启动原因</label>
                             <div class="col-md-10">
                                             <textarea class="form-control" placeholder="最大限制2500个汉字" rows="6"
-                                                      id="runreason" name="runreason"></textarea>
+                                                      id="runreason_invited" name="runreason_invited"></textarea>
                                 <div class="form-control-focus"></div>
                             </div>
                         </div>

@@ -134,12 +134,12 @@ $(document).ready(function () {
                 {
                     processid: process_id,
                     plan_process_run_id: plan_process_run_id,
-                    run_person: $("#runperson").val(),
-                    run_time: $("#runtime").val(),
-                    run_reason: $("#runreason").val(),
+                    run_person: $("#runperson_invited").val(),
+                    run_time: $("#runtime_invited").val(),
+                    run_reason: $("#runreason_invited").val(),
 
-                    target: $("#target").val(),
-                    recovery_time: $("#recovery_time").val()
+                    target: $("#target_invited").val(),
+                    recovery_time: $("#recovery_time_invited").val()
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {
@@ -153,23 +153,30 @@ $(document).ready(function () {
         });
     });
 
-
     $("#run").click(function () {
         $("#static").modal({backdrop: "static"});
-        // 写入当前时间
-        var myDate = new Date();
-        $("#run_time").val(myDate.toLocaleString());
-    });
-
-    $("#run_invited").click(function () {
-        $("#static02").modal({backdrop: "static"});
         $('#recovery_time').datetimepicker({
             format: 'yyyy-mm-dd hh:ii:ss',
             pickerPosition: 'top-right'
         });
         // 写入当前时间
         var myDate = new Date();
-        $("#runtime").val(myDate.toLocaleString());
+        $("#run_time").val(myDate.toLocaleString());
+
+        $("#target").val("")
+    });
+
+    $("#run_invited").click(function () {
+        $("#static02").modal({backdrop: "static"});
+        $('#recovery_time_invited').datetimepicker({
+            format: 'yyyy-mm-dd hh:ii:ss',
+            pickerPosition: 'top-right'
+        });
+        // 写入当前时间
+        var myDate = new Date();
+        $("#runtime_invited").val(myDate.toLocaleString());
+
+        $("#target_invited").val("")
     });
 
     $("#plan").click(function () {
@@ -322,11 +329,6 @@ $(document).ready(function () {
         customProcessDataTable();
     })
 
-    $('#recovery_time').datetimepicker({
-        format: 'yyyy-mm-dd hh:ii:ss',
-        pickerPosition: 'top-right'
-    });
-
     $("#recovery_time_redio_group").click(function () {
         if ($("input[name='recovery_time_redio']:checked").val() == 2) {
             $("#static04").modal({backdrop: "static"});
@@ -380,6 +382,62 @@ $(document).ready(function () {
             });
         } else {
             $("#recovery_time").val("");
+        }
+    });
+
+    $("#recovery_time_redio_group_invited").click(function () {
+        if ($("input[name='recovery_time_redio_invited']:checked").val() == 2) {
+            $("#static04").modal({backdrop: "static"});
+            var origin = $("#origin_invited").val();
+            var datatable = $("#backup_point").dataTable();
+            datatable.fnClearTable(); //清空数据
+            datatable.fnDestroy();
+            $('#backup_point').dataTable({
+                "bAutoWidth": true,
+                "bProcessing": true,
+                "ajax": "../../oraclerecoverydata?clientName=" + origin,
+                "columns": [
+                    {"data": "jobId"},
+                    {"data": "jobType"},
+                    {"data": "Level"},
+                    {"data": "StartTime"},
+                    {"data": "LastTime"},
+                    {"data": null},
+                ],
+                "columnDefs": [{
+                    "targets": -1,
+                    "data": null,
+                    "defaultContent": "<button  id='select' title='选择'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-check'></i></button>"
+                }],
+
+                "oLanguage": {
+                    "sLengthMenu": "&nbsp;&nbsp;每页显示 _MENU_ 条记录",
+                    "sZeroRecords": "抱歉， 没有找到",
+                    "sInfo": "从 _START_ 到 _END_ /共 _TOTAL_ 条数据",
+                    "sInfoEmpty": '',
+                    "sInfoFiltered": "(从 _MAX_ 条数据中检索)",
+                    "sSearch": "搜索",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "前一页",
+                        "sNext": "后一页",
+                        "sLast": "尾页"
+                    },
+                    "sZeroRecords": "没有检索到数据",
+
+                }
+            });
+            $('#backup_point tbody').on('click', 'button#select', function () {
+                var table = $('#backup_point').DataTable();
+                var data = table.row($(this).parents('tr')).data();
+                $("#recovery_time_invited").val(data.LastTime);
+                $("input[name='optionsRadios'][value='1']").prop("checked", false);
+                $("input[name='optionsRadios'][value='2']").prop("checked", true);
+
+                $("#static04").modal("hide");
+            });
+        } else {
+            $("#recovery_time_invited").val("");
         }
     });
 });
