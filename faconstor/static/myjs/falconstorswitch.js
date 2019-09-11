@@ -327,10 +327,57 @@ $(document).ready(function () {
         pickerPosition: 'top-right'
     });
 
-    $("#recovery_time_redio_group").change(function () {
-        if ($("input[name='recovery_time_redio']:checked").val() == 1) {
-            $("#recovery_time").val("")
+    $("#recovery_time_redio_group").click(function () {
+        if ($("input[name='recovery_time_redio']:checked").val() == 2) {
+            $("#static04").modal({backdrop: "static"});
+            var origin = $("#origin").val();
+            var datatable = $("#backup_point").dataTable();
+            datatable.fnClearTable(); //清空数据
+            datatable.fnDestroy();
+            $('#backup_point').dataTable({
+                "bAutoWidth": true,
+                "bProcessing": true,
+                "ajax": "../../oraclerecoverydata?clientName=" + origin,
+                "columns": [
+                    {"data": "jobId"},
+                    {"data": "jobType"},
+                    {"data": "Level"},
+                    {"data": "StartTime"},
+                    {"data": "LastTime"},
+                    {"data": null},
+                ],
+                "columnDefs": [{
+                    "targets": -1,
+                    "data": null,
+                    "defaultContent": "<button  id='select' title='选择'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-check'></i></button>"
+                }],
+
+                "oLanguage": {
+                    "sLengthMenu": "&nbsp;&nbsp;每页显示 _MENU_ 条记录",
+                    "sZeroRecords": "抱歉， 没有找到",
+                    "sInfo": "从 _START_ 到 _END_ /共 _TOTAL_ 条数据",
+                    "sInfoEmpty": '',
+                    "sInfoFiltered": "(从 _MAX_ 条数据中检索)",
+                    "sSearch": "搜索",
+                    "oPaginate": {
+                        "sFirst": "首页",
+                        "sPrevious": "前一页",
+                        "sNext": "后一页",
+                        "sLast": "尾页"
+                    },
+                    "sZeroRecords": "没有检索到数据",
+
+                }
+            });
+            $('#backup_point tbody').on('click', 'button#select', function () {
+                var table = $('#backup_point').DataTable();
+                var data = table.row($(this).parents('tr')).data();
+                $("#recovery_time").val(data.LastTime);
+                $("input[name='optionsRadios'][value='1']").prop("checked", false);
+                $("input[name='optionsRadios'][value='2']").prop("checked", true);
+
+                $("#static04").modal("hide");
+            });
         }
     });
-
 });

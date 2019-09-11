@@ -167,6 +167,15 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
+                                        style="color:red; "></span>源客户端</label>
+                                <div class="col-md-10">
+                                    <input id="origin" autocomplete="off" type="text" readonly
+                                           name="origin" class="form-control" value="{{ origin.client_name }}">
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-md-2 control-label"><span
                                         style="color:red; "></span>选择目标客户端</label>
                                 <div class="col-md-10">
                                     <select name="target" id="target" class="form-control">
@@ -279,7 +288,6 @@
                     <h4 class="modal-title">启动流程</h4>
                 </div>
                 <div class="panel-body">
-
                     <form class="bs-example form-horizontal activate-form">{% csrf_token %}
 
                         <div class="form-body">
@@ -303,6 +311,15 @@
                                     <div class="form-control-focus"></div>
 
                                 </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span
+                                    style="color:red; "></span>源客户端</label>
+                            <div class="col-md-10">
+                                <input id="origin" autocomplete="off" type="text" readonly
+                                       name="origin" class="form-control" value="{{ origin.client_name }}">
+                                <div class="form-control-focus"></div>
                             </div>
                         </div>
                         <!-- 选择时间点/选择恢复终端 -->
@@ -341,19 +358,18 @@
                                 <div class="form-control-focus"></div>
                             </div>
                         </div>
+                        <div class="form-actions ">
+                            <div class="modal-footer">
+                                <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                </button>
+                                <button type="button" id="confirm_invited" name="confirm_invited" class="btn green">确认
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="form-actions ">
-                    <div class="modal-footer">
-                        <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
-                        </button>
-                        <button type="button" id="confirm_invited" name="confirm_invited" class="btn green">确认
-                        </button>
-                    </div>
-                </div>
-                </form>
             </div>
         </div>
-    </div>
     </div>
 
     <div id="static03" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
@@ -410,6 +426,42 @@
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="static04" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" style="width:900px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+                    <h4 class="modal-title">选择时间点恢复</h4>
+                </div>
+                <div class="portlet light bordered">
+                    <section class="panel panel-default">
+                        <header class="panel-heading">
+                            备份列表
+                        </header>
+                        <div style="height:10px"></div>
+                        <table class="table table-striped table-bordered table-hover table-checkable order-column"
+                               id="backup_point">
+                            <thead>
+                            <tr>
+                                <th> 任务ID</th>
+                                <th> 任务类型</th>
+                                <th> 备份类型</th>
+                                <th> 开始时间</th>
+                                <th> 更新时间</th>
+                                <th style="width:30px;"> 操作</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </section>
                 </div>
             </div>
         </div>

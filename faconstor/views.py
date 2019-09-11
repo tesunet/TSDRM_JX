@@ -3152,13 +3152,24 @@ def falconstorswitch(request, process_id):
         else:
             return Http404()
 
-        # commvault源端客户端
+        # commvault目标客户端
         all_targets = Target.objects.exclude(state="9")
+
+        # commvault源客户端
+        all_steps = Step.objects.exclude(state="9").filter(process_id=process_id)
+
+        origin = ""
+        for cur_step in all_steps:
+            all_scripts = Script.objects.filter(step_id=cur_step.id)
+            for cur_script in all_scripts:
+                if cur_script.origin:
+                    origin = cur_script.origin
+                    break
 
         return render(request, 'falconstorswitch.html',
                       {'username': request.user.userinfo.fullname, "pagefuns": getpagefuns(funid, request=request),
                        "wrapper_step_list": wrapper_step_list, "process_id": process_id,
-                       "plan_process_run_id": plan_process_run_id, "all_targets": all_targets})
+                       "plan_process_run_id": plan_process_run_id, "all_targets": all_targets, "origin": origin})
     else:
         return HttpResponseRedirect("/login")
 
@@ -6424,7 +6435,7 @@ def manualrecovery(request, funid):
         all_targets = Target.objects.exclude(state="9")
         return render(request, 'manualrecovery.html',
                       {'username': request.user.userinfo.fullname, "manualrecoverypage": True,
-                      "pagefuns": getpagefuns(funid, request=request), "all_targets": all_targets})
+                       "pagefuns": getpagefuns(funid, request=request), "all_targets": all_targets})
     else:
         return HttpResponseRedirect("/login")
 
@@ -6479,4 +6490,3 @@ def oraclerecoverydata(request):
         return JsonResponse({"data": result})
     else:
         return HttpResponseRedirect("/login")
-        
