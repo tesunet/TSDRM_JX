@@ -156,7 +156,6 @@ urlpatterns = [
     url(r'^manualrecovery/$', manualrecovery, {'funid': '79'}),
     url(r'^manualrecoverydata/$', manualrecoverydata),
 
-    url(r'^oraclerecovery/(\d+)/$', oraclerecovery),
     url(r'^dooraclerecovery/$', dooraclerecovery),
     url(r'^oraclerecoverydata/$', oraclerecoverydata),
 ]

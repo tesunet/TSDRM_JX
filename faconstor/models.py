@@ -74,6 +74,7 @@ class Target(models.Model):
     client_name = models.CharField("终端client_name", blank=True, null=True, max_length=128)
     info = models.TextField("客户端相关信息", blank=True, null=True)
     state = models.CharField("状态", blank=True, null=True, max_length=20)
+    os = models.CharField("系统", blank=True, null=True, max_length=50)
 
 
 class Origin(models.Model):
@@ -82,6 +83,7 @@ class Origin(models.Model):
     client_name = models.CharField("源端client_name", blank=True, null=True, max_length=128)
     info = models.TextField("客户端相关信息", blank=True, null=True)
     state = models.CharField("状态", blank=True, null=True, max_length=20)
+    os = models.CharField("系统", blank=True, null=True, max_length=50)
 
 
 class HostsManage(models.Model):

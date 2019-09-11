@@ -38,6 +38,9 @@ $(document).ready(function() {
     $('#static1').on('show.bs.modal', function(e) {
         var el = e.relatedTarget;
         $("#sourceClient").val(el.innerText);
+        var datatable = $("#backup_point").dataTable();
+        datatable.fnClearTable(); //清空数据
+        datatable.fnDestroy();
         $('#backup_point').dataTable({
             "bAutoWidth": true,
             "bProcessing": true,
@@ -79,6 +82,8 @@ $(document).ready(function() {
             $("#datetimepicker").val(data.LastTime);
             $("input[name='optionsRadios'][value='1']").prop("checked", false);
             $("input[name='optionsRadios'][value='2']").prop("checked", true);
+
+            $("#ora_instance").val(data.instance);
         });
     });
 
@@ -100,7 +105,7 @@ $(document).ready(function() {
                     type: "POST",
                     url: "../../dooraclerecovery/",
                     data: {
-                        instanceName: $('#instanceName').val(),
+                        instanceName: $("#ora_instance").val(),
                         sourceClient: $('#sourceClient').val(),
                         destClient: $('#destClient').val(),
                         restoreTime: myrestoreTime,

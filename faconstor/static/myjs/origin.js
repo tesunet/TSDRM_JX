@@ -1,17 +1,18 @@
-$(document).ready(function () {
+$(document).ready(function() {
     $('#origin_dt').dataTable({
         "bAutoWidth": true,
         "bSort": false,
         "bProcessing": true,
         "ajax": "../origin_data/",
         "columns": [
-            {"data": "id"},
-            {"data": "client_id"},
-            {"data": "client_name"},
-            {"data": "agent"},
-            {"data": "instance"},
-            {"data": "target_client_name"},
-            {"data": null}
+            { "data": "id" },
+            { "data": "client_id" },
+            { "data": "client_name" },
+            { "data": "agent" },
+            { "data": "instance" },
+            { "data": "os" },
+            { "data": "target_client_name" },
+            { "data": null }
         ],
 
         "columnDefs": [{
@@ -38,7 +39,7 @@ $(document).ready(function () {
         }
     });
     // 行按钮
-    $('#origin_dt tbody').on('click', 'button#delrow', function () {
+    $('#origin_dt tbody').on('click', 'button#delrow', function() {
         if (confirm("确定要删除该条数据？")) {
             var table = $('#origin_dt').DataTable();
             var data = table.row($(this).parents('tr')).data();
@@ -48,20 +49,20 @@ $(document).ready(function () {
                 data: {
                     origin_id: data.id,
                 },
-                success: function (data) {
+                success: function(data) {
                     if (data.ret == 1) {
                         table.ajax.reload();
                     }
                     alert(data.info);
                 },
-                error: function (e) {
+                error: function(e) {
                     alert("删除失败，请于管理员联系。");
                 }
             });
 
         }
     });
-    $('#origin_dt tbody').on('click', 'button#edit', function () {
+    $('#origin_dt tbody').on('click', 'button#edit', function() {
         var table = $('#origin_dt').DataTable();
         var data = table.row($(this).parents('tr')).data();
 
@@ -69,7 +70,9 @@ $(document).ready(function () {
         $("#origin").val(data.client_id);
         $("#agent").val(data.agent);
         $("#instance").val(data.instance);
+        console.log(data.target_client)
         $("#target").val(data.target_client);
+        $("#os").val(data.os);
     });
 
     var oracle_data = JSON.parse($("#oracle_data").val());
@@ -78,7 +81,7 @@ $(document).ready(function () {
     }
 
     // 切换
-    $("#origin").change(function () {
+    $("#origin").change(function() {
         //..
         var clientid = $(this).val();
 
@@ -86,22 +89,24 @@ $(document).ready(function () {
             if (clientid == oracle_data[i].clientid) {
                 $("#agent").val(oracle_data[i].agent);
                 $("#instance").val(oracle_data[i].instance);
+                $("#os").val(oracle_data[i].os);
                 break
             }
         }
     });
 
 
-    $("#new").click(function () {
+    $("#new").click(function() {
         $("#origin_id").val("0");
         $("#origin").val("");
         $("#agent").val("");
         $("#instance").val("");
 
         $("#target").val("");
+        $("#os").val("");
     });
 
-    $('#save').click(function () {
+    $('#save').click(function() {
         var table = $('#origin_dt').DataTable();
 
         $.ajax({
@@ -115,22 +120,23 @@ $(document).ready(function () {
                 agent: $("#agent").val(),
                 instance: $("#instance").val(),
 
-                target_client: $("#target").val()
+                target_client: $("#target").val(),
+                os: $("#os").val()
             },
-            success: function (data) {
+            success: function(data) {
                 if (data.ret == 1) {
                     $('#static').modal('hide');
                     table.ajax.reload();
                 }
                 alert(data.info);
             },
-            error: function (e) {
+            error: function(e) {
                 alert("页面出现错误，请于管理员联系。");
             }
         });
     });
 
-    $('#error').click(function () {
+    $('#error').click(function() {
         $(this).hide()
     })
 });

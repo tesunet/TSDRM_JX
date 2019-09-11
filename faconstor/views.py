@@ -5586,17 +5586,22 @@ def target(request, funid):
         dm = SQLApi.CustomFilter(settings.sql_credit)
         oracle_data = dm.get_instance_from_oracle()
 
-        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
-        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+        all_client_manage = ClientManage.objects.exclude(state="9")
+        tmp_client_manage = [tmp_client.client_name for tmp_client in all_client_manage]
 
         oracle_data_list = []
         for od in oracle_data:
             if od["clientname"] in tmp_client_manage:
+                cur_client = ClientManage.objects.exclude(state="9").filter(client_name=od["clientname"])
+                os = ""
+                if cur_client:
+                    os = cur_client[0].client_os
                 oracle_data_list.append({
                     "clientid": od["clientid"],
                     "clientname": od["clientname"],
                     "agent": od["agent"],
-                    "instance": od["instance"]
+                    "instance": od["instance"],
+                    "os": os
                 })
 
         return render(request, 'target.html',
@@ -5617,6 +5622,7 @@ def target_data(request):
                 "id": target.id,
                 "client_id": target.client_id,
                 "client_name": target.client_name,
+                "os": target.os,
                 "agent": target_info["agent"],
                 "instance": target_info["instance"]
             })
@@ -5632,6 +5638,7 @@ def target_save(request):
         client_name = request.POST.get("client_name", "").strip()
         agent = request.POST.get("agent", "").strip()
         instance = request.POST.get("instance", "").strip()
+        os = request.POST.get("os", "").strip()
         ret = 0
         info = ""
         try:
@@ -5657,6 +5664,7 @@ def target_save(request):
                             cur_target = Target()
                             cur_target.client_id = client_id
                             cur_target.client_name = client_name
+                            cur_target.os = os
                             cur_target.info = json.dumps({
                                 "agent": agent,
                                 "instance": instance
@@ -5683,6 +5691,7 @@ def target_save(request):
                             try:
                                 cur_target.client_id = client_id
                                 cur_target.client_name = client_name
+                                cur_target.os = os
                                 cur_target.info = json.dumps({
                                     "agent": agent,
                                     "instance": instance
@@ -5737,17 +5746,22 @@ def origin(request, funid):
         dm = SQLApi.CustomFilter(settings.sql_credit)
         oracle_data = dm.get_instance_from_oracle()
 
-        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
-        tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
+        all_client_manage = ClientManage.objects.exclude(state="9")
+        tmp_client_manage = [tmp_client.client_name for tmp_client in all_client_manage]
 
         oracle_data_list = []
         for od in oracle_data:
+            cur_client = ClientManage.objects.exclude(state="9").filter(client_name=od["clientname"])
+            os = ""
+            if cur_client:
+                os = cur_client[0].client_os
             if od["clientname"] in tmp_client_manage:
                 oracle_data_list.append({
                     "clientid": od["clientid"],
                     "clientname": od["clientname"],
                     "agent": od["agent"],
-                    "instance": od["instance"]
+                    "instance": od["instance"],
+                    "os": os
                 })
 
         # 所有关联终端
@@ -5772,9 +5786,10 @@ def origin_data(request):
                 "id": origin.id,
                 "client_id": origin.client_id,
                 "client_name": origin.client_name,
+                "os": origin.os,
                 "agent": origin_info["agent"],
                 "instance": origin_info["instance"],
-                "target_client": origin.target.client_id,
+                "target_client": origin.target.id,
                 "target_client_name": origin.target.client_name
             })
 
@@ -5790,7 +5805,7 @@ def origin_save(request):
         client_name = request.POST.get("client_name", "").strip()
         agent = request.POST.get("agent", "").strip()
         instance = request.POST.get("instance", "").strip()
-
+        client_os = request.POST.get("os", "")
         target_client = request.POST.get("target_client", "")
         print(target_client)
         ret = 0
@@ -5814,7 +5829,7 @@ def origin_save(request):
                     info = "未关联终端"
                 else:
                     try:
-                        to_target = Target.objects.get(client_id=target_client)
+                        to_target = Target.objects.get(id=target_client)
                     except Target.DoesNotExist as e:
                         ret = 0
                         info = "该终端不存在。"
@@ -5825,6 +5840,7 @@ def origin_save(request):
                                 cur_origin = Origin()
                                 cur_origin.client_id = client_id
                                 cur_origin.client_name = client_name
+                                cur_origin.os = client_os
                                 cur_origin.info = json.dumps({
                                     "agent": agent,
                                     "instance": instance
@@ -5848,6 +5864,7 @@ def origin_save(request):
                                 try:
                                     cur_origin.client_id = client_id
                                     cur_origin.client_name = client_name
+                                    cur_origin.os = client_os
                                     cur_origin.info = json.dumps({
                                         "agent": agent,
                                         "instance": instance
@@ -6403,9 +6420,11 @@ def client_manage_del(request):
 
 def manualrecovery(request, funid):
     if request.user.is_authenticated():
+        result = []
+        all_targets = Target.objects.exclude(state="9")
         return render(request, 'manualrecovery.html',
                       {'username': request.user.userinfo.fullname, "manualrecoverypage": True,
-                      "pagefuns": getpagefuns(funid, request=request),})
+                      "pagefuns": getpagefuns(funid, request=request), "all_targets": all_targets})
     else:
         return HttpResponseRedirect("/login")
 
@@ -6413,54 +6432,18 @@ def manualrecovery(request, funid):
 def manualrecoverydata(request):
     if request.user.is_authenticated():
         result = []
-        all_client_manage = ClientManage.objects.exclude(state="9")
-        for client_manage in all_client_manage:
+        all_origins = Origin.objects.exclude(state="9")
+        for origin in all_origins:
             result.append({
-                "client_manage_id": client_manage.id,
-                "client_name": client_manage.client_name,
-                "client_id": client_manage.client_id,
-                "client_os": client_manage.client_os,
+                "client_manage_id": origin.id,
+                "client_name": origin.client_name,
+                "client_id": origin.client_id,
+                "client_os": origin.os,
                 "model": "Oracle Database"
             })
         return JsonResponse({"data": result})
     else:
         return HttpResponseRedirect("/login")
-
-
-def oraclerecovery(request, client_manage_id):
-    if request.user.is_authenticated():
-        try:
-            client_manage_id = int(client_manage_id)
-        except:
-            raise Http404()
-        try:
-            cur_client_manage = ClientManage.objects.get(id=client_manage_id)
-        except ClientManage.DoesNotExist as e:
-            raise Http404()
-        else:
-            client_name = cur_client_manage.client_name
-            dest_client = ClientManage.objects.exclude(state="9")
-            instalce_name = ""
-        # myhost = ClientHost.objects.filter(id=id)
-        # if len(myhost) > 0:
-        #     if myhost[0].owernID == request.user.userinfo.userGUID:
-        #         alldataset = DataSet.objects.filter(clientGUID=myhost[0].clientGUID, agentType='Oracle').exclude(
-        #             status="9")
-        #         if len(alldataset) > 0:
-        #             allhost = ClientHost.objects.exclude(status="9").filter(Q(hostType="physical box") & (
-        #                     Q(owernID=request.user.userinfo.userGUID) | Q(
-        #                 userinfo__id=request.user.userinfo.id))).filter(
-        #                 agentTypeList__contains="<agentType>Oracle</agentType>")
-        #             destClient = []
-        #             for host in allhost:
-        #                 destClient.append(host.clientName)
-            return render(request, 'oraclerecovery.html', {'username': request.user.userinfo.fullname,
-                                                            "instalce_name": instalce_name,  # 获取实例名alldataset
-                                                            "client_name": client_name,
-                                                            "dest_client": dest_client,
-                                                            "manualrecoverypage": True})
-    else:
-        return HttpResponseRedirect("/index")
 
 
 def dooraclerecovery(request):
@@ -6473,6 +6456,8 @@ def dooraclerecovery(request):
 
             oraRestoreOperator = {"restoreTime": restoreTime, "restorePath": None}
 
+            # 暂时卡主恢复任务
+            return HttpResponse("assert")
             cvToken = CV_RestApi_Token()
             cvToken.login(info)
             cvAPI = CV_API(cvToken)
@@ -6490,8 +6475,7 @@ def oraclerecoverydata(request):
         result = []
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
-        RET = dm.get_oracle_backup_job_list(client_name)
-        print(RET)
+        result = dm.get_oracle_backup_job_list(client_name)
         return JsonResponse({"data": result})
     else:
         return HttpResponseRedirect("/login")

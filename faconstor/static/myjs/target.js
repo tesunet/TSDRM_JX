@@ -1,16 +1,17 @@
-$(document).ready(function () {
+$(document).ready(function() {
     $('#target_dt').dataTable({
         "bAutoWidth": true,
         "bSort": false,
         "bProcessing": true,
         "ajax": "../target_data/",
         "columns": [
-            {"data": "id"},
-            {"data": "client_id"},
-            {"data": "client_name"},
-            {"data": "agent"},
-            {"data": "instance"},
-            {"data": null}
+            { "data": "id" },
+            { "data": "client_id" },
+            { "data": "client_name" },
+            { "data": "agent" },
+            { "data": "instance" },
+            { "data": "os" },
+            { "data": null }
         ],
 
         "columnDefs": [{
@@ -37,7 +38,7 @@ $(document).ready(function () {
         }
     });
     // 行按钮
-    $('#target_dt tbody').on('click', 'button#delrow', function () {
+    $('#target_dt tbody').on('click', 'button#delrow', function() {
         if (confirm("确定要删除该条数据？")) {
             var table = $('#target_dt').DataTable();
             var data = table.row($(this).parents('tr')).data();
@@ -47,26 +48,27 @@ $(document).ready(function () {
                 data: {
                     target_id: data.id,
                 },
-                success: function (data) {
+                success: function(data) {
                     if (data.ret == 1) {
                         table.ajax.reload();
                     }
                     alert(data.info);
                 },
-                error: function (e) {
+                error: function(e) {
                     alert("删除失败，请于管理员联系。");
                 }
             });
 
         }
     });
-    $('#target_dt tbody').on('click', 'button#edit', function () {
+    $('#target_dt tbody').on('click', 'button#edit', function() {
         var table = $('#target_dt').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $("#target_id").val(data.id);
         $("#client_id").val(data.client_id);
         $("#agent").val(data.agent);
         $("#instance").val(data.instance);
+        $("#os").val(data.os);
     });
 
     // 加载oracle_data
@@ -79,7 +81,7 @@ $(document).ready(function () {
     }
 
     // 切换
-    $("#target").change(function () {
+    $("#target").change(function() {
         //..
         var clientid = $(this).val();
 
@@ -87,20 +89,22 @@ $(document).ready(function () {
             if (clientid == oracle_data[i].clientid) {
                 $("#agent").val(oracle_data[i].agent);
                 $("#instance").val(oracle_data[i].instance);
+                $("#os").val(oracle_data[i].os);
                 break
             }
         }
     });
 
 
-    $("#new").click(function () {
+    $("#new").click(function() {
         $("#target_id").val("0");
         $("#target").val("");
         $("#agent").val("");
         $("#instance").val("");
+        $("#os").val("");
     });
 
-    $('#save').click(function () {
+    $('#save').click(function() {
         var table = $('#target_dt').DataTable();
         console.log($("select#target:selected").text());
         $.ajax({
@@ -113,21 +117,22 @@ $(document).ready(function () {
                 client_name: $("#target").find("option:selected").text(),
                 agent: $("#agent").val(),
                 instance: $("#instance").val(),
+                os: $("#os").val()
             },
-            success: function (data) {
+            success: function(data) {
                 if (data.ret == 1) {
                     $('#static').modal('hide');
                     table.ajax.reload();
                 }
                 alert(data.info);
             },
-            error: function (e) {
+            error: function(e) {
                 alert("页面出现错误，请于管理员联系。");
             }
         });
     })
 
-    $('#error').click(function () {
+    $('#error').click(function() {
         $(this).hide()
     })
 });

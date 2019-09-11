@@ -770,7 +770,6 @@ class CVApi(DataMonitor):
         oracle_backup_sql = """SELECT [jobid],[backuplevel],[startdate],[enddate],[instance]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}';""".format(client_name)
-        print(oracle_backup_sql)
         content = self.fetch_all(oracle_backup_sql)
         oracle_backuplist = []
         for i in content:
