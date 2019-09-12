@@ -44,6 +44,7 @@ from faconstor.models import *
 from .remote import ServerByPara
 from TSDRM import settings
 from .api import SQLApi
+from .CVApi import *
 
 funlist = []
 
@@ -6276,6 +6277,7 @@ def get_schedule_policy(request):
             }
 
             whole_list.append(schedule_dict)
+
     except Exception as e:
         print(e)
         return JsonResponse({
@@ -6466,9 +6468,8 @@ def dooraclerecovery(request):
             instanceName = request.POST.get('instanceName', '')
 
             oraRestoreOperator = {"restoreTime": restoreTime, "restorePath": None}
-
             # 暂时卡主恢复任务
-            return HttpResponse("assert")
+            return HttpResponse("oracle恢复接口问题.")
             cvToken = CV_RestApi_Token()
             cvToken.login(info)
             cvAPI = CV_API(cvToken)

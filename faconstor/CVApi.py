@@ -3532,7 +3532,7 @@ if __name__ == "__main__":
     cvToken.login(info)
     cvAPI = CV_API(cvToken)
 
-    ret = cvAPI.getJobList("win-2qls3b7jx3v.hzx", type="restore")  # backup status
+    # ret = cvAPI.getJobList("win-2qls3b7jx3v.hzx", type="restore")  # backup status
     # [{'client': 'win-2qls3b7jx3v.hzx', 'StartTime': '1567750899', 'diskSize': '0', 'jobId': '4553013',
     # 'backupSetName': 'default', 'LastTime': '1567750899', 'jobType': 'Restore', 'agentType': 'Oracle Database',
     # 'status': '运行', 'Level': 'UNKNOWN_BKP_LEVEL', 'appSize': '0'}]
@@ -3540,7 +3540,7 @@ if __name__ == "__main__":
     # ret = cvAPI.getClientInfo(3)
     # ret = cvAPI.getVMWareVMList()
 
-    print(ret)
+    # print(ret)
     # import json
 
     # with open(r"C:\Users\Administrator\Desktop\ret.json", "w") as f:
@@ -3593,9 +3593,9 @@ if __name__ == "__main__":
     # retCode = cvAPI.setOracleBackupset("win64-db1", "ORCL", credit, content)
     # print(retCode, cvAPI.msg)
 
-    # operator = {"restoreTime":"", "restorePath":""}
-    # retCode = cvAPI.restoreOracleBackupset("test2.paulwen", "test3.paulwen", "ORCL", operator)
-    # print(retCode, cvAPI.msg)
+    operator = {"restoreTime":"", "restorePath":""}
+    retCode = cvAPI.restoreOracleBackupset("win-2qls3b7jx3v.hzx", "win-2qls3b7jx3v.hzx", "ORCL", operator)
+    print(retCode, cvAPI.msg)
 
     # content = {"SPName":"SP-7DAYS", "Schdule":"FILE", "Paths":["c:\\", "E:\\"], "OS":True}
     # retCode = cvAPI.setFSBackupset("win64-db1", "newTest", content)

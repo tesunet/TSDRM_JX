@@ -443,6 +443,36 @@ class CVApi(DataMonitor):
 
         return whole_list
 
+    def get_vm_backup_content(self, client_id=None):
+        if client_id:
+            vm_backup_content_sql = """
+            SELECT [vmname],[vmclientid],[virtualizationclient],[virtualizationclientid],[jobid],[vmGUID],[vmstatus],[vmhost],[proxy],[startdateunixsec]
+            ,[enddateunixsec],[startdate],[enddate],[failureReason],[vmbackupsizebytes],[vmguestsizebytes],[vmsizebytes],[vmcbtstatus],[vmtransportmode]
+            ,[subclient],[backupset],[data_sp],[backuplevelInt],[backuplevel]
+            FROM [CommServ].[dbo].[CommCellVMBackupInfo] WHERE [virtualizationclientid] = {0}
+            """.format(client_id)
+        else:
+            vm_backup_content_sql = """
+            SELECT [vmname],[vmclientid],[virtualizationclient],[virtualizationclientid],[jobid],[vmGUID],[vmstatus],[vmhost],[proxy],[startdateunixsec]
+            ,[enddateunixsec],[startdate],[enddate],[failureReason],[vmbackupsizebytes],[vmguestsizebytes],[vmsizebytes],[vmcbtstatus],[vmtransportmode]
+            ,[subclient],[backupset],[data_sp],[backuplevelInt],[backuplevel]
+            FROM [CommServ].[dbo].[CommCellVMBackupInfo]
+            """
+
+        vm_backup_content_list = []
+        content = self.fetch_all(vm_backup_content_sql)
+        for i in content:
+            vm_backup_content_list.append({
+                "vmname": i[0],
+                "vmclientid": i[1],
+                "virtualizationclient": i[2],
+                "virtualizationclientid": i[3],
+                "vmhost": i[7],
+                "backupset": i[20],
+                "subclient": i[19]
+            })
+        return vm_backup_content_list
+
     def get_instance_from_oracle(self):
         instance_sql = """SELECT DISTINCT([clientname]),[idataagent],[instance], [clientid]
                           FROM [commserv].[dbo].[CommCellSubClientConfig]
@@ -461,9 +491,9 @@ class CVApi(DataMonitor):
 
     def get_all_backup_content(self):
         # 虚机备份内容
-        cv_token = CVRestApiToken()
-        cv_token.login(settings.CVApi_credit)
-        cv_api = CVApiOperate(cv_token)
+        # cv_token = CVRestApiToken()
+        # cv_token.login(settings.CVApi_credit)
+        # cv_api = CVApiOperate(cv_token)
 
         # "Mysql", "Windows File System", "Linux File System"
         backupset_content_sql = """SELECT [clientname],[idataagent],[backupset],[subclient],[content]
@@ -499,29 +529,18 @@ class CVApi(DataMonitor):
             if i[1] in ["Virtual Server"]:
                 # clientId
                 client_id = i[5]
-                sub_client_list = cv_api.get_sub_client_list(client_id)
 
-                # subclientId
-                # {'applicationId': '106', '_type_': '7', 'backupsetName': 'defaultBackupSet', 'instanceId': '10', 'subclientGUID': 'A546CEEC-22ED-4370-A81F-680E88CA5A76', 'subclientName': 'default', 'clientId': '5', '
-                # backupsetId': '16', 'subclientId': '22', 'displayName': 'vctest.hzx', 'appName': 'Virtual Server', 'clientName': 'vctest.hzx', 'instanceName': 'VMware'},
-                for sub_client in sub_client_list:
-                    if sub_client['appName'] == i[1] and sub_client['backupsetName'] == i[3] and sub_client[
-                        'subclientName'] == i[4]:
-                        content = cv_api.get_vm_backup_content(sub_client['subclientId'])
+                content = self.get_vm_backup_content(client_id)
 
-                        if content:
-                            vm_content = ''
-                            for vm in content:
-                                vm_content += vm + ','
+                for vm_content in content:
+                    backupset_content_list.append({
+                        "clientname": i[0],
+                        "idataagent": i[1],
+                        "backupset": i[3],
+                        "subclient": i[4],
+                        "content": vm_content["vmname"],
+                    })
 
-                        backupset_content_list.append({
-                            "clientname": i[0],
-                            "idataagent": i[1],
-                            "backupset": i[3],
-                            "subclient": i[4],
-                            "content": vm_content[:-1] if content else '',
-                        })
-                        break
         extra_content = self.get_installed_sub_clients_for_info()
         # 去重
         extra_content = remove_duplicate_for_info(extra_content)
