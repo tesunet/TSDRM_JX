@@ -400,7 +400,7 @@ class CV_GetAllInformation(CV_RestApi):
     def getJobList(self, clientId, type="backup", appTypeName=None, backupsetName=None, subclientName=None, start=None,
                    end=None):
         statusList = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "commpleted": "完成",
-                      "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉", "Kill Pending": "终止未决"}
+                      "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉"}
         '''
         Running
         Waiting
@@ -1237,8 +1237,7 @@ class CV_Backupset(CV_Client):
                         self.isNewBackupset = False
                         return self.backupsetInfo
                 else:
-                    if node["instanceName"].upper() == backupset.upper() and agentType.upper() in node[
-                        "agentType"].upper():
+                    if node["instanceName"].upper() == backupset.upper() and node["agentType"].upper() in agentType.upper():
                         self.backupsetInfo = node
                         self.isNewBackupset = False
                         return self.backupsetInfo
@@ -3368,7 +3367,7 @@ class CV_API(object):
     def restoreOracleBackupset(self, source, dest, instance, operator=None):
         # param client is clientName or clientId 
         # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
-        # return JobId 
+        # return JobId
         # or -1 is error
 
         # print(client, backupset, credit, content)
@@ -3532,16 +3531,12 @@ if __name__ == "__main__":
     cvToken.login(info)
     cvAPI = CV_API(cvToken)
 
-    # ret = cvAPI.getJobList("win-2qls3b7jx3v.hzx", type="restore")  # backup status
-    # [{'client': 'win-2qls3b7jx3v.hzx', 'StartTime': '1567750899', 'diskSize': '0', 'jobId': '4553013',
-    # 'backupSetName': 'default', 'LastTime': '1567750899', 'jobType': 'Restore', 'agentType': 'Oracle Database',
-    # 'status': '运行', 'Level': 'UNKNOWN_BKP_LEVEL', 'appSize': '0'}]
-
+    # ret = cvAPI.getJobList(3)  # backup status
     # ret = cvAPI.getClientInfo(3)
-    # ret = cvAPI.getVMWareVMList()
+    # ret = cvAPI.getClientList()
 
     # print(ret)
-    # import json
+    import json
 
     # with open(r"C:\Users\Administrator\Desktop\ret.json", "w") as f:
     #     f.write(json.dumps(ret))
