@@ -37,6 +37,10 @@ $(document).ready(function () {
 
     $('#static1').on('show.bs.modal', function (e) {
         var el = e.relatedTarget;
+        var jQuery_el = $(el);
+        var agent = jQuery_el.parent().next().html();
+        $("#agent").val(agent);
+
         $("#sourceClient").val(el.innerText);
         var datatable = $("#backup_point").dataTable();
         datatable.fnClearTable(); //清空数据
@@ -115,6 +119,9 @@ $(document).ready(function () {
                         sourceClient: $('#sourceClient').val(),
                         destClient: $('#destClient').val(),
                         restoreTime: myrestoreTime,
+
+                        // 判断是oracle还是oracle rac
+                        agent: $("#agent").val()
                     },
                     success: function (data) {
                         alert(data);

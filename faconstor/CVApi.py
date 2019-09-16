@@ -2698,10 +2698,10 @@ class CV_Backupset(CV_Client):
         if operator != None:
             keys = operator.keys()
             if "restoreTime" not in keys:
-                self.msg = "operator - no userName"
+                self.msg = "operator - no restoreTime"
                 return jobId
             if "restorePath" not in keys:
-                self.msg = "operator - no user passwd"
+                self.msg = "operator - no restorePath"
                 return jobId
         else:
             self.msg = "param not set"
@@ -2942,6 +2942,84 @@ class CV_Backupset(CV_Client):
             root = ET.fromstring(restoreoracleXML)
         except:
             self.msg = "Error:parse xml: " + restoreoracleXML
+            return jobId
+
+        sourceClient = source
+        destClient = dest
+        # instance = operator["instanceName"]
+        restoreTime = operator["restoreTime"]
+        restorePath = operator["restorePath"]
+        try:
+            sourceclients = root.findall(".//associations/clientName")
+            for node in sourceclients:
+                node.text = sourceClient
+                break
+            destclients = root.findall(".//destClient/clientName")
+            for node in destclients:
+                node.text = destClient
+                break
+            sourceclients = root.findall(".//backupset/clientName")
+            for node in sourceclients:
+                node.text = sourceClient
+                break
+            instanceNames = root.findall(".//associations/instanceName")
+            for node in instanceNames:
+                node.text = instance
+                break
+            if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
+                timeRange = root.findall(".//timeRange")
+                for node in timeRange:
+                    toTimeValue = ET.Element('toTimeValue')
+                    toTimeValue.text = restoreTime
+                    node.append(toTimeValue)
+        except:
+            self.msg = "the file format is wrong"
+            return jobId
+
+        xmlString = ""
+        xmlString = ET.tostring(root, encoding='utf-8', method='xml')
+        if self.qCmd("QCommand/qoperation execute", xmlString):
+            try:
+                root = ET.fromstring(self.receiveText)
+            except:
+                self.msg = "unknown error" + self.receiveText
+                return jobId
+
+            nodes = root.findall(".//jobIds")
+            for node in nodes:
+                self.msg = "jobId is: " + node.attrib["val"]
+                jobId = int(node.attrib["val"])
+                return jobId
+            self.msg = "unknown error:" + self.receiveText
+        return jobId
+
+    def restoreOracleRacBackupset(self, source, dest, operator):
+        # param client is clientName or clientId 
+        # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
+        # return JobId 
+        # or -1 is error
+        jobId = -1
+        instance = self.backupsetInfo["instanceName"]
+        if operator != None:
+            keys = operator.keys()
+            if "restoreTime" not in keys:
+                self.msg = "operator - no restoreTime"
+                return jobId
+            if "restorePath" not in keys:
+                self.msg = "operator - no restorePath"
+                return jobId
+        else:
+            self.msg = "param not set"
+            return jobId
+
+        restoreoracleRacXML = '''
+        
+        '''
+
+        try:
+            root = ET.fromstring(restoreoracleRacXML)
+        except:
+            self.msg = "Error:parse xml: " + restoreoracleRacXML
             return jobId
 
         sourceClient = source
@@ -3383,6 +3461,25 @@ class CV_API(object):
         self.msg = sourceBackupset.msg
         return jobId
 
+    def restoreOracleRacBackupset(self, source, dest, instance, operator=None):
+        # param client is clientName or clientId 
+        # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
+        # return JobId
+        # or -1 is error
+
+        # print(client, backupset, credit, content)
+        sourceBackupset = CV_Backupset(self.token, source, "Oracle RAC", instance)
+        destBackupset = CV_Backupset(self.token, dest, "Oracle RAC", instance)
+        if sourceBackupset.getIsNewBackupset() == True:
+            self.msg = "there is not this oracle rac sid" + source
+            return False
+        if destBackupset.getIsNewBackupset() == True:
+            self.msg = "there is not this oracle rac sid" + dest
+            return False
+        jobId = sourceBackupset.restoreOracleRacBackupset(source, dest, operator)
+        self.msg = sourceBackupset.msg
+        return jobId
+
     def restoreMssqlBackupset(self, source, dest, instance, operator=None):
         # param client is clientName or clientId 
         # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
@@ -3590,6 +3687,7 @@ if __name__ == "__main__":
 
     operator = {"restoreTime":"", "restorePath":""}
     retCode = cvAPI.restoreOracleBackupset("win-2qls3b7jx3v.hzx", "win-2qls3b7jx3v.hzx", "ORCL", operator)
+    # retCode = cvAPI.restoreOracleRacBackupset("win-2qls3b7jx3v.hzx", "win-2qls3b7jx3v.hzx", "ORCL", operator)
     print(retCode, cvAPI.msg)
 
     # content = {"SPName":"SP-7DAYS", "Schdule":"FILE", "Paths":["c:\\", "E:\\"], "OS":True}

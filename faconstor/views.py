@@ -6303,7 +6303,7 @@ def client_manage(request, funid):
         for client in installed_client:
             sub_list = dm.get_installed_sub_clients_for_info(client["client_name"])
             for sub in sub_list:
-                if "Oracle Database" in sub["idataagent"]:
+                if "Oracle" in sub["idataagent"]:
                     oracle_client.append({
                         "client_name": client["client_name"],
                         "client_id": client["client_id"],
@@ -6452,7 +6452,7 @@ def manualrecoverydata(request):
                 "client_name": origin.client_name,
                 "client_id": origin.client_id,
                 "client_os": origin.os,
-                "model": "Oracle Database"
+                "model": json.loads(origin.info)["agent"]
             })
         return JsonResponse({"data": result})
     else:
@@ -6466,17 +6466,24 @@ def dooraclerecovery(request):
             destClient = request.POST.get('destClient', '')
             restoreTime = request.POST.get('restoreTime', '')
             instanceName = request.POST.get('instanceName', '')
-
+            agent = request.POST.get('agent', '')
             oraRestoreOperator = {"restoreTime": restoreTime, "restorePath": None}
-            # 暂时卡主恢复任务
-            return HttpResponse("oracle恢复接口问题.")
+
             cvToken = CV_RestApi_Token()
             cvToken.login(info)
             cvAPI = CV_API(cvToken)
-            if cvAPI.restoreOracleBackupset(sourceClient, destClient, instanceName, oraRestoreOperator):
-                return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
+            if agent.upper() == "ORACLE DATABASE":
+                if cvAPI.restoreOracleBackupset(sourceClient, destClient, instanceName, oraRestoreOperator):
+                    return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
+                else:
+                    return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
+            elif agent.upper() == "ORACLE RAC":
+                if cvAPI.restoreOracleRacBackupset(sourceClient, destClient, instanceName, oraRestoreOperator):
+                    return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
+                else:
+                    return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
             else:
-                return HttpResponse(u"恢复任务启动失败。" + cvAPI.msg)
+                return HttpResponse("无当前模块，恢复任务启动失败。")
         else:
             return HttpResponse("恢复任务启动失败。")
 
