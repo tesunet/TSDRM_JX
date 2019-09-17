@@ -3613,7 +3613,7 @@ class CV_API(object):
 
 
 if __name__ == "__main__":
-    def run(origin, target, instance, recover_ymd, recover_hms):
+    def run(origin, target, instance, recover_ymd=None, recover_hms=None):
         import pymysql.cursors
         from xml.dom.minidom import parse, parseString
 
@@ -3674,7 +3674,10 @@ if __name__ == "__main__":
         cvToken = CV_RestApi_Token()
         cvToken.login(info)
         cvAPI = CV_API(cvToken)
-        recover_time = datetime.strptime(recover_ymd + " " + recover_hms, "%Y-%m-%d %H:%M:%S")
+
+        recover_time = None
+        if recover_ymd and recover_hms:
+            recover_time = datetime.strptime(recover_ymd + " " + recover_hms, "%Y-%m-%d %H:%M:%S")
         jobId = cvAPI.restoreOracleBackupset(origin, target, instance,
                                              {'restorePath': None, 'restoreTime': recover_time})
 
@@ -3701,6 +3704,9 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 6:
         ret = run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        print("commvault api executes succeed.")
+    elif len(sys.argv) == 4:
+        ret = run(sys.argv[1], sys.argv[2], sys.argv[3])
         print("commvault api executes succeed.")
     else:
         exit(1)
