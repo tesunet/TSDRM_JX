@@ -4119,7 +4119,6 @@ if __name__ == "__main__":
 
                 recovery_sql = """SELECT recover_time, browse_job_id FROM js_tesudrm.faconstor_processrun
                                   WHERE state!='9' AND id={0};""".format(processrun_id)
-                print(recovery_sql)
                 cursor.execute(recovery_sql)
                 recovery_result = cursor.fetchone()
         except:
