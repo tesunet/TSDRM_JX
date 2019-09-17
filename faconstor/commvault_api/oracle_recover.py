@@ -20,10 +20,6 @@ except:
     import urllib
 
 
-# __platform__ = {"platform":None, "ProcessorType":0, "hostName":None}
-# __clientInfo__ = {"clientName":None, "clientId":None, "platform":self.platform, "backupsetList":[], "agentList":[]}
-
-
 class CV_RestApi_Token(object):
     """
     Class documentation goes here.
@@ -1237,8 +1233,8 @@ class CV_Backupset(CV_Client):
                         self.isNewBackupset = False
                         return self.backupsetInfo
                 else:
-                    if node["instanceName"].upper() == backupset.upper() and agentType.upper() in node[
-                        "agentType"].upper():
+                    if node["instanceName"].upper() == backupset.upper() and node[
+                        "agentType"].upper() in agentType.upper():
                         self.backupsetInfo = node
                         self.isNewBackupset = False
                         return self.backupsetInfo
@@ -2699,10 +2695,10 @@ class CV_Backupset(CV_Client):
         if operator != None:
             keys = operator.keys()
             if "restoreTime" not in keys:
-                self.msg = "operator - no userName"
+                self.msg = "operator - no restoreTime"
                 return jobId
             if "restorePath" not in keys:
-                self.msg = "operator - no user passwd"
+                self.msg = "operator - no restorePath"
                 return jobId
         else:
             self.msg = "param not set"
@@ -2943,6 +2939,84 @@ class CV_Backupset(CV_Client):
             root = ET.fromstring(restoreoracleXML)
         except:
             self.msg = "Error:parse xml: " + restoreoracleXML
+            return jobId
+
+        sourceClient = source
+        destClient = dest
+        # instance = operator["instanceName"]
+        restoreTime = operator["restoreTime"]
+        restorePath = operator["restorePath"]
+        try:
+            sourceclients = root.findall(".//associations/clientName")
+            for node in sourceclients:
+                node.text = sourceClient
+                break
+            destclients = root.findall(".//destClient/clientName")
+            for node in destclients:
+                node.text = destClient
+                break
+            sourceclients = root.findall(".//backupset/clientName")
+            for node in sourceclients:
+                node.text = sourceClient
+                break
+            instanceNames = root.findall(".//associations/instanceName")
+            for node in instanceNames:
+                node.text = instance
+                break
+            if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
+                timeRange = root.findall(".//timeRange")
+                for node in timeRange:
+                    toTimeValue = ET.Element('toTimeValue')
+                    toTimeValue.text = restoreTime
+                    node.append(toTimeValue)
+        except:
+            self.msg = "the file format is wrong"
+            return jobId
+
+        xmlString = ""
+        xmlString = ET.tostring(root, encoding='utf-8', method='xml')
+        if self.qCmd("QCommand/qoperation execute", xmlString):
+            try:
+                root = ET.fromstring(self.receiveText)
+            except:
+                self.msg = "unknown error" + self.receiveText
+                return jobId
+
+            nodes = root.findall(".//jobIds")
+            for node in nodes:
+                self.msg = "jobId is: " + node.attrib["val"]
+                jobId = int(node.attrib["val"])
+                return jobId
+            self.msg = "unknown error:" + self.receiveText
+        return jobId
+
+    def restoreOracleRacBackupset(self, source, dest, operator):
+        # param client is clientName or clientId
+        # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
+        # return JobId
+        # or -1 is error
+        jobId = -1
+        instance = self.backupsetInfo["instanceName"]
+        if operator != None:
+            keys = operator.keys()
+            if "restoreTime" not in keys:
+                self.msg = "operator - no restoreTime"
+                return jobId
+            if "restorePath" not in keys:
+                self.msg = "operator - no restorePath"
+                return jobId
+        else:
+            self.msg = "param not set"
+            return jobId
+
+        restoreoracleRacXML = '''
+
+        '''
+
+        try:
+            root = ET.fromstring(restoreoracleRacXML)
+        except:
+            self.msg = "Error:parse xml: " + restoreoracleRacXML
             return jobId
 
         sourceClient = source
@@ -3384,6 +3458,25 @@ class CV_API(object):
         self.msg = sourceBackupset.msg
         return jobId
 
+    def restoreOracleRacBackupset(self, source, dest, instance, operator=None):
+        # param client is clientName or clientId
+        # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
+        # return JobId
+        # or -1 is error
+
+        # print(client, backupset, credit, content)
+        sourceBackupset = CV_Backupset(self.token, source, "Oracle RAC", instance)
+        destBackupset = CV_Backupset(self.token, dest, "Oracle RAC", instance)
+        if sourceBackupset.getIsNewBackupset() == True:
+            self.msg = "there is not this oracle rac sid" + source
+            return False
+        if destBackupset.getIsNewBackupset() == True:
+            self.msg = "there is not this oracle rac sid" + dest
+            return False
+        jobId = sourceBackupset.restoreOracleRacBackupset(source, dest, operator)
+        self.msg = sourceBackupset.msg
+        return jobId
+
     def restoreMssqlBackupset(self, source, dest, instance, operator=None):
         # param client is clientName or clientId
         # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
@@ -3521,9 +3614,63 @@ class CV_API(object):
 
 if __name__ == "__main__":
     def run(origin, target, instance, recover_ymd, recover_hms):
-        info = {"webaddr": "192.168.100.149", "port": "81", "username": "admin", "passwd": "Admin@2017", "token": "",
-                "lastlogin": 0}
+        import pymysql.cursors
+        from xml.dom.minidom import parse, parseString
 
+        db_host = '192.168.100.154'
+        db_name = "js_tesudrm"
+        db_user = "root"
+        db_password = "password"
+
+        # commvault账户
+        connection = pymysql.connect(host=db_host,
+                                     user=db_user,
+                                     password=db_password,
+                                     db=db_name,
+                                     charset='utf8mb4',
+                                     cursorclass=pymysql.cursors.DictCursor)
+
+        result = {}
+        try:
+            with connection.cursor() as cursor:
+                # Read a single record
+                sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
+                cursor.execute(sql)
+                result = cursor.fetchone()
+        finally:
+            connection.close()
+
+        webaddr = ""
+        port = ""
+        usernm = ""
+        passwd = ""
+        if result:
+            doc = parseString(result["content"])
+            try:
+                webaddr = (doc.getElementsByTagName("webaddr"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                port = (doc.getElementsByTagName("port"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                usernm = (doc.getElementsByTagName("username"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                passwd = (doc.getElementsByTagName("passwd"))[0].childNodes[0].data
+            except:
+                pass
+
+        info = {
+            "web_addr": webaddr,
+            "port": port,
+            "username": usernm,
+            "pass_wd": passwd,
+            "token": "",
+            "last_login": 0
+        }
         cvToken = CV_RestApi_Token()
         cvToken.login(info)
         cvAPI = CV_API(cvToken)
@@ -3543,18 +3690,18 @@ if __name__ == "__main__":
         #                     print("恢复成功。")
         #                     break
 
-            # 测试
-            # ret = cvAPI.getJobList(3)
-            #  {'LastTime': '1563368513', 'StartTime': '1563368416', 'diskSize': '0', 'jobType': 'Backup', 'jobId': '4552172', 'backupSetName': 'default', 'status': 'Completed', 'Level': 'FULL', 'agentType': 'Oracle', 'appS
-            # ize': '210763776', 'client': 'win-2qls3b7jx3v.hzx'}
-            # return ret
+        # 测试
+        # ret = cvAPI.getJobList(3)
+        #  {'LastTime': '1563368513', 'StartTime': '1563368416', 'diskSize': '0', 'jobType': 'Backup', 'jobId': '4552172', 'backupSetName': 'default', 'status': 'Completed', 'Level': 'FULL', 'agentType': 'Oracle', 'appS
+        # ize': '210763776', 'client': 'win-2qls3b7jx3v.hzx'}
+        # return ret
 
-        ret = cvAPI.getJobList(3)
         return ret
+
 
     if len(sys.argv) == 6:
         ret = run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
-        print(ret)
+        print("commvault api executes succeed.")
     else:
         exit(1)
 
