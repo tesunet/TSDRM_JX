@@ -122,6 +122,7 @@
                     <input hidden id="id" type="text" name="id">
                     <input hidden id="processid" type="text" name="processid">
                     <input hidden id="planprocessrunid" type="text" name="planprocessrunid">
+                    <input hidden id="browseJobId" type="text" name="browseJobId">
 
                 </div>
                 <div class="panel-body">
@@ -291,11 +292,14 @@
                     <form class="bs-example form-horizontal activate-form">{% csrf_token %}
 
                         <div class="form-body">
+                            <input hidden id="browseJobIdInvited" type="text" name="browseJobIdInvited">
+
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>启动人</label>
                                 <div class="col-md-10">
-                                    <input id="runperson_invited" type="text" name="runperson_invited" class="form-control "
+                                    <input id="runperson_invited" type="text" name="runperson_invited"
+                                           class="form-control "
                                            placeholder="" value="{{ request.user.userinfo.fullname }}" readonly>
 
                                     <div class="form-control-focus"></div>

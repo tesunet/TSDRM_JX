@@ -88,6 +88,7 @@ $(document).ready(function () {
             $("input[name='optionsRadios'][value='2']").prop("checked", true);
 
             $("#ora_instance").val(data.instance);
+            $("#browseJobId").val(data.jobId);
         });
 
         $("#recovery_time_redio_group").click(function () {
@@ -108,9 +109,10 @@ $(document).ready(function () {
             if ($('#destClient').val() == "")
                 alert("请选择目标客户端。");
             else {
-                var myrestoreTime = ""
-                if ($("input[name='optionsRadios']:checked").val() == "2" && $('#datetimepicker').val() != "")
-                    myrestoreTime = $('#datetimepicker').val()
+                var myrestoreTime = "";
+                if ($("input[name='optionsRadios']:checked").val() == "2" && $('#datetimepicker').val() != ""){
+                    myrestoreTime = $('#datetimepicker').val();
+                }
                 $.ajax({
                     type: "POST",
                     url: "../../dooraclerecovery/",
@@ -119,7 +121,7 @@ $(document).ready(function () {
                         sourceClient: $('#sourceClient').val(),
                         destClient: $('#destClient').val(),
                         restoreTime: myrestoreTime,
-
+                        browseJobId: $("#browseJobId").val(),
                         // 判断是oracle还是oracle rac
                         agent: $("#agent").val()
                     },

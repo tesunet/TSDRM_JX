@@ -362,9 +362,7 @@ def runstep(steprun, if_repeat=False):
                     if oracle_info:
                         instance = oracle_info["instance"]
 
-                    oracle_param = "%s %s %s" % (origin, target, instance)
-                    if recover_time:
-                        oracle_param = "%s %s %s %s" % (origin, target, instance, "{0}".format(recover_time.strftime("%Y-%m-%d %H:%M:%S")))
+                    oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
 
                     try:
                         ret = os.system(commvault_api_path + " %s" % oracle_param)

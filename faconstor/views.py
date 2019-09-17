@@ -3232,6 +3232,7 @@ def falconstorrun(request):
 
         target = request.POST.get('target', '')
         recovery_time = request.POST.get('recovery_time', '')
+        browseJobId = request.POST.get('browseJobId', '')
 
         try:
             processid = int(processid)
@@ -3262,6 +3263,7 @@ def falconstorrun(request):
                     myprocessrun.run_reason = run_reason
                     myprocessrun.state = "RUN"
                     myprocessrun.target_id = target
+                    myprocessrun.browse_job_id = browseJobId
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
                     # print("processid:{0}, run_reason:{1}, target:{2}, recovery_time:{3}".format(processid, run_reason,
@@ -3356,6 +3358,7 @@ def falconstor_run_invited(request):
 
         target = request.POST.get('target', '')
         recovery_time = request.POST.get('recovery_time', '')
+        browseJobId = request.POST.get('browseJobId', '')
 
         if current_process_run:
             current_process_run = current_process_run[0]
@@ -3370,6 +3373,7 @@ def falconstor_run_invited(request):
                 current_process_run.target_id = target
                 current_process_run.recover_time = datetime.datetime.strptime(recovery_time,
                                                                               "%Y-%m-%d %H:%M:%S") if recovery_time else None
+                current_process_run.browse_job_id = browseJobId
 
                 current_process_run.save()
 
@@ -6466,8 +6470,9 @@ def dooraclerecovery(request):
             destClient = request.POST.get('destClient', '')
             restoreTime = request.POST.get('restoreTime', '')
             instanceName = request.POST.get('instanceName', '')
+            browseJobId = request.POST.get('browseJobId', '')
             agent = request.POST.get('agent', '')
-            oraRestoreOperator = {"restoreTime": restoreTime, "restorePath": None}
+            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None}
 
             cvToken = CV_RestApi_Token()
             cvToken.login(info)
@@ -6478,6 +6483,7 @@ def dooraclerecovery(request):
                 else:
                     return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
             elif agent.upper() == "ORACLE RAC":
+                oraRestoreOperator["browseJobId"] = browseJobId
                 if cvAPI.restoreOracleRacBackupset(sourceClient, destClient, instanceName, oraRestoreOperator):
                     return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
                 else:

@@ -124,6 +124,7 @@ class ProcessRun(models.Model):
     note = models.CharField("记录", blank=True, null=True, max_length=5000)
     target = models.ForeignKey(Target, blank=True, null=True, verbose_name="oracle恢复流程指定目标客户端")
     recover_time = models.DateTimeField("指定恢复时间点", blank=True, null=True)
+    browse_job_id = models.CharField("指点时间点的备份任务id", blank=True, null=True, max_length=50)
 
 
 class StepRun(models.Model):
@@ -212,5 +213,3 @@ class ClientManage(models.Model):
     client_os = models.CharField("操作系统", blank=True, null=True, max_length=64)
     install_time = models.DateTimeField("安装时间", blank=True, null=True)
     state = models.CharField("状态", blank=True, null=True, max_length=20)
-
-
