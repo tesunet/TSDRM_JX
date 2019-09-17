@@ -28,7 +28,7 @@ $(document).ready(function () {
             "columnDefs": [{
                 "targets": 1,
                 "render": function (data, type, full) {
-                    return "<td><a href='process_url' target='_blank'>data</a></td>".replace("data", full.process_name).replace("process_url", "/processindex/" + full.processrun_id + "?s=true")
+                    return full.state != "计划" ? "<td><a href='process_url' target='_blank'>data</a></td>".replace("data", full.process_name).replace("process_url", "/processindex/" + full.processrun_id + "?s=true") : "<td>" + full.process_name + "</td>"
                 }
             }, {
                 "visible": false,
@@ -256,7 +256,7 @@ $(document).ready(function () {
                     $("#static01").modal("hide");
                     // $("#sample_1").DataTable().destroy();
                     // customProcessDataTable();
-                    window.location.href = "/"
+                    // window.location.href = "/"
                 } else
                     alert(data["res"]);
             }
