@@ -14,6 +14,7 @@ import os
 from TSDRM import settings
 import json
 from .api import SQLApi
+import subprocess
 
 
 def is_connection_usable():
@@ -365,18 +366,19 @@ def runstep(steprun, if_repeat=False):
 
                     oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
                     try:
-                        ret = os.system(commvault_api_path + " %s" % oracle_param)
+                        ret = subprocess.getstatusoutput(commvault_api_path + " %s" % oracle_param)
+                        exec_status, recover_job_id = ret
+
                     except Exception as e:
                         result["exec_tag"] = 1
                         result["data"] = "执行commvault接口出现异常{0}。".format(e)
                         result["log"] = "执行commvault接口出现异常{0}。".format(e)
                     else:
-                        print(ret, type(ret))
-                        if ret == 0:
+                        if exec_status == 0:
                             result["exec_tag"] = 0
                             result["data"] = "调用commvault接口成功。"
                             result["log"] = "调用commvault接口成功。"
-                        elif ret == 1:
+                        elif exec_status == 1:
                             result["exec_tag"] = 1
                             result["data"] = "调用commvault接口错误。"
                             result["log"] = "调用commvault接口错误。"
@@ -385,12 +387,11 @@ def runstep(steprun, if_repeat=False):
                             # ret=2时，查看任务错误信息写入日志    #
                             # Oracle恢复出错                      #
                             #######################################
-                            recover_job_id = processrun.recover_job_id
 
                             # 查看Oracle恢复错误信息
                             dm = SQLApi.CustomFilter(settings.sql_credit)
                             job_controller = dm.get_job_controller()
-                            print(job_controller)
+
                             recover_error = ""
 
                             for jc in job_controller:

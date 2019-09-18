@@ -2354,7 +2354,6 @@ class CV_Backupset(CV_Client):
                 child = ET.Element('sourceItem')
                 child.text = '\\'
                 parent[0].append(child)
-            print(restoreTime)
             if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
                 timeRange = root.findall(".//timeRange")
                 for node in timeRange:
@@ -4087,6 +4086,7 @@ class CV_API(object):
         self.msg = info.msg
         return list
 
+
 if __name__ == '__main__':
     class DoMysql(object):
         # 初始化
@@ -4200,23 +4200,14 @@ if __name__ == '__main__':
         cvToken = CV_RestApi_Token()
         cvToken.login(info)
         cvAPI = CV_API(cvToken)
-        ret = cvAPI.getJobList("oracle_rac", type="restore")
 
-        # jobId = cvAPI.restoreOracleRacBackupset(origin, target, instance,
-        #                                         {'browseJobId': browse_job_id, 'restoreTime': recover_time})
+        jobId = cvAPI.restoreOracleRacBackupset(origin, target, instance,
+                                                {'browseJobId': browse_job_id, 'restoreTime': recover_time})
 
-        jobId = 4553295
+        # jobId = 4553295
         if jobId == -1:
             exit(1)
         else:
-            #############################################
-            # 将恢复流程ID写入流程中，用来查看任务错误信息#
-            #   任务执行失败，任务竟然会回滚？           #
-            #############################################
-            update_sql = "UPDATE js_tesudrm.faconstor_processrun SET recover_job_id='{0}' WHERE id={1} AND state!='9';".format(
-                jobId, int(processrun_id))
-            db.update(update_sql)
-
             while True:
                 ret = cvAPI.getJobList(origin, type="restore")
                 for i in ret:
@@ -4227,11 +4218,16 @@ if __name__ == '__main__':
                             exit(0)
                         else:
                             # oracle恢复出现异常
+                            #################################
+                            # 程序中不要出现其他print()      #
+                            # print()将会作为输出被服务器获取#
+                            #################################
+                            print(jobId)
                             exit(2)
                 time.sleep(4)
+
 
     if len(sys.argv) == 5:
         run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     else:
         exit(1)
-

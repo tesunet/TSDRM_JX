@@ -1,17 +1,15 @@
-import json
 import sys
-import os
 import requests
 import time
 import copy
-import subprocess
 from datetime import datetime
+import pymysql
+from xml.dom.minidom import parse, parseString
 
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
-from xml.etree.ElementTree import Element
 import base64
 
 try:
@@ -436,18 +434,18 @@ class CV_GetAllInformation(CV_RestApi):
             # print(node.attrib)
             if appTypeName != None:
                 if appTypeName not in node.attrib["appTypeName"]:
-                    continue;
+                    continue
             if backupsetName != None:
                 if backupsetName not in node.attrib["backupSetName"]:
-                    continue;
+                    continue
             if subclientName != None:
                 if subclientName not in node.attrib["subclientName"]:
-                    continue;
+                    continue
             status = node.attrib["status"]
-            try:
-                node.attrib["status"] = statusList[status]
-            except:
-                node.attrib["status"] = status
+            # try:
+            #     node.attrib["status"] = statusList[status]
+            # except:
+            node.attrib["status"] = status
             self.jobList.append(node.attrib)
         return self.jobList
 
@@ -2356,7 +2354,6 @@ class CV_Backupset(CV_Client):
                 child = ET.Element('sourceItem')
                 child.text = '\\'
                 parent[0].append(child)
-            print(restoreTime)
             if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
                 timeRange = root.findall(".//timeRange")
                 for node in timeRange:
@@ -4090,41 +4087,80 @@ class CV_API(object):
         return list
 
 
-if __name__ == "__main__":
-    def run(origin, target, instance, processrun_id):
-        import pymysql.cursors
-        from xml.dom.minidom import parse, parseString
+if __name__ == '__main__':
+    class DoMysql(object):
+        # 初始化
+        def __init__(self, host, user, password, db):
+            # 创建连接
+            self.conn = pymysql.Connect(
+                host=host,
+                port=3306,
+                user=user,
+                password=password,
+                db=db,
+                charset='utf8',
+                cursorclass=pymysql.cursors.DictCursor  # 以字典的形式返回数据
+            )
+            # 获取游标
+            self.cursor = self.conn.cursor()
 
+        # 返回多条数据
+        def fetchAll(self, sql):
+            self.cursor.execute(sql)
+            return self.cursor.fetchall()
+
+        # 返回一条数据
+        def fetchOne(self, sql):
+            self.cursor.execute(sql)
+            return self.cursor.fetchone()
+
+        # 插入一条数据
+        def insert_one(self, sql):
+            result = self.cursor.execute(sql)
+            self.conn.commit()
+            return result
+
+        # 插入多条数据
+        def insert_many(self, sql, datas):
+            result = self.cursor.executemany(sql, datas)
+            self.conn.commit()
+            return result
+
+        # 更新数据
+        def update(self, sql):
+            result = self.cursor.execute(sql)
+            self.conn.commit()
+            return result
+
+        # 关闭连接
+        def close(self):
+            self.cursor.close()
+            self.conn.close()
+
+
+    def run(origin, target, instance, processrun_id):
+        #################
+        # 数据库认证信息 #
+        #################
         db_host = '192.168.100.154'
         db_name = "js_tesudrm"
         db_user = "root"
         db_password = "password"
 
-        # commvault账户
-        connection = pymysql.connect(host=db_host,
-                                     user=db_user,
-                                     password=db_password,
-                                     db=db_name,
-                                     charset='utf8mb4',
-                                     cursorclass=pymysql.cursors.DictCursor)
+        db = DoMysql(db_host, db_user, db_password, db_name)
 
         credit_result = {}
         recovery_result = {}
-        try:
-            with connection.cursor() as cursor:
-                # Read a single record
-                credit_sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
-                cursor.execute(credit_sql)
-                credit_result = cursor.fetchone()
 
-                recovery_sql = """SELECT recover_time, browse_job_id FROM js_tesudrm.faconstor_processrun
-                                  WHERE state!='9' AND id={0};""".format(processrun_id)
-                cursor.execute(recovery_sql)
-                recovery_result = cursor.fetchone()
+        credit_sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
+        recovery_sql = """SELECT recover_time, browse_job_id FROM js_tesudrm.faconstor_processrun
+                          WHERE state!='9' AND id={0};""".format(processrun_id)
+
+        try:
+            credit_result = db.fetchOne(credit_sql)
+            recovery_result = db.fetchOne(recovery_sql)
         except:
-            exit(2)
-        finally:
-            connection.close()
+            pass
 
         recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"]) if recovery_result else ""
         browse_job_id = recovery_result["browse_job_id"] if recovery_result else ""
@@ -4153,39 +4189,45 @@ if __name__ == "__main__":
                 pass
 
         info = {
-            "web_addr": webaddr,
+            "webaddr": webaddr,
             "port": port,
             "username": usernm,
-            "pass_wd": passwd,
+            "passwd": passwd,
             "token": "",
             "last_login": 0
         }
+
         cvToken = CV_RestApi_Token()
         cvToken.login(info)
         cvAPI = CV_API(cvToken)
 
         jobId = cvAPI.restoreOracleBackupset(origin, target, instance,
-                                             {'browseJobId': browse_job_id, 'restoreTime': recover_time})
-        ret = ""
-        # if jobId == -1:
-        #     exit(1)
-        # else:
-        #     while True:
-        #         time.sleep(5)
-        #         ret = cvAPI.getJobList(origin, type="restore")
-        #         for i in ret:
-        #             if str(i["jobId"]) == str(jobId):
-        #                 if status == "完成":
-        #                     print("恢复成功。")
-        #                     break
+                                                {'browseJobId': browse_job_id, 'restoreTime': recover_time})
 
-        return ret
+        # jobId = 4553295
+        if jobId == -1:
+            exit(1)
+        else:
+            while True:
+                ret = cvAPI.getJobList(origin, type="restore")
+                for i in ret:
+                    if str(i["jobId"]) == str(jobId):
+                        if i['status'].upper() in ['RUNNING', 'WAITING']:
+                            continue
+                        elif i['status'].upper() == 'COMPLETED':
+                            exit(0)
+                        else:
+                            # oracle恢复出现异常
+                            #################################
+                            # 程序中不要出现其他print()      #
+                            # print()将会作为输出被服务器获取#
+                            #################################
+                            print(jobId)
+                            exit(2)
+                time.sleep(4)
 
 
     if len(sys.argv) == 5:
-        ret = run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-        print("commvault api executes succeed.")
+        run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     else:
         exit(1)
-
-    # 检测恢复进度
