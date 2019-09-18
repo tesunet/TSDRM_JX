@@ -400,7 +400,7 @@ class CV_GetAllInformation(CV_RestApi):
 
     def getJobList(self, clientId, type="backup", appTypeName=None, backupsetName=None, subclientName=None, start=None,
                    end=None):
-        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "commpleted": "完成",
+        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "未决", "Suspend": "终止", "commpleted": "完成",
                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉"}
         '''
         Running
@@ -441,13 +441,13 @@ class CV_GetAllInformation(CV_RestApi):
             # print(node.attrib)
             if appTypeName != None:
                 if appTypeName not in node.attrib["appTypeName"]:
-                    continue;
+                    continue
             if backupsetName != None:
                 if backupsetName not in node.attrib["backupSetName"]:
-                    continue;
+                    continue
             if subclientName != None:
                 if subclientName not in node.attrib["subclientName"]:
-                    continue;
+                    continue
             status = node.attrib["status"]
             try:
                 node.attrib["status"] = statusList[status]
@@ -4107,11 +4107,11 @@ if __name__ == "__main__":
     cvToken.login(info)
     cvAPI = CV_API(cvToken)
 
-    # ret = cvAPI.getJobList(3, type="restore")  # backup status
+    ret = cvAPI.getJobList("oracle_rac", type="restore")  # backup status
     # ret = cvAPI.getClientInfo(3)
     # ret = cvAPI.getClientList()
 
-    # print(ret)
+    print(ret)
     import json
 
     # with open(r"C:\Users\Administrator\Desktop\ret.json", "w") as f:
@@ -4164,10 +4164,10 @@ if __name__ == "__main__":
     # retCode = cvAPI.setOracleBackupset("win64-db1", "ORCL", credit, content)
     # print(retCode, cvAPI.msg)
 
-    operator = {"restoreTime": "", "browseJobId": ""}
-    retCode = cvAPI.restoreOracleBackupset("win-2qls3b7jx3v.hzx", "win-2qls3b7jx3v.hzx", "ORCL", operator)
-    # retCode = cvAPI.restoreOracleRacBackupset("win-2qls3b7jx3v.hzx", "win-2qls3b7jx3v.hzx", "ORCL", operator)
-    print(retCode, cvAPI.msg)
+    # operator = {"restoreTime": "", "browseJobId": ""}
+    # retCode = cvAPI.restoreOracleBackupset("win-2qls3b7jx3v.hzx", "win-2qls3b7jx3v.hzx", "ORCL", operator)
+    # # retCode = cvAPI.restoreOracleRacBackupset("win-2qls3b7jx3v.hzx", "win-2qls3b7jx3v.hzx", "ORCL", operator)
+    # print(retCode, cvAPI.msg)
 
     # content = {"SPName":"SP-7DAYS", "Schdule":"FILE", "Paths":["c:\\", "E:\\"], "OS":True}
     # retCode = cvAPI.setFSBackupset("win64-db1", "newTest", content)

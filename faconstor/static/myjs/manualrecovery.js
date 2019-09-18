@@ -127,6 +127,7 @@ $(document).ready(function () {
                     },
                     success: function (data) {
                         alert(data);
+                        $("#static1").modal("hide");
                     },
                     error: function (e) {
                         alert("恢复失败，请于客服联系。");

@@ -13,6 +13,7 @@ import paramiko
 import os
 from TSDRM import settings
 import json
+from .api import SQLApi
 
 
 def is_connection_usable():
@@ -363,7 +364,6 @@ def runstep(steprun, if_repeat=False):
                         instance = oracle_info["instance"]
 
                     oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
-
                     try:
                         ret = os.system(commvault_api_path + " %s" % oracle_param)
                     except Exception as e:
@@ -371,23 +371,47 @@ def runstep(steprun, if_repeat=False):
                         result["data"] = "执行commvault接口出现异常{0}。".format(e)
                         result["log"] = "执行commvault接口出现异常{0}。".format(e)
                     else:
+                        print(ret, type(ret))
                         if ret == 0:
                             result["exec_tag"] = 0
-                            result["data"] = "执行commvault接口成功。"
-                            result["log"] = "执行commvault接口成功。"
-                        else:
+                            result["data"] = "调用commvault接口成功。"
+                            result["log"] = "调用commvault接口成功。"
+                        elif ret == 1:
                             result["exec_tag"] = 1
-                            result["data"] = "执行commvault接口错误。"
-                            result["log"] = "执行commvault接口错误。"
+                            result["data"] = "调用commvault接口错误。"
+                            result["log"] = "调用commvault接口错误。"
+                        else:
+                            #######################################
+                            # ret=2时，查看任务错误信息写入日志    #
+                            # Oracle恢复出错                      #
+                            #######################################
+                            recover_job_id = processrun.recover_job_id
+
+                            # 查看Oracle恢复错误信息
+                            dm = SQLApi.CustomFilter(settings.sql_credit)
+                            job_controller = dm.get_job_controller()
+                            print(job_controller)
+                            recover_error = ""
+
+                            for jc in job_controller:
+                                print(recover_job_id, jc["jobID"])
+                                if str(recover_job_id) == str(jc["jobID"]):
+                                    recover_error = jc["delayReason"]
+                                    break
+
+                            result["exec_tag"] = 2
+                            # 查看任务错误信息写入>>result["data"]
+                            result["data"] = recover_error
+                            result["log"] = "Oracle恢复出错。"
 
                 script.endtime = datetime.datetime.now()
                 script.result = result['exec_tag']
                 script.explain = result['data'] if len(result['data']) <= 5000 else result['data'][-4999:]
 
-                # 处理脚本执行失败问题
+                # 处理接口调用执行失败问题
                 if result["exec_tag"] == 1:
                     script.runlog = result['log']  # 写入错误类型
-                    print("当前脚本执行失败,结束任务!")
+                    print("当前接口执行失败,结束任务!")
                     script.state = "ERROR"
                     script.save()
                     steprun.state = "ERROR"
@@ -401,7 +425,28 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.receiveauth = steprun.step.group
                     myprocesstask.type = "ERROR"
                     myprocesstask.state = "0"
-                    myprocesstask.content = "脚本" + script_name + "执行错误，请处理。"
+                    myprocesstask.content = "接口" + script_name + "调用执行错误，请处理。"
+                    myprocesstask.steprun_id = steprun.id
+                    myprocesstask.save()
+                    return 0
+                # Oracle恢复失败问题
+                if result["exec_tag"] == 2:
+                    script.runlog = result['log']  # 写入错误类型
+                    print("Oracle恢复失败,结束任务!")
+                    script.state = "ERROR"
+                    script.save()
+                    steprun.state = "ERROR"
+                    steprun.save()
+
+                    script_name = script.script.name if script.script.name else ""
+                    myprocesstask = ProcessTask()
+                    myprocesstask.processrun = steprun.processrun
+                    myprocesstask.starttime = datetime.datetime.now()
+                    myprocesstask.senduser = steprun.processrun.creatuser
+                    myprocesstask.receiveauth = steprun.step.group
+                    myprocesstask.type = "ERROR"
+                    myprocesstask.state = "0"
+                    myprocesstask.content = "接口" + script_name + "调用过程中，Oracle恢复失败。"
                     myprocesstask.steprun_id = steprun.id
                     myprocesstask.save()
                     return 0

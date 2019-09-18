@@ -3896,7 +3896,10 @@ def get_script_log(request):
         try:
             script_run_id = int(script_run_id)
         except:
-            raise Http404()
+            return JsonResponse({
+                "res": "0",
+                "log_info": "网络错误导致的脚本信息获取失败。",
+            })
 
         current_script_run = ScriptRun.objects.filter(id=script_run_id).select_related("script")
         log_info = ""
@@ -3923,7 +3926,7 @@ def get_script_log(request):
             base_data = result["data"]
 
             if result["exec_tag"] == "1":
-                res = 0
+                res = "0"
                 data = "{0} 导致获取日志信息失败！".format(base_data)
             else:
                 res = "1"
@@ -5606,7 +5609,10 @@ def target(request, funid):
         tmp_client_manage = [tmp_client.client_name for tmp_client in all_client_manage]
 
         oracle_data_list = []
+        pre_od_name = ""
         for od in oracle_data:
+            if od["clientname"] == pre_od_name:
+                continue
             if od["clientname"] in tmp_client_manage:
                 cur_client = ClientManage.objects.exclude(state="9").filter(client_name=od["clientname"])
                 os = ""
@@ -5619,6 +5625,9 @@ def target(request, funid):
                     "instance": od["instance"],
                     "os": os
                 })
+
+                # 去重
+                pre_od_name = od["clientname"]
 
         return render(request, 'target.html',
                       {'username': request.user.userinfo.fullname,
@@ -5766,7 +5775,10 @@ def origin(request, funid):
         tmp_client_manage = [tmp_client.client_name for tmp_client in all_client_manage]
 
         oracle_data_list = []
+        pre_od_name = ""
         for od in oracle_data:
+            if od["clientname"] == pre_od_name:
+                continue
             cur_client = ClientManage.objects.exclude(state="9").filter(client_name=od["clientname"])
             os = ""
             if cur_client:
@@ -5779,6 +5791,9 @@ def origin(request, funid):
                     "instance": od["instance"],
                     "os": os
                 })
+
+                # 去重
+                pre_od_name = od["clientname"]
 
         # 所有关联终端
         all_target = Target.objects.exclude(state="9")
@@ -6473,6 +6488,7 @@ def dooraclerecovery(request):
             browseJobId = request.POST.get('browseJobId', '')
             agent = request.POST.get('agent', '')
             oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None}
+
 
             cvToken = CV_RestApi_Token()
             cvToken.login(info)

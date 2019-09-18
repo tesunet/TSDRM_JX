@@ -474,10 +474,10 @@ class CVApi(DataMonitor):
         return vm_backup_content_list
 
     def get_instance_from_oracle(self):
-        instance_sql = """SELECT DISTINCT([clientname]),[idataagent],[instance], [clientid]
+        instance_sql = """SELECT DISTINCT [clientname],[idataagent],[instance], [clientid]
                           FROM [commserv].[dbo].[CommCellSubClientConfig]
-                          WHERE [idataagentstatus] = 'installed' AND [data_sp]!='not assigned' AND [instance] IS NOT NULL
-                          AND [idataagent]='Oracle Database';"""
+                          WHERE [idataagentstatus] = 'installed' AND [instance] IS NOT NULL AND [instance] != ''
+                          AND [idataagent] LIKE 'Oracle%';"""
         oracle_instance = self.fetch_all(instance_sql)
         instance_list = []
         for instance in oracle_instance:
@@ -487,6 +487,7 @@ class CVApi(DataMonitor):
                 "agent": instance[1],
                 "instance": instance[2]
             })
+        print(instance_list)
         return instance_list
 
     def get_all_backup_content(self):
@@ -786,7 +787,7 @@ class CVApi(DataMonitor):
         return commserv_info
 
     def get_oracle_backup_job_list(self, client_name):
-        oracle_backup_sql = """SELECT [jobid],[backuplevel],[startdate],[enddate],[instance]
+        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}';""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
@@ -797,10 +798,29 @@ class CVApi(DataMonitor):
                 "jobType": "Backup",
                 "Level": i[1],
                 "StartTime": "{:%Y-%m-%d %H:%M:%M}".format(i[2]) if i[2] else "",
-                "LastTime":  "{:%Y-%m-%d %H:%M:%M}".format(i[3]) if i[3] else "",
+                "LastTime": "{:%Y-%m-%d %H:%M:%M}".format(i[3]) if i[3] else "",
                 "instance": i[4]
             })
         return oracle_backuplist
+
+    def get_job_controller(self):
+        job_controller_sql = """SELECT [jobID],[operation],[clientComputer],[agentType],[subclient]
+                                ,[jobType],[phase],[storagePolicy],[mediaAgent],[status],[progress],[errors],[delayReason],[description]
+                                ,[scheduleId],[instanceName]
+                                FROM [CommServ].[dbo].[CommCellJobController];"""
+        content = self.fetch_all(job_controller_sql)
+        job_controller_list = []
+        for i in content:
+            job_controller_list.append({
+                "jobID": i[0],
+                "operation": i[2],
+                "clientComputer": i[3],
+                "agentType": i[4],
+                "progress": i[10],
+                "delayReason": i[12]
+            })
+        return job_controller_list
+
 
 class CustomFilter(CVApi):
     def custom_all_backup_content(self, client_manage_list):
@@ -1238,8 +1258,8 @@ if __name__ == '__main__':
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
     # ret = dm.get_instance_from_oracle()
-    # ret = dm.get_DDB_info()
-    # print(len(ret), "\n", ret)
+    ret = dm.get_job_controller()
+    print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients_for_info()
     # ret = dm.custom_all_backup_content()
@@ -1252,9 +1272,9 @@ if __name__ == '__main__':
     # ret = dm.get_all_auxcopys()
     # ret = dm.custom_concrete_job_list()
     # ret = dm.get_all_schedules()
-    
-    ret = dm.get_oracle_backup_job_list("win-2qls3b7jx3v.hzx")
-    print(ret)
+
+    # ret = dm.get_oracle_backup_job_list("win-2qls3b7jx3v.hzx")
+    # print(ret)
     # for i in ret:
     #     print(i)
     # import json
