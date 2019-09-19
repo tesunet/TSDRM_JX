@@ -368,7 +368,6 @@ def runstep(steprun, if_repeat=False):
                     try:
                         ret = subprocess.getstatusoutput(commvault_api_path + " %s" % oracle_param)
                         exec_status, recover_job_id = ret
-
                     except Exception as e:
                         result["exec_tag"] = 1
                         result["data"] = "执行commvault接口出现异常{0}。".format(e)
@@ -392,7 +391,7 @@ def runstep(steprun, if_repeat=False):
                             dm = SQLApi.CustomFilter(settings.sql_credit)
                             job_controller = dm.get_job_controller()
 
-                            recover_error = ""
+                            recover_error = "无"
 
                             for jc in job_controller:
                                 print(recover_job_id, jc["jobID"])

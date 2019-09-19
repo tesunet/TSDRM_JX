@@ -118,9 +118,9 @@ class ServerByPara(object):
         return result
 
 # if __name__ == '__main__':
-# server_obj = ServerByPara(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-#     server_obj = ServerByPara(r"C:\Users\Administrator\Desktop\test_python.bat", "192.168.100.151", "administrator","tesunet@2017", "Windows")
-# server_obj = ServerByPara(r"/root/Desktop/test06.sh hello", "47.95.195.90", "root","!zxcvbn123", "Linux")
-#     server_obj = ServerByPara(r"cat /root/Desktop/script_log.txt", "47.95.195.90", "root","!zxcvbn123", "Linux")
-#
-    # server_obj.run("")
+#     # server_obj = ServerByPara(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+#     server_obj = ServerByPara(r"echo succeed", "192.168.184.128", "win","password", "Windows")
+#     # server_obj = ServerByPara(r"/root/Desktop/test06.sh hello", "47.95.195.90", "root","!zxcvbn123", "Linux")
+#     #     server_obj = ServerByPara(r"cat /root/Desktop/script_log.txt", "47.95.195.90", "root","!zxcvbn123", "Linux")
+#     #
+#     server_obj.run("")

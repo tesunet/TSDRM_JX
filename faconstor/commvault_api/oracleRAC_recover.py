@@ -393,7 +393,7 @@ class CV_GetAllInformation(CV_RestApi):
 
     def getJobList(self, clientId, type="backup", appTypeName=None, backupsetName=None, subclientName=None, start=None,
                    end=None):
-        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "阻塞", "Suspend": "终止", "commpleted": "完成",
+        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "未决", "Suspend": "终止", "commpleted": "完成",
                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉"}
         '''
         Running
@@ -442,10 +442,10 @@ class CV_GetAllInformation(CV_RestApi):
                 if subclientName not in node.attrib["subclientName"]:
                     continue
             status = node.attrib["status"]
-            # try:
-            #     node.attrib["status"] = statusList[status]
-            # except:
-            node.attrib["status"] = status
+            try:
+                node.attrib["status"] = statusList[status]
+            except:
+                node.attrib["status"] = status
             self.jobList.append(node.attrib)
         return self.jobList
 
@@ -2354,6 +2354,7 @@ class CV_Backupset(CV_Client):
                 child = ET.Element('sourceItem')
                 child.text = '\\'
                 parent[0].append(child)
+            print(restoreTime)
             if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
                 timeRange = root.findall(".//timeRange")
                 for node in timeRange:
@@ -3264,258 +3265,259 @@ class CV_Backupset(CV_Client):
 
             </TMMsg_CreateTaskReq>
         '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()))
+                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))
         if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
-                    <processinginstructioninfo/>
-                    <taskInfo>
-                        <task>
-                            <taskFlags>
-                                <disabled>false</disabled>
-                            </taskFlags>
-                            <policyType>DATA_PROTECTION</policyType>
-                            <taskType>IMMEDIATE</taskType>
-                            <initiatedFrom>COMMANDLINE</initiatedFrom>
-                            <alert>
-                                <alertName></alertName>
-                            </alert>
-                        </task>
-                        <associations>
-                            <subclientName>default</subclientName>
-                            <backupsetName>defaultBackupSet</backupsetName>
-                            <instanceName>{instance}</instanceName>
-                            <appName>Oracle RAC</appName>
-                            <clientName>{sourceClient}</clientName>
-                        </associations>
-                        <subTasks>
-                            <subTask>
-                                <subTaskType>RESTORE</subTaskType>
-                                <operationType>RESTORE</operationType>
-                            </subTask>
-                            <options>
-                                <backupOpts>
-                                    <backupLevel>INCREMENTAL</backupLevel>
-                                    <vsaBackupOptions/>
-                                </backupOpts>
-                                <restoreOptions>
-                                    <browseOption>
-                                        <commCellId>2</commCellId>
-                                        <backupset>
-                                            <backupsetName>defaultBackupSet</backupsetName>
-                                            <clientName>{sourceClient}</clientName>
-                                        </backupset>
-                                        <timeRange>
-                                            <fromTimeValue>{restoreTime}</fromTimeValue>
-                                            <toTimeValue>{restoreTime}</toTimeValue>
-                                        </timeRange>
-                                        <noImage>false</noImage>
-                                        <useExactIndex>false</useExactIndex>
-                                        <mediaOption>
-                                            <library/>
-                                            <mediaAgent/>
-                                            <drivePool/>
-                                            <drive/>
-                                            <copyPrecedence>
-                                                <copyPrecedenceApplicable>false</copyPrecedenceApplicable>
-                                                <synchronousCopyPrecedence>1</synchronousCopyPrecedence>
-                                                <copyPrecedence>0</copyPrecedence>
-                                            </copyPrecedence>
-                                            <proxyForSnapClients>
-                                                <clientName></clientName>
-                                            </proxyForSnapClients>
-                                            <useISCSIMount>false</useISCSIMount>
-                                        </mediaOption>
-                                        <timeZone>
-                                            <TimeZoneName>(UTC+08:00)&#x5317;&#x4eAC;&#xFF0C;&#x91CD;&#x5e86;&#xFF0C;&#x9999;&#x6e2F;&#x7279;&#x522B;&#x884C;&#x653F;&#x533A;&#xFF0C;&#x4e4C;&#x9C81;&#x6728;&#x9F50;</TimeZoneName>
-                                        </timeZone>
-                                        <listMedia>false</listMedia>
-                                        <browseJobId>{browseJobId}</browseJobId>
-                                        <browseJobCommCellId>2</browseJobCommCellId>
-                                    </browseOption>
-                                    <destination>
-                                        <destClient>
-                                            <clientName>{destClient}</clientName>
-                                        </destClient>
-                                        <destinationInstance>
-                                            <instanceName>{instance}</instanceName>
-                                            <appName>Oracle</appName>
-                                            <clientName>{destClient}</clientName>
-                                        </destinationInstance>
-                                    </destination>
-                                    <oracleOpt>
-                                        <racDataStreamAllcation>2 1</racDataStreamAllcation>
-                                        <racDataStreamAllcation>3 1</racDataStreamAllcation>
-                                        <catalogConnect1></catalogConnect1>
-                                        <catalogConnect2>
-                                            <password>||#5!M2NmZTNlZWI4NTRlOGFhNjRlMDE1NWJlYzAxOTY3NGQ1&#xA;</password>
-                                        </catalogConnect2>
-                                        <catalogConnect3></catalogConnect3>
-                                        <restoreControlFile>true</restoreControlFile>
-                                        <specifyControlFile>false</specifyControlFile>
-                                        <controlFilePath></controlFilePath>
-                                        <specifyControlFileTime>false</specifyControlFileTime>
-                                        <controlFileTime>
-                                            <timeValue>{restoreTime}</timeValue>
-                                        </controlFileTime>
-                                        <archiveLog>false</archiveLog>
-                                        <archiveLogBy>DEFAULT</archiveLogBy>
-                                        <useStartLSN>false</useStartLSN>
-                                        <startLSNNum>1</startLSNNum>
-                                        <useEndLSN>false</useEndLSN>
-                                        <endLSNNum>1</endLSNNum>
-                                        <maxOpenFiles>0</maxOpenFiles>
-                                        <dbIncarnation>0</dbIncarnation>
-                                        <restoreSPFile>false</restoreSPFile>
-                                        <specifySPFile>false</specifySPFile>
-                                        <SPFilePath></SPFilePath>
-                                        <specifySPFileTime>false</specifySPFileTime>
-                                        <SPFileTime>
-                                            <timeValue>{restoreTime}</timeValue>
-                                        </SPFileTime>
-                                        <logTime/>
-                                        <useStartLog>true</useStartLog>
-                                        <useEndLog>false</useEndLog>
-                                        <logTarget></logTarget>
-                                        <restoreData>true</restoreData>
-                                        <partialRestore>false</partialRestore>
-                                        <restoreFrom>1</restoreFrom>
-                                        <restoreTime>
-                                            <timeValue>{restoreTime}</timeValue>
-                                        </restoreTime>
-                                        <restoreTag></restoreTag>
-                                        <checkReadOnly>false</checkReadOnly>
-                                        <recover>true</recover>
-                                        <recoverFrom>1</recoverFrom>
-                                        <recoverTime>
-                                            <timeValue>{restoreTime}</timeValue>
-                                        </recoverTime>
-                                        <recoverSCN></recoverSCN>
-                                        <noCatalog>true</noCatalog>
-                                        <restoreStream>2</restoreStream>
-                                        <resetDatabase>false</resetDatabase>
-                                        <doNotRecoverRedoLogs>false</doNotRecoverRedoLogs>
-                                        <openDatabase>false</openDatabase>
-                                        <resetLogs>0</resetLogs>
-                                        <redirectItemsPresent>true</redirectItemsPresent>
-                                        <validate>false</validate>
-                                        <renamePathForAllTablespaces>/u01/app/oracle/oradata/ORACLE/datafile
-                                        </renamePathForAllTablespaces>
-                                        <databaseCopy>false</databaseCopy>
-                                        <duplicate>false</duplicate>
-                                        <duplicateNoFileNamecheck>false</duplicateNoFileNamecheck>
-                                        <duplicateStandby>false</duplicateStandby>
-                                        <duplicateStandbySID></duplicateStandbySID>
-                                        <duplicateStandbyDoRecover>false</duplicateStandbyDoRecover>
-                                        <duplicateTo>false</duplicateTo>
-                                        <duplicateToName></duplicateToName>
-                                        <duplicateToPFile></duplicateToPFile>
-                                        <duplicateToSkipReadOnly>false</duplicateToSkipReadOnly>
-                                        <duplicateToOpenRestricted>false</duplicateToOpenRestricted>
-                                        <duplicateToSkipTablespace>false</duplicateToSkipTablespace>
-                                        <duplicateToLogFile>false</duplicateToLogFile>
-                                        <restoreFailover>true</restoreFailover>
-                                        <setDBId>true</setDBId>
-                                        <timeZone>
-                                            <TimeZoneName>(UTC+08:00)&#x5317;&#x4eAC;&#xFF0C;&#x91CD;&#x5e86;&#xFF0C;&#x9999;&#x6e2F;&#x7279;&#x522B;&#x884C;&#x653F;&#x533A;&#xFF0C;&#x4e4C;&#x9C81;&#x6728;&#x9F50;</TimeZoneName>
-                                        </timeZone>
-                                        <redirectAllItemsSelected>true</redirectAllItemsSelected>
-                                        <fileName></fileName>
-                                        <stagingPath></stagingPath>
-                                        <tableViewRestore>false</tableViewRestore>
-                                        <tag></tag>
-                                        <restoreInstanceLog>false</restoreInstanceLog>
-                                        <threadId>1</threadId>
-                                        <ctrlFileBackupType>AUTO_BACKUP</ctrlFileBackupType>
-                                        <ctrlBackupPiece></ctrlBackupPiece>
-                                        <spFileBackupType>AUTO_BACKUP</spFileBackupType>
-                                        <spFileBackupPiece></spFileBackupPiece>
-                                        <ctrlRestoreFrom>true</ctrlRestoreFrom>
-                                        <spFileRestoreFrom>false</spFileRestoreFrom>
-                                        <osID>2</osID>
-                                        <controleFileScript></controleFileScript>
-                                        <databaseScript></databaseScript>
-                                        <restoreTablespace>false</restoreTablespace>
-                                        <customizeScript>false</customizeScript>
-                                        <autoDetectDevice>true</autoDetectDevice>
-                                        <isDeviceTypeSelected>false</isDeviceTypeSelected>
-                                        <deviceType>UTIL_FILE</deviceType>
-                                        <restoreByTag>false</restoreByTag>
-                                        <switchDatabaseMode>true</switchDatabaseMode>
-                                        <restoreDataTag>false</restoreDataTag>
-                                        <cleanupAuxiliary>true</cleanupAuxiliary>
-                                        <useSnapRestore>false</useSnapRestore>
-                                        <backupValidationOnly>false</backupValidationOnly>
-                                        <mountDatabase>false</mountDatabase>
-                                        <redirectTempFilesSelected>false</redirectTempFilesSelected>
-                                        <redirectTempFilesValue></redirectTempFilesValue>
-                                        <duplicateActiveDatabase>false</duplicateActiveDatabase>
-                                        <cloneEnv>false</cloneEnv>
-                                        <sapRestoreInitOraFromSrc>false</sapRestoreInitOraFromSrc>
-                                        <skipTargetConnection>false</skipTargetConnection>
-                                        <crossmachineRestoreOptions>
-                                            <doNidForCrossMachineRestore>false</doNidForCrossMachineRestore>
-                                            <onlineLogDest></onlineLogDest>
-                                        </crossmachineRestoreOptions>
-                                        <oraExtendedRstOptions>0</oraExtendedRstOptions>
-                                    </oracleOpt>
-                                    <volumeRstOption>
-                                        <volumeLeveRestore>false</volumeLeveRestore>
-                                    </volumeRstOption>
-                                    <virtualServerRstOption>
-                                        <isBlockLevelReplication>false</isBlockLevelReplication>
-                                    </virtualServerRstOption>
-                                    <fileOption>
-                                        <sourceItem>SID&#xFF1A; oracle</sourceItem>
-                                    </fileOption>
-                                    <commonOptions>
-                                        <detectRegularExpression>true</detectRegularExpression>
-                                        <restoreDeviceFilesAsRegularFiles>false</restoreDeviceFilesAsRegularFiles>
-                                        <restoreSpaceRestrictions>false</restoreSpaceRestrictions>
-                                        <ignoreNamespaceRequirements>false</ignoreNamespaceRequirements>
-                                        <skipErrorsAndContinue>false</skipErrorsAndContinue>
-                                        <onePassRestore>false</onePassRestore>
-                                        <revert>false</revert>
-                                        <recoverAllProtectedMails>false</recoverAllProtectedMails>
-                                        <isFromBrowseBackup>false</isFromBrowseBackup>
-                                        <clusterDBBackedup>false</clusterDBBackedup>
-                                        <useRmanRestore>true</useRmanRestore>
-                                        <restoreToDisk>false</restoreToDisk>
-                                        <isDBArchiveRestore>false</isDBArchiveRestore>
-                                        <syncRestore>false</syncRestore>
-                                        <validateOnly>false</validateOnly>
-                                        <copyToObjectStore>false</copyToObjectStore>
-                                    </commonOptions>
-                                    <dbDataMaskingOptions>
-                                        <enabled>false</enabled>
-                                        <isStandalone>false</isStandalone>
-                                    </dbDataMaskingOptions>
-                                    <dbDumpOptions>
-                                        <enabled>false</enabled>
-                                    </dbDumpOptions>
-                                </restoreOptions>
-                                <adminOpts>
-                                    <contentIndexingOption>
-                                        <subClientBasedAnalytics>false</subClientBasedAnalytics>
-                                    </contentIndexingOption>
-                                </adminOpts>
-                                <commonOpts>
-                                    <startUpOpts>
-                                        <startInSuspendedState>false</startInSuspendedState>
-                                        <priority>166</priority>
-                                        <useDefaultPriority>true</useDefaultPriority>
-                                    </startUpOpts>
-                                    <prePostOpts>
-                                        <preRecoveryCommand></preRecoveryCommand>
-                                        <postRecoveryCommand></postRecoveryCommand>
-                                        <runPostWhenFail>false</runPostWhenFail>
-                                    </prePostOpts>
-                                    <jobDescription></jobDescription>
-                                </commonOpts>
-                            </options>
-                            <subTaskOperation>OVERWRITE</subTaskOperation>
-                        </subTasks>
-                    </taskInfo>
+
+                  <processinginstructioninfo/>
+
+                  <taskInfo>
+                    <task>
+                      <taskFlags>
+                        <disabled>false</disabled>
+                      </taskFlags>
+                      <policyType>DATA_PROTECTION</policyType>
+                      <taskType>IMMEDIATE</taskType>
+                      <initiatedFrom>COMMANDLINE</initiatedFrom>
+                      <alert>
+                        <alertName></alertName>
+                      </alert>
+                    </task>
+                    <associations>
+                      <subclientName>default</subclientName>
+                      <backupsetName>defaultBackupSet</backupsetName>
+                      <instanceName>{instance}</instanceName>
+                      <appName>Oracle RAC</appName>
+                      <clientName>{sourceClient}</clientName>
+                    </associations>
+                    <subTasks>
+                      <subTask>
+                        <subTaskType>RESTORE</subTaskType>
+                        <operationType>RESTORE</operationType>
+                      </subTask>
+                      <options>
+                        <backupOpts>
+                          <backupLevel>INCREMENTAL</backupLevel>
+                          <vsaBackupOptions/>
+                        </backupOpts>
+                        <restoreOptions>
+                          <browseOption>
+                            <commCellId>2</commCellId>
+                            <backupset>
+                              <backupsetName>defaultBackupSet</backupsetName>
+                              <clientName>{sourceClient}</clientName>
+                            </backupset>
+                            <timeRange>
+                              <fromTimeValue>2019-07-15 13:32:33</fromTimeValue>
+                              <toTimeValue>{restoreTime}</toTimeValue>
+                            </timeRange>
+                            <noImage>false</noImage>
+                            <useExactIndex>false</useExactIndex>
+                            <mediaOption>
+                              <library/>
+                              <mediaAgent/>
+                              <drivePool/>
+                              <drive/>
+                              <copyPrecedence>
+                                <copyPrecedenceApplicable>false</copyPrecedenceApplicable>
+                                <synchronousCopyPrecedence>1</synchronousCopyPrecedence>
+                                <copyPrecedence>0</copyPrecedence>
+                              </copyPrecedence>
+                              <proxyForSnapClients>
+                                <clientName></clientName>
+                              </proxyForSnapClients>
+                              <useISCSIMount>false</useISCSIMount>
+                            </mediaOption>
+                            <timeZone>
+                              <TimeZoneName>(UTC+08:00)&#x5317;&#x4eAC;&#xFF0C;&#x91CD;&#x5e86;&#xFF0C;&#x9999;&#x6e2F;&#x7279;&#x522B;&#x884C;&#x653F;&#x533A;&#xFF0C;&#x4e4C;&#x9C81;&#x6728;&#x9F50;</TimeZoneName>
+                            </timeZone>
+                            <listMedia>false</listMedia>
+                            <browseJobId>{browseJobId}</browseJobId>
+                            <browseJobCommCellId>2</browseJobCommCellId>
+                          </browseOption>
+                          <destination>
+                            <destClient>
+                              <clientName>{destClient}</clientName>
+                            </destClient>
+                            <destinationInstance>
+                              <instanceName>{instance}</instanceName>
+                              <appName>Oracle</appName>
+                              <clientName>{destClient}</clientName>
+                            </destinationInstance>
+                          </destination>
+                          <oracleOpt>
+                            <racDataStreamAllcation>2 1</racDataStreamAllcation>
+                            <racDataStreamAllcation>3 1</racDataStreamAllcation>
+                            <catalogConnect1></catalogConnect1>
+                            <catalogConnect2>
+                              <password>||#5!M2NmZTNlZWI4NTRlOGFhNjRlMDE1NWJlYzAxOTY3NGQ1&#xA;</password>
+                            </catalogConnect2>
+                            <catalogConnect3></catalogConnect3>
+                            <restoreControlFile>true</restoreControlFile>
+                            <specifyControlFile>false</specifyControlFile>
+                            <controlFilePath></controlFilePath>
+                            <specifyControlFileTime>true</specifyControlFileTime>
+                            <controlFileTime>
+                              <timeValue>{restoreTime}</timeValue>
+                            </controlFileTime>
+                            <archiveLog>false</archiveLog>
+                            <archiveLogBy>DEFAULT</archiveLogBy>
+                            <useStartLSN>false</useStartLSN>
+                            <startLSNNum>1</startLSNNum>
+                            <useEndLSN>false</useEndLSN>
+                            <endLSNNum>1</endLSNNum>
+                            <maxOpenFiles>0</maxOpenFiles>
+                            <dbIncarnation>0</dbIncarnation>
+                            <restoreSPFile>false</restoreSPFile>
+                            <specifySPFile>false</specifySPFile>
+                            <SPFilePath></SPFilePath>
+                            <specifySPFileTime>false</specifySPFileTime>
+                            <SPFileTime>
+                              <timeValue>{restoreTime}</timeValue>
+                            </SPFileTime>
+                            <logTime/>
+                            <useStartLog>true</useStartLog>
+                            <useEndLog>false</useEndLog>
+                            <logTarget></logTarget>
+                            <restoreData>true</restoreData>
+                            <partialRestore>false</partialRestore>
+                            <restoreFrom>1</restoreFrom>
+                            <restoreTime>
+                              <timeValue>{restoreTime}</timeValue>
+                            </restoreTime>
+                            <restoreTag></restoreTag>
+                            <checkReadOnly>false</checkReadOnly>
+                            <recover>true</recover>
+                            <recoverFrom>1</recoverFrom>
+                            <recoverTime>
+                              <timeValue>{restoreTime}</timeValue>
+                            </recoverTime>
+                            <recoverSCN></recoverSCN>
+                            <noCatalog>true</noCatalog>
+                            <restoreStream>2</restoreStream>
+                            <resetDatabase>false</resetDatabase>
+                            <doNotRecoverRedoLogs>false</doNotRecoverRedoLogs>
+                            <openDatabase>false</openDatabase>
+                            <resetLogs>0</resetLogs>
+                            <redirectItemsPresent>true</redirectItemsPresent>
+                            <validate>false</validate>
+                            <renamePathForAllTablespaces>/u01/app/oracle/oradata/ORACLE/datafile</renamePathForAllTablespaces>
+                            <databaseCopy>false</databaseCopy>
+                            <duplicate>false</duplicate>
+                            <duplicateNoFileNamecheck>false</duplicateNoFileNamecheck>
+                            <duplicateStandby>false</duplicateStandby>
+                            <duplicateStandbySID></duplicateStandbySID>
+                            <duplicateStandbyDoRecover>false</duplicateStandbyDoRecover>
+                            <duplicateTo>false</duplicateTo>
+                            <duplicateToName></duplicateToName>
+                            <duplicateToPFile></duplicateToPFile>
+                            <duplicateToSkipReadOnly>false</duplicateToSkipReadOnly>
+                            <duplicateToOpenRestricted>false</duplicateToOpenRestricted>
+                            <duplicateToSkipTablespace>false</duplicateToSkipTablespace>
+                            <duplicateToLogFile>false</duplicateToLogFile>
+                            <restoreFailover>true</restoreFailover>
+                            <setDBId>true</setDBId>
+                            <timeZone>
+                              <TimeZoneName>(UTC+08:00)&#x5317;&#x4eAC;&#xFF0C;&#x91CD;&#x5e86;&#xFF0C;&#x9999;&#x6e2F;&#x7279;&#x522B;&#x884C;&#x653F;&#x533A;&#xFF0C;&#x4e4C;&#x9C81;&#x6728;&#x9F50;</TimeZoneName>
+                            </timeZone>
+                            <redirectAllItemsSelected>true</redirectAllItemsSelected>
+                            <fileName></fileName>
+                            <stagingPath></stagingPath>
+                            <tableViewRestore>false</tableViewRestore>
+                            <tag></tag>
+                            <restoreInstanceLog>false</restoreInstanceLog>
+                            <threadId>1</threadId>
+                            <ctrlFileBackupType>AUTO_BACKUP</ctrlFileBackupType>
+                            <ctrlBackupPiece></ctrlBackupPiece>
+                            <spFileBackupType>AUTO_BACKUP</spFileBackupType>
+                            <spFileBackupPiece></spFileBackupPiece>
+                            <ctrlRestoreFrom>true</ctrlRestoreFrom>
+                            <spFileRestoreFrom>false</spFileRestoreFrom>
+                            <osID>2</osID>
+                            <controleFileScript></controleFileScript>
+                            <databaseScript></databaseScript>
+                            <restoreTablespace>false</restoreTablespace>
+                            <customizeScript>false</customizeScript>
+                            <autoDetectDevice>true</autoDetectDevice>
+                            <isDeviceTypeSelected>false</isDeviceTypeSelected>
+                            <deviceType>UTIL_FILE</deviceType>
+                            <restoreByTag>false</restoreByTag>
+                            <switchDatabaseMode>true</switchDatabaseMode>
+                            <restoreDataTag>false</restoreDataTag>
+                            <cleanupAuxiliary>true</cleanupAuxiliary>
+                            <useSnapRestore>false</useSnapRestore>
+                            <backupValidationOnly>false</backupValidationOnly>
+                            <mountDatabase>false</mountDatabase>
+                            <redirectTempFilesSelected>false</redirectTempFilesSelected>
+                            <redirectTempFilesValue></redirectTempFilesValue>
+                            <duplicateActiveDatabase>false</duplicateActiveDatabase>
+                            <cloneEnv>false</cloneEnv>
+                            <sapRestoreInitOraFromSrc>false</sapRestoreInitOraFromSrc>
+                            <skipTargetConnection>false</skipTargetConnection>
+                            <crossmachineRestoreOptions>
+                              <doNidForCrossMachineRestore>false</doNidForCrossMachineRestore>
+                              <onlineLogDest></onlineLogDest>
+                            </crossmachineRestoreOptions>
+                            <oraExtendedRstOptions>0</oraExtendedRstOptions>
+                          </oracleOpt>
+                          <volumeRstOption>
+                            <volumeLeveRestore>false</volumeLeveRestore>
+                          </volumeRstOption>
+                          <virtualServerRstOption>
+                            <isBlockLevelReplication>false</isBlockLevelReplication>
+                          </virtualServerRstOption>
+                          <fileOption>
+                            <sourceItem>SID&#xFF1A; oracle</sourceItem>
+                          </fileOption>
+                          <commonOptions>
+                            <detectRegularExpression>true</detectRegularExpression>
+                            <restoreDeviceFilesAsRegularFiles>false</restoreDeviceFilesAsRegularFiles>
+                            <restoreSpaceRestrictions>false</restoreSpaceRestrictions>
+                            <ignoreNamespaceRequirements>false</ignoreNamespaceRequirements>
+                            <skipErrorsAndContinue>false</skipErrorsAndContinue>
+                            <onePassRestore>false</onePassRestore>
+                            <revert>false</revert>
+                            <recoverAllProtectedMails>false</recoverAllProtectedMails>
+                            <isFromBrowseBackup>false</isFromBrowseBackup>
+                            <clusterDBBackedup>false</clusterDBBackedup>
+                            <useRmanRestore>true</useRmanRestore>
+                            <restoreToDisk>false</restoreToDisk>
+                            <isDBArchiveRestore>false</isDBArchiveRestore>
+                            <syncRestore>false</syncRestore>
+                            <validateOnly>false</validateOnly>
+                            <copyToObjectStore>false</copyToObjectStore>
+                          </commonOptions>
+                          <dbDataMaskingOptions>
+                            <enabled>false</enabled>
+                            <isStandalone>false</isStandalone>
+                          </dbDataMaskingOptions>
+                          <dbDumpOptions>
+                            <enabled>false</enabled>
+                          </dbDumpOptions>
+                        </restoreOptions>
+                        <adminOpts>
+                          <contentIndexingOption>
+                            <subClientBasedAnalytics>false</subClientBasedAnalytics>
+                          </contentIndexingOption>
+                        </adminOpts>
+                        <commonOpts>
+                          <startUpOpts>
+                            <startInSuspendedState>false</startInSuspendedState>
+                            <priority>166</priority>
+                            <useDefaultPriority>true</useDefaultPriority>
+                          </startUpOpts>
+                          <prePostOpts>
+                            <preRecoveryCommand></preRecoveryCommand>
+                            <postRecoveryCommand></postRecoveryCommand>
+                            <runPostWhenFail>false</runPostWhenFail>
+                          </prePostOpts>
+                          <jobDescription></jobDescription>
+                        </commonOpts>
+                      </options>
+                      <subTaskOperation>OVERWRITE</subTaskOperation>
+                    </subTasks>
+                  </taskInfo>
 
                 </TMMsg_CreateTaskReq>
             """.format(sourceClient=sourceClient, destClient=destClient, instance=instance, restoreTime=restoreTime,
@@ -4087,147 +4089,146 @@ class CV_API(object):
         return list
 
 
-if __name__ == '__main__':
-    class DoMysql(object):
-        # 初始化
-        def __init__(self, host, user, password, db):
-            # 创建连接
-            self.conn = pymysql.Connect(
-                host=host,
-                port=3306,
-                user=user,
-                password=password,
-                db=db,
-                charset='utf8',
-                cursorclass=pymysql.cursors.DictCursor  # 以字典的形式返回数据
-            )
-            # 获取游标
-            self.cursor = self.conn.cursor()
+class DoMysql(object):
+    # 初始化
+    def __init__(self, host, user, password, db):
+        # 创建连接
+        self.conn = pymysql.Connect(
+            host=host,
+            port=3306,
+            user=user,
+            password=password,
+            db=db,
+            charset='utf8',
+            cursorclass=pymysql.cursors.DictCursor  # 以字典的形式返回数据
+        )
+        # 获取游标
+        self.cursor = self.conn.cursor()
 
-        # 返回多条数据
-        def fetchAll(self, sql):
-            self.cursor.execute(sql)
-            return self.cursor.fetchall()
+    # 返回多条数据
+    def fetchAll(self, sql):
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
 
-        # 返回一条数据
-        def fetchOne(self, sql):
-            self.cursor.execute(sql)
-            return self.cursor.fetchone()
+    # 返回一条数据
+    def fetchOne(self, sql):
+        self.cursor.execute(sql)
+        return self.cursor.fetchone()
 
-        # 插入一条数据
-        def insert_one(self, sql):
-            result = self.cursor.execute(sql)
-            self.conn.commit()
-            return result
+    # 插入一条数据
+    def insert_one(self, sql):
+        result = self.cursor.execute(sql)
+        self.conn.commit()
+        return result
 
-        # 插入多条数据
-        def insert_many(self, sql, datas):
-            result = self.cursor.executemany(sql, datas)
-            self.conn.commit()
-            return result
+    # 插入多条数据
+    def insert_many(self, sql, datas):
+        result = self.cursor.executemany(sql, datas)
+        self.conn.commit()
+        return result
 
-        # 更新数据
-        def update(self, sql):
-            result = self.cursor.execute(sql)
-            self.conn.commit()
-            return result
+    # 更新数据
+    def update(self, sql):
+        result = self.cursor.execute(sql)
+        self.conn.commit()
+        return result
 
-        # 关闭连接
-        def close(self):
-            self.cursor.close()
-            self.conn.close()
+    # 关闭连接
+    def close(self):
+        self.cursor.close()
+        self.conn.close()
 
 
-    def run(origin, target, instance, processrun_id):
-        #################
-        # 数据库认证信息 #
-        #################
-        db_host = '192.168.100.154'
-        db_name = "js_tesudrm"
-        db_user = "root"
-        db_password = "password"
+def run(origin, target, instance, processrun_id):
+    #################
+    # 数据库认证信息 #
+    #################
+    db_host = '192.168.100.154'
+    db_name = "js_tesudrm"
+    db_user = "root"
+    db_password = "password"
 
-        db = DoMysql(db_host, db_user, db_password, db_name)
+    db = DoMysql(db_host, db_user, db_password, db_name)
 
-        credit_result = {}
-        recovery_result = {}
+    credit_result = {}
+    recovery_result = {}
 
-        credit_sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
-        recovery_sql = """SELECT recover_time, browse_job_id FROM js_tesudrm.faconstor_processrun
-                          WHERE state!='9' AND id={0};""".format(processrun_id)
+    credit_sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
+    recovery_sql = """SELECT recover_time, browse_job_id FROM js_tesudrm.faconstor_processrun
+                      WHERE state!='9' AND id={0};""".format(processrun_id)
 
+    try:
+        credit_result = db.fetchOne(credit_sql)
+        recovery_result = db.fetchOne(recovery_sql)
+    except:
+        pass
+
+    recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"]) if recovery_result else ""
+    browse_job_id = recovery_result["browse_job_id"] if recovery_result else ""
+
+    webaddr = ""
+    port = ""
+    usernm = ""
+    passwd = ""
+    if credit_result:
+        doc = parseString(credit_result["content"])
         try:
-            credit_result = db.fetchOne(credit_sql)
-            recovery_result = db.fetchOne(recovery_sql)
+            webaddr = (doc.getElementsByTagName("webaddr"))[0].childNodes[0].data
+        except:
+            pass
+        try:
+            port = (doc.getElementsByTagName("port"))[0].childNodes[0].data
+        except:
+            pass
+        try:
+            usernm = (doc.getElementsByTagName("username"))[0].childNodes[0].data
+        except:
+            pass
+        try:
+            passwd = (doc.getElementsByTagName("passwd"))[0].childNodes[0].data
         except:
             pass
 
-        recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"]) if recovery_result else ""
-        browse_job_id = recovery_result["browse_job_id"] if recovery_result else ""
-
-        webaddr = ""
-        port = ""
-        usernm = ""
-        passwd = ""
-        if credit_result:
-            doc = parseString(credit_result["content"])
-            try:
-                webaddr = (doc.getElementsByTagName("webaddr"))[0].childNodes[0].data
-            except:
-                pass
-            try:
-                port = (doc.getElementsByTagName("port"))[0].childNodes[0].data
-            except:
-                pass
-            try:
-                usernm = (doc.getElementsByTagName("username"))[0].childNodes[0].data
-            except:
-                pass
-            try:
-                passwd = (doc.getElementsByTagName("passwd"))[0].childNodes[0].data
-            except:
-                pass
-
-        info = {
-            "webaddr": webaddr,
-            "port": port,
-            "username": usernm,
-            "passwd": passwd,
-            "token": "",
-            "last_login": 0
-        }
-
-        cvToken = CV_RestApi_Token()
-        cvToken.login(info)
-        cvAPI = CV_API(cvToken)
-
-        jobId = cvAPI.restoreOracleRacBackupset(origin, target, instance,
-                                                {'browseJobId': browse_job_id, 'restoreTime': recover_time})
-
-        # jobId = 4553295
-        if jobId == -1:
-            exit(1)
-        else:
-            while True:
-                ret = cvAPI.getJobList(origin, type="restore")
-                for i in ret:
-                    if str(i["jobId"]) == str(jobId):
-                        if i['status'].upper() in ['RUNNING', 'WAITING']:
-                            continue
-                        elif i['status'].upper() == 'COMPLETED':
-                            exit(0)
-                        else:
-                            # oracle恢复出现异常
-                            #################################
-                            # 程序中不要出现其他print()      #
-                            # print()将会作为输出被服务器获取#
-                            #################################
-                            print(jobId)
-                            exit(2)
-                time.sleep(4)
+    info = {
+        "webaddr": webaddr,
+        "port": port,
+        "username": usernm,
+        "passwd": passwd,
+        "token": "",
+        "last_login": 0
+    }
 
 
-    if len(sys.argv) == 5:
-        run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-    else:
+    cvToken = CV_RestApi_Token()
+    cvToken.login(info)
+    cvAPI = CV_API(cvToken)
+
+    jobId = cvAPI.restoreOracleRacBackupset(origin, target, instance,
+                                            {'browseJobId': browse_job_id, 'restoreTime': recover_time})
+    # jobId = 4553295
+    if jobId == -1:
         exit(1)
+    else:
+        while True:
+            ret = cvAPI.getJobList(origin, type="restore")
+            for i in ret:
+                if str(i["jobId"]) == str(jobId):
+                    if i['status'].upper() in ['RUNNING', 'WAITING']:
+                        continue
+                    elif i['status'].upper() == 'COMPLETED':
+                        exit(0)
+                    else:
+                        # oracle恢复出现异常
+                        #################################
+                        # 程序中不要出现其他print()      #
+                        # print()将会作为输出被服务器获取#
+                        #################################
+                        print(jobId)
+                        exit(2)
+            time.sleep(4)
+
+
+if len(sys.argv) == 5:
+    run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+else:
+    exit(1)

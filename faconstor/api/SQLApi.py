@@ -787,19 +787,23 @@ class CVApi(DataMonitor):
         return commserv_info
 
     def get_oracle_backup_job_list(self, client_name):
-        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance]
+        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}';""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
         oracle_backuplist = []
         for i in content:
+
+            start_time = "{:%Y-%m-%d %H:%M:%S}".format(i[2].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[2] else ""
+            last_time = "{:%Y-%m-%d %H:%M:%S}".format(i[3].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[3] else ""
+
             oracle_backuplist.append({
                 "jobId": i[0],
                 "jobType": "Backup",
                 "Level": i[1],
-                "StartTime": "{:%Y-%m-%d %H:%M:%M}".format(i[2]) if i[2] else "",
-                "LastTime": "{:%Y-%m-%d %H:%M:%M}".format(i[3]) if i[3] else "",
-                "instance": i[4]
+                "StartTime": start_time,
+                "LastTime": last_time,
+                "instance": i[4],
             })
         return oracle_backuplist
 

@@ -86,7 +86,6 @@ $(document).ready(function () {
             $("#datetimepicker").val(data.LastTime);
             $("input[name='optionsRadios'][value='1']").prop("checked", false);
             $("input[name='optionsRadios'][value='2']").prop("checked", true);
-
             $("#ora_instance").val(data.instance);
             $("#browseJobId").val(data.jobId);
         });
