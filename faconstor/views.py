@@ -270,9 +270,9 @@ def processindex(request, processrun_id):
 
 def get_process_index_data(request):
     if request.user.is_authenticated():
-        print('************')
+        # print('************')
         processrun_id = request.POST.get("p_run_id", "")
-        print(processrun_id)
+        # print(processrun_id)
 
         current_processruns = ProcessRun.objects.filter(id=int(processrun_id)).select_related("process")
 
@@ -454,7 +454,6 @@ def get_process_index_data(request):
             }
         else:
             c_step_run_data = {}
-        # print("c_step_run_data", c_step_run_data)
         return JsonResponse(c_step_run_data)
 
 
