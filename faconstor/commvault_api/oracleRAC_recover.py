@@ -393,7 +393,7 @@ class CV_GetAllInformation(CV_RestApi):
 
     def getJobList(self, clientId, type="backup", appTypeName=None, backupsetName=None, subclientName=None, start=None,
                    end=None):
-        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "未决", "Suspend": "终止", "commpleted": "完成",
+        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "未决", "Suspend": "终止", "Completed": "完成",
                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉"}
         '''
         Running
@@ -4213,9 +4213,9 @@ def run(origin, target, instance, processrun_id):
             ret = cvAPI.getJobList(origin, type="restore")
             for i in ret:
                 if str(i["jobId"]) == str(jobId):
-                    if i['status'].upper() in ['RUNNING', 'WAITING']:
+                    if i['status'] in ['运行', '等待']:
                         continue
-                    elif i['status'].upper() == 'COMPLETED':
+                    elif i['status'].upper() == '完成':
                         exit(0)
                     else:
                         # oracle恢复出现异常
