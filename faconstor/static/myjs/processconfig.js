@@ -224,11 +224,17 @@ function customTree() {
                         $("#commv_interface").val("");
                         $("#interface_type").val("");
 
+                        $("#host_id_div").hide();
+                        $("#script_text_div").hide();
+                        $("#success_text_div").hide();
+                        $("#log_address_div").hide();
+                        $("#origin_div").hide();
+                        $("#commv_interface_div").hide();
                         document.getElementById("edit").click();
                     }
                     if ($(e.target).text() == "修改") {
                         if ($("#se_1").find('option:selected').length == 0)
-                            alert("请选择要修改的脚本。");
+                            alert("请选择要修改的接口。");
                         else {
                             if ($("#se_1").find('option:selected').length > 1)
                                 alert("修改时请不要选择多条记录。");

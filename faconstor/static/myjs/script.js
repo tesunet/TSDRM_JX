@@ -114,6 +114,13 @@ $(document).ready(function () {
         $("#origin").val("");
         $("#commv_interface").val("");
         $("#interface_type").val("");
+
+        $("#host_id_div").hide();
+        $("#script_text_div").hide();
+        $("#success_text_div").hide();
+        $("#log_address_div").hide();
+        $("#origin_div").hide();
+        $("#commv_interface_div").hide();
     });
 
     // interface_type change
