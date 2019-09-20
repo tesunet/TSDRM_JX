@@ -380,8 +380,8 @@ $(document).ready(function () {
                 var table = $('#backup_point').DataTable();
                 var data = table.row($(this).parents('tr')).data();
                 $("#recovery_time").val(data.LastTime);
-                $("input[name='optionsRadios'][value='1']").prop("checked", false);
-                $("input[name='optionsRadios'][value='2']").prop("checked", true);
+                $("input[name='recovery_time_redio'][value='1']").prop("checked", false);
+                $("input[name='recovery_time_redio'][value='2']").prop("checked", true);
                 $("#browseJobId").val(data.jobId);
                 $("#SCN").val(data.SCN);
 
@@ -439,8 +439,8 @@ $(document).ready(function () {
                 var table = $('#backup_point').DataTable();
                 var data = table.row($(this).parents('tr')).data();
                 $("#recovery_time_invited").val(data.LastTime);
-                $("input[name='optionsRadios'][value='1']").prop("checked", false);
-                $("input[name='optionsRadios'][value='2']").prop("checked", true);
+                $("input[name='recovery_time_redio_invited'][value='1']").prop("checked", false);
+                $("input[name='recovery_time_redio_invited'][value='2']").prop("checked", true);
                 $("#browseJobIdInvited").val(data.jobId);
                 $("#SCN_invited").val(data.SCN);
 
@@ -449,5 +449,28 @@ $(document).ready(function () {
         } else {
             $("#recovery_time_invited").val("");
         }
+    });
+
+    // modal.show事件
+    $("#static").on("shown.bs.modal", function (event) {
+        $("#target").val("");
+        $("#run_reason").val("");
+        $("#recovery_time").val("");
+        // 写入当前时间
+        var myDate = new Date();
+        $("#run_time").val(myDate.toLocaleString());
+        $("input[name='recovery_time_redio'][value='1']").prop("checked", true);
+        $("input[name='recovery_time_redio'][value='2']").prop("checked", false);
+    });
+
+    $("#static02").on("shown.bs.modal", function (event) {
+        $("#target_invited").val("");
+        $("#runreason_invited").val("");
+        $("#recovery_time_invited").val("");
+        // 写入当前时间
+        var myDate = new Date();
+        $("#runtime_invited").val(myDate.toLocaleString());
+        $("input[name='recovery_time_redio_invited'][value='1']").prop("checked", true);
+        $("input[name='recovery_time_redio_invited'][value='2']").prop("checked", false);
     });
 });
