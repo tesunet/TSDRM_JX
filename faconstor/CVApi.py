@@ -400,17 +400,22 @@ class CV_GetAllInformation(CV_RestApi):
 
     def getJobList(self, clientId, type="backup", appTypeName=None, backupsetName=None, subclientName=None, start=None,
                    end=None):
-        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "未决", "Suspend": "终止", "commpleted": "完成",
+        statusList = {"Running": "运行", "Waiting": "等待", "Pending": "未决", "Suspend": "终止", "Completed": "完成",
                       "Failed": "失败", "Failed to Start": "启动失败", "Killed": "杀掉"}
         '''
         Running
         Waiting
         Pending
         Suspend
+        Pending
+        Suspended
         Kill Pending
         Interrupt Pending
         Interrupted
-        QueuedCompleted
+        Queued
+        Running (cannot be verified)
+        Abnormal Terminated Cleanup
+        Completed
         Completed w/ one or more errors
         Completed w/ one or more warnings
         Committed

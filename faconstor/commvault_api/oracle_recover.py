@@ -400,10 +400,15 @@ class CV_GetAllInformation(CV_RestApi):
         Waiting
         Pending
         Suspend
+        Pending
+        Suspended
         Kill Pending
         Interrupt Pending
         Interrupted
-        QueuedCompleted
+        Queued
+        Running (cannot be verified)
+        Abnormal Terminated Cleanup
+        Completed
         Completed w/ one or more errors
         Completed w/ one or more warnings
         Committed
