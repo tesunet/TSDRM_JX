@@ -1,1 +1,0 @@
-echo "linux-1 succeed."

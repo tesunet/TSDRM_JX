@@ -243,6 +243,8 @@ def runstep(steprun, if_repeat=False):
                 script.result = ""
                 script.state = "RUN"
                 script.save()
+                linux_temp_script_file = "/tmp/tmp_script.sh"
+                windows_temp_script_file = "C:/tmp_script.bat"
 
                 if script.script.interface_type == "脚本":
                     # HostsManage
@@ -251,16 +253,8 @@ def runstep(steprun, if_repeat=False):
                     username = cur_host_manage.username
                     password = cur_host_manage.password
                     script_type = cur_host_manage.type
+                    system_tag = cur_host_manage.os
 
-                    system_tag = ""
-                    if script_type == "SSH":
-                        system_tag = "Linux"
-                    if script_type == "BAT":
-                        system_tag = "Windows"
-
-                    linux_temp_script_file = "/tmp/tmp_script.sh"
-                    # windows_temp_script_file = "C:/tmp_script{0}.bat".format(script.id)
-                    windows_temp_script_file = "C:/tmp_script.bat"
                     if system_tag == "Linux":
                         # 写入文件
                         script_path = os.path.join(os.path.join(os.path.join(settings.BASE_DIR, "faconstor"), "upload"),
@@ -357,7 +351,7 @@ def runstep(steprun, if_repeat=False):
                         target = script.steprun.processrun.target.client_name if script.steprun.processrun.target else ""
                     else:
                         target = script.script.target.client_name if script.script.target else ""
-                    recover_time = script.steprun.processrun.recover_time
+                    # recover_time = script.steprun.processrun.recover_time
                     oracle_info = json.loads(script.script.origin.info)
 
                     instance = ""
@@ -468,20 +462,25 @@ def runstep(steprun, if_repeat=False):
                 myprocesstask.save()
 
                 if script.script.interface_type == "脚本":
+                    sys_platform = script.script.hosts_manage.os
+                    ip = script.script.hosts_manage.host_ip
+                    username = script.script.hosts_manage.username
+                    password = script.script.hosts_manage.password
+
                     # 删除Linux下脚本
-                    if system_tag == "Linux":
+                    if sys_platform == "Linux":
                         del_cmd = 'if [ ! -f "{0}" ]; then'.format(linux_temp_script_file) + '\n' + \
                                   '   echo "文件不存在"' + '\n' + \
                                   'else' + '\n' + \
                                   '   rm -f {0}'.format(linux_temp_script_file) + '\n' + \
                                   'fi'
-                        del_obj = remote.ServerByPara(del_cmd, ip, username, password, system_tag)
+                        del_obj = remote.ServerByPara(del_cmd, ip, username, password, sys_platform)
                         del_result = del_obj.run("")
                     else:
                         if result["exec_tag"] == 0:
                             # 删除windows的bat脚本
                             del_cmd = 'if exist {0} del "{0}"'.format(windows_temp_script_file)
-                            del_obj = remote.ServerByPara(del_cmd, ip, username, password, system_tag)
+                            del_obj = remote.ServerByPara(del_cmd, ip, username, password, sys_platform)
                             del_result = del_obj.run("")
 
             if steprun.step.approval == "1" or steprun.verifyitemsrun_set.all():
