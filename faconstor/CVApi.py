@@ -6,7 +6,7 @@ import requests
 import time
 import copy
 import subprocess
-from datetime import datetime
+import datetime
 
 try:
     import xml.etree.cElementTree as ET
@@ -3272,7 +3272,7 @@ class CV_Backupset(CV_Client):
 
             </TMMsg_CreateTaskReq>
         '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.now()))
+                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()))
         if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
