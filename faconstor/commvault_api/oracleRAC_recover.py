@@ -3008,6 +3008,9 @@ class CV_Backupset(CV_Client):
             if "browseJobId" not in keys:
                 self.msg = "operator - no browseJobId"
                 return jobId
+            if "SCN" not in keys:
+                self.msg = "operator - no SCN"
+                return jobId
         else:
             self.msg = "param not set"
             return jobId
@@ -3016,6 +3019,7 @@ class CV_Backupset(CV_Client):
         destClient = dest
         restoreTime = operator["restoreTime"]
         browseJobId = operator["browseJobId"]
+        SCN = operator["SCN"]
 
         restoreoracleRacXML = '''
             <TMMsg_CreateTaskReq>
@@ -3276,7 +3280,6 @@ class CV_Backupset(CV_Client):
                 <TMMsg_CreateTaskReq>
 
                   <processinginstructioninfo/>
-
                   <taskInfo>
                     <task>
                       <taskFlags>
@@ -3394,11 +3397,11 @@ class CV_Backupset(CV_Client):
                             <restoreTag></restoreTag>
                             <checkReadOnly>false</checkReadOnly>
                             <recover>true</recover>
-                            <recoverFrom>1</recoverFrom>
+                            <recoverFrom>2</recoverFrom>
                             <recoverTime>
                               <timeValue>{restoreTime}</timeValue>
                             </recoverTime>
-                            <recoverSCN></recoverSCN>
+                            <recoverSCN>{SCN}</recoverSCN>
                             <noCatalog>true</noCatalog>
                             <restoreStream>2</restoreStream>
                             <resetDatabase>false</resetDatabase>
@@ -3526,7 +3529,7 @@ class CV_Backupset(CV_Client):
 
                 </TMMsg_CreateTaskReq>
             """.format(sourceClient=sourceClient, destClient=destClient, instance=instance, restoreTime=restoreTime,
-                       browseJobId=browseJobId)
+                       browseJobId=browseJobId, SCN=SCN)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
@@ -4159,7 +4162,7 @@ def run(origin, target, instance, processrun_id):
     recovery_result = {}
 
     credit_sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
-    recovery_sql = """SELECT recover_time, browse_job_id FROM js_tesudrm.faconstor_processrun
+    recovery_sql = """SELECT recover_time, browse_job_id, SCN FROM js_tesudrm.faconstor_processrun
                       WHERE state!='9' AND id={0};""".format(processrun_id)
 
     try:
@@ -4170,6 +4173,7 @@ def run(origin, target, instance, processrun_id):
 
     recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"]) if recovery_result else ""
     browse_job_id = recovery_result["browse_job_id"] if recovery_result else ""
+    SCN = recovery_result["SCN"] if recovery_result else ""
 
     webaddr = ""
     port = ""
@@ -4209,7 +4213,7 @@ def run(origin, target, instance, processrun_id):
     cvAPI = CV_API(cvToken)
 
     jobId = cvAPI.restoreOracleRacBackupset(origin, target, instance,
-                                            {'browseJobId': browse_job_id, 'restoreTime': recover_time})
+                                            {'browseJobId': browse_job_id, 'restoreTime': recover_time, 'SCN': SCN})
     # jobId = 4553295
     if jobId == -1:
         exit(1)

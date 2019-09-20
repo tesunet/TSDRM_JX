@@ -3015,6 +3015,9 @@ class CV_Backupset(CV_Client):
             if "browseJobId" not in keys:
                 self.msg = "operator - no browseJobId"
                 return jobId
+            if "SCN" not in keys:
+                self.msg = "operator - no SCN"
+                return jobId
         else:
             self.msg = "param not set"
             return jobId
@@ -3023,6 +3026,7 @@ class CV_Backupset(CV_Client):
         destClient = dest
         restoreTime = operator["restoreTime"]
         browseJobId = operator["browseJobId"]
+        SCN = operator["SCN"]
 
         restoreoracleRacXML = '''
             <TMMsg_CreateTaskReq>
@@ -3281,9 +3285,8 @@ class CV_Backupset(CV_Client):
         if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
-
+                
                   <processinginstructioninfo/>
-
                   <taskInfo>
                     <task>
                       <taskFlags>
@@ -3401,11 +3404,11 @@ class CV_Backupset(CV_Client):
                             <restoreTag></restoreTag>
                             <checkReadOnly>false</checkReadOnly>
                             <recover>true</recover>
-                            <recoverFrom>1</recoverFrom>
+                            <recoverFrom>2</recoverFrom>
                             <recoverTime>
                               <timeValue>{restoreTime}</timeValue>
                             </recoverTime>
-                            <recoverSCN></recoverSCN>
+                            <recoverSCN>{SCN}</recoverSCN>
                             <noCatalog>true</noCatalog>
                             <restoreStream>2</restoreStream>
                             <resetDatabase>false</resetDatabase>
@@ -3530,10 +3533,10 @@ class CV_Backupset(CV_Client):
                       <subTaskOperation>OVERWRITE</subTaskOperation>
                     </subTasks>
                   </taskInfo>
-
+                
                 </TMMsg_CreateTaskReq>
             """.format(sourceClient=sourceClient, destClient=destClient, instance=instance, restoreTime=restoreTime,
-                       browseJobId=browseJobId)
+                       browseJobId=browseJobId, SCN=SCN)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)

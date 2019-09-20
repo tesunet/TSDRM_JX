@@ -125,6 +125,7 @@ class ProcessRun(models.Model):
     target = models.ForeignKey(Target, blank=True, null=True, verbose_name="oracle恢复流程指定目标客户端")
     recover_time = models.DateTimeField("指定恢复时间点", blank=True, null=True)
     browse_job_id = models.CharField("指点时间点的备份任务ID", blank=True, null=True, max_length=50)
+    SCN = models.CharField("指定备份节点的SCN", blank=True, null=True, max_length=50)
 
 
 class StepRun(models.Model):

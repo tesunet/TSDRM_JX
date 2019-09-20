@@ -88,6 +88,7 @@ $(document).ready(function () {
             $("input[name='optionsRadios'][value='2']").prop("checked", true);
             $("#ora_instance").val(data.instance);
             $("#browseJobId").val(data.jobId);
+            $("#SCN").val(data.SCN);
         });
 
         $("#recovery_time_redio_group").click(function () {
@@ -122,7 +123,8 @@ $(document).ready(function () {
                         restoreTime: myrestoreTime,
                         browseJobId: $("#browseJobId").val(),
                         // 判断是oracle还是oracle rac
-                        agent: $("#agent").val()
+                        agent: $("#agent").val(),
+                        SCN: $("#SCN").val()
                     },
                     success: function (data) {
                         alert(data);

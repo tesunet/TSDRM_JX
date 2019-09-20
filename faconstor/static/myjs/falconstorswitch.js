@@ -109,7 +109,8 @@ $(document).ready(function () {
 
                     target: $("#target").val(),
                     recovery_time: $("#recovery_time").val(),
-                    browseJobId: $("#browseJobId").val()
+                    browseJobId: $("#browseJobId").val(),
+                    SCN: $("#SCN").val()
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {
@@ -141,7 +142,9 @@ $(document).ready(function () {
 
                     target: $("#target_invited").val(),
                     recovery_time: $("#recovery_time_invited").val(),
-                    browseJobId: $("#browseJobIdInvited").val()
+                    browseJobId: $("#browseJobIdInvited").val(),
+
+                    SCN: $("#SCN_invited").val()
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {
@@ -329,7 +332,7 @@ $(document).ready(function () {
         });
         $("#sample_1").DataTable().destroy();
         customProcessDataTable();
-    })
+    });
 
     $("#recovery_time_redio_group").click(function () {
         if ($("input[name='recovery_time_redio']:checked").val() == 2) {
@@ -380,6 +383,8 @@ $(document).ready(function () {
                 $("input[name='optionsRadios'][value='1']").prop("checked", false);
                 $("input[name='optionsRadios'][value='2']").prop("checked", true);
                 $("#browseJobId").val(data.jobId);
+                $("#SCN").val(data.SCN);
+
                 $("#static04").modal("hide");
 
             });
@@ -437,6 +442,7 @@ $(document).ready(function () {
                 $("input[name='optionsRadios'][value='1']").prop("checked", false);
                 $("input[name='optionsRadios'][value='2']").prop("checked", true);
                 $("#browseJobIdInvited").val(data.jobId);
+                $("#SCN_invited").val(data.SCN);
 
                 $("#static04").modal("hide");
             });

@@ -3,6 +3,7 @@ import datetime
 import copy
 from TSDRM import settings
 from faconstor.CVApi_bak import *
+import re
 
 
 class DataMonitor(object):
@@ -793,6 +794,25 @@ class CVApi(DataMonitor):
         content = self.fetch_all(oracle_backup_sql)
         oracle_backuplist = []
         for i in content:
+            ###############################################
+            # 选择一台rac机器，nextSCN-1作为当前备份的SCN号#
+            ##############################################
+            next_SCN = i[5]
+            cur_SCN = ""
+            if next_SCN:
+                com = re.compile(" \d+")
+                all_next_SCN = com.findall(next_SCN)
+                if all_next_SCN:
+                    try:
+                        first_rac_SCN = int(all_next_SCN[0].strip())
+                        second_rac_SCN = int(all_next_SCN[1].strip())
+                    except Exception as e:
+                        print("SCN:", e)
+                    else:
+                        if first_rac_SCN > second_rac_SCN:
+                            cur_SCN = first_rac_SCN - 1
+                        else:
+                            cur_SCN = second_rac_SCN - 1
 
             start_time = "{:%Y-%m-%d %H:%M:%S}".format(i[2].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[2] else ""
             last_time = "{:%Y-%m-%d %H:%M:%S}".format(i[3].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[3] else ""
@@ -804,6 +824,7 @@ class CVApi(DataMonitor):
                 "StartTime": start_time,
                 "LastTime": last_time,
                 "instance": i[4],
+                "SCN": cur_SCN
             })
         return oracle_backuplist
 
@@ -1261,8 +1282,8 @@ if __name__ == '__main__':
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
-    # ret = dm.get_instance_from_oracle()
-    ret = dm.get_job_controller()
+    ret = dm.get_oracle_backup_job_list("oracle_rac")
+    # ret = dm.get_job_controller()
     print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients_for_info()

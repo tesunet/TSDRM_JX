@@ -3232,6 +3232,7 @@ def falconstorrun(request):
         target = request.POST.get('target', '')
         recovery_time = request.POST.get('recovery_time', '')
         browseJobId = request.POST.get('browseJobId', '')
+        SCN = request.POST.get('SCN', '')
 
         try:
             processid = int(processid)
@@ -3263,6 +3264,7 @@ def falconstorrun(request):
                     myprocessrun.state = "RUN"
                     myprocessrun.target_id = target
                     myprocessrun.browse_job_id = browseJobId
+                    myprocessrun.SCN = SCN
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
                     # print("processid:{0}, run_reason:{1}, target:{2}, recovery_time:{3}".format(processid, run_reason,
@@ -3359,6 +3361,8 @@ def falconstor_run_invited(request):
         recovery_time = request.POST.get('recovery_time', '')
         browseJobId = request.POST.get('browseJobId', '')
 
+        SCN = request.POST.get('SCN', '')
+
         if current_process_run:
             current_process_run = current_process_run[0]
 
@@ -3373,6 +3377,7 @@ def falconstor_run_invited(request):
                 current_process_run.recover_time = datetime.datetime.strptime(recovery_time,
                                                                               "%Y-%m-%d %H:%M:%S") if recovery_time else None
                 current_process_run.browse_job_id = browseJobId
+                current_process_run.SCN = SCN
 
                 current_process_run.save()
 
@@ -6486,9 +6491,9 @@ def dooraclerecovery(request):
             instanceName = request.POST.get('instanceName', '')
             browseJobId = request.POST.get('browseJobId', '')
             agent = request.POST.get('agent', '')
-            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None}
+            SCN = request.POST.get('SCN', '')
 
-
+            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "SCN": SCN}
             cvToken = CV_RestApi_Token()
             cvToken.login(info)
             cvAPI = CV_API(cvToken)
