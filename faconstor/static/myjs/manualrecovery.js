@@ -40,6 +40,7 @@ $(document).ready(function () {
         var jQuery_el = $(el);
         var agent = jQuery_el.parent().next().html();
         $("#agent").val(agent);
+        $("#data_path").val("");
 
         $("#sourceClient").val(el.innerText);
         var datatable = $("#backup_point").dataTable();
@@ -88,7 +89,7 @@ $(document).ready(function () {
             $("input[name='optionsRadios'][value='2']").prop("checked", true);
             $("#ora_instance").val(data.instance);
             $("#browseJobId").val(data.jobId);
-            $("#SCN").val(data.SCN);
+
         });
 
         $("#recovery_time_redio_group").click(function () {
@@ -124,7 +125,7 @@ $(document).ready(function () {
                         browseJobId: $("#browseJobId").val(),
                         // 判断是oracle还是oracle rac
                         agent: $("#agent").val(),
-                        SCN: $("#SCN").val()
+                        data_path: $("#data_path").val()
                     },
                     success: function (data) {
                         alert(data);

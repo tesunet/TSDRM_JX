@@ -440,7 +440,7 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.receiveauth = steprun.step.group
                     myprocesstask.type = "ERROR"
                     myprocesstask.state = "0"
-                    myprocesstask.content = "接口" + script_name + "调用过程中，Oracle恢复失败。"
+                    myprocesstask.content = "接口" + script_name + "调用过程中，Oracle恢复异常。"
                     myprocesstask.steprun_id = steprun.id
                     myprocesstask.save()
                     return 0

@@ -29,9 +29,9 @@ class CV_RestApi_Token(object):
     """
     Class documentation goes here.
     it is CV Rest API
-            
+
     member
-        init 
+        init
         login(credit) return None/token
         setAccess
     """
@@ -78,7 +78,7 @@ class CV_RestApi_Token(object):
 
     def _login(self, credit):
         """
-        Constructor 
+        Constructor
         login function
         """
         self.isLogin = False
@@ -132,9 +132,9 @@ class CV_RestApi(object):
     attrib
         service is CV webaddr service string
         msg is error/success msg
-        
+
     member
-        init 
+        init
         login(credit) return None/token
         setAccess
     """
@@ -323,17 +323,17 @@ class CV_RestApi(object):
 
 class CV_GetAllInformation(CV_RestApi):
     """
-    class CV_getAllInformation is get total information class 
+    class CV_getAllInformation is get total information class
     include client, subclient, storagePolice, schdule, joblist
     spList = {"storagePolicyId", "storagePolicyName"}
     schduleList = {"taskName", "associatedObjects", "taskType", "runUserId", "taskId", "ownerId", "description", "ownerName", "policyType", "GUID", "alertId"}
     clientList = {"clientId", "clientName", "_type_"}
-    
+
     getSPlist return storage Police list
     getSchduleList return schdule List
     getClientList return client List
     getJobList return job list
-    
+
     """
 
     def __init__(self, token):
@@ -1220,9 +1220,9 @@ class CV_Backupset(CV_Client):
         return self.isNewBackupset
 
     def getBackupset(self, agentType, backupset=None):
-        # param client is clientName or clientId 
-        # param backupset is backupsetName or backupsetId 
-        # return backupset info backupset 
+        # param client is clientName or clientId
+        # param backupset is backupsetName or backupsetId
+        # return backupset info backupset
         # None is no backupset
         self.isNewBackupset = True
         self.backupsetInfo = None
@@ -1322,10 +1322,10 @@ class CV_Backupset(CV_Client):
         return True
 
     def setFSBackupset(self, backupset=None, content=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # content is  FSBackupset {"SPName":, "Schdule":, "Paths":["", ""], "OS":True/False}
-        # return True / False        
+        # return True / False
         if content == None:
             self.msg = "param is not set"
             return False
@@ -2004,7 +2004,7 @@ class CV_Backupset(CV_Client):
         return True
 
     def setMssqlBackupset(self, backupset=None, credit=None, content=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # credit is {"instanceName":,"Server":, "userName":, "passwd":, SPName":, "useVss":True/False}
         # content is {"SPName":, "Schdule":}
@@ -2153,10 +2153,10 @@ class CV_Backupset(CV_Client):
         # print(self.receiveText)
 
     def restoreFSBackupset(self, dest, operator):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # operator is {"restoreTime":, "destPath":, "sourcePaths":["", ""], "overWrite":True/False, "OS Restore":True/False, "inPlace":True/False}
-        # return jobId 
+        # return jobId
         # or -1 is error
         jobId = -1
 
@@ -2395,8 +2395,8 @@ class CV_Backupset(CV_Client):
         return jobId
 
     def restoreVMWareBackupset(self, dest, operator):
-        # operator is {"vsaClientName":"vsTest.hzx", "vmGUID":"" , "vmName":"" , "vsaBrowseProxy":"", "vsaRestoreProxy":"", 
-        #              "vCenterHost", "DCName", "esxHost", "datastore", "newVMName":"abc", "diskOption":"Auto/Thin/thick", 
+        # operator is {"vsaClientName":"vsTest.hzx", "vmGUID":"" , "vmName":"" , "vsaBrowseProxy":"", "vsaRestoreProxy":"",
+        #              "vCenterHost", "DCName", "esxHost", "datastore", "newVMName":"abc", "diskOption":"Auto/Thin/thick",
         #              "Power":True/False, "overWrite":True/False}
         jobId = -1
         restoreVMXML = '''
@@ -2696,9 +2696,9 @@ class CV_Backupset(CV_Client):
         return jobId
 
     def restoreOracleBackupset(self, source, dest, operator):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # operator is {"instanceName":, "destClient":, "restoreTime":, "browseJobId":None}
-        # return JobId 
+        # return JobId
         # or -1 is error
         jobId = -1
         instance = self.backupsetInfo["instanceName"]
@@ -3001,9 +3001,9 @@ class CV_Backupset(CV_Client):
         return jobId
 
     def restoreOracleRacBackupset(self, source, dest, operator):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # operator is {"instanceName":, "destClient":, "restoreTime":, "browseJobId":None}
-        # return JobId 
+        # return JobId
         # or -1 is error
         jobId = -1
         instance = self.backupsetInfo["instanceName"]
@@ -3015,8 +3015,8 @@ class CV_Backupset(CV_Client):
             if "browseJobId" not in keys:
                 self.msg = "operator - no browseJobId"
                 return jobId
-            if "SCN" not in keys:
-                self.msg = "operator - no SCN"
+            if "data_path" not in keys:
+                self.msg = "operator - no data_path"
                 return jobId
         else:
             self.msg = "param not set"
@@ -3026,7 +3026,7 @@ class CV_Backupset(CV_Client):
         destClient = dest
         restoreTime = operator["restoreTime"]
         browseJobId = operator["browseJobId"]
-        SCN = operator["SCN"]
+        data_path = operator["data_path"]
 
         restoreoracleRacXML = '''
             <TMMsg_CreateTaskReq>
@@ -3108,7 +3108,7 @@ class CV_Backupset(CV_Client):
                                     <racDataStreamAllcation>3 1</racDataStreamAllcation>
                                     <catalogConnect1></catalogConnect1>
                                     <catalogConnect2>
-                                        <password>||#5!M2NmZTNlZWI4NTRlOGFhNjRlMDE1NWJlYzAxOTY3NGQ1&#xA;</password>
+                                        <password/>
                                     </catalogConnect2>
                                     <catalogConnect3></catalogConnect3>
                                     <restoreControlFile>true</restoreControlFile>
@@ -3161,7 +3161,7 @@ class CV_Backupset(CV_Client):
                                     <resetLogs>0</resetLogs>
                                     <redirectItemsPresent>true</redirectItemsPresent>
                                     <validate>false</validate>
-                                    <renamePathForAllTablespaces>/u01/app/oracle/oradata/ORACLE/datafile
+                                    <renamePathForAllTablespaces>{data_path}
                                     </renamePathForAllTablespaces>
                                     <databaseCopy>false</databaseCopy>
                                     <duplicate>false</duplicate>
@@ -3281,12 +3281,13 @@ class CV_Backupset(CV_Client):
 
             </TMMsg_CreateTaskReq>
         '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()))
+                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), data_path=data_path)
         if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
                 
                   <processinginstructioninfo/>
+                
                   <taskInfo>
                     <task>
                       <taskFlags>
@@ -3366,7 +3367,7 @@ class CV_Backupset(CV_Client):
                             <racDataStreamAllcation>3 1</racDataStreamAllcation>
                             <catalogConnect1></catalogConnect1>
                             <catalogConnect2>
-                              <password>||#5!M2NmZTNlZWI4NTRlOGFhNjRlMDE1NWJlYzAxOTY3NGQ1&#xA;</password>
+                              <password/>
                             </catalogConnect2>
                             <catalogConnect3></catalogConnect3>
                             <restoreControlFile>true</restoreControlFile>
@@ -3404,11 +3405,11 @@ class CV_Backupset(CV_Client):
                             <restoreTag></restoreTag>
                             <checkReadOnly>false</checkReadOnly>
                             <recover>true</recover>
-                            <recoverFrom>2</recoverFrom>
+                            <recoverFrom>1</recoverFrom>
                             <recoverTime>
                               <timeValue>{restoreTime}</timeValue>
                             </recoverTime>
-                            <recoverSCN>{SCN}</recoverSCN>
+                            <recoverSCN></recoverSCN>
                             <noCatalog>true</noCatalog>
                             <restoreStream>2</restoreStream>
                             <resetDatabase>false</resetDatabase>
@@ -3417,7 +3418,7 @@ class CV_Backupset(CV_Client):
                             <resetLogs>0</resetLogs>
                             <redirectItemsPresent>true</redirectItemsPresent>
                             <validate>false</validate>
-                            <renamePathForAllTablespaces>/u01/app/oracle/oradata/ORACLE/datafile</renamePathForAllTablespaces>
+                            <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
                             <databaseCopy>false</databaseCopy>
                             <duplicate>false</duplicate>
                             <duplicateNoFileNamecheck>false</duplicateNoFileNamecheck>
@@ -3536,7 +3537,7 @@ class CV_Backupset(CV_Client):
                 
                 </TMMsg_CreateTaskReq>
             """.format(sourceClient=sourceClient, destClient=destClient, instance=instance, restoreTime=restoreTime,
-                       browseJobId=browseJobId, SCN=SCN)
+                       browseJobId=browseJobId, data_path=data_path)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
@@ -3810,21 +3811,21 @@ class CV_API(object):
         return True
 
     def setRACClient(self, client, racClient):
-        # param client is clientName or clientId 
-        # param racClient 
+        # param client is clientName or clientId
+        # param racClient
         # return True / False
         return True
 
     def delRACClient(self, client):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # return True / False
         return True
 
     def getBackupset(self, client, agentType, backupset=None):
-        # param client is clientName or clientId 
-        # param backupset is backupsetName or backupsetId 
-        # return backupset info backupset 
-        # None is no backupset        
+        # param client is clientName or clientId
+        # param backupset is backupsetName or backupsetId
+        # return backupset info backupset
+        # None is no backupset
         info = CV_Backupset(self.token, client, agentType)
         backupsetInfo = info.getBackupset(agentType, backupset)
         self.msg = info.msg
@@ -3839,7 +3840,7 @@ class CV_API(object):
         return clientInfo.getSubclientInfo(subclientId)
 
     def setFSBackupset(self, client, backupset, content=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # content is  FSBackupset {"SPName":, "Schdule":, "Paths":["", ""], "OS":True/False}
         # return True / False
@@ -3853,7 +3854,7 @@ class CV_API(object):
         return retCode
 
     def setVMWareBackupset(self, client, backupset, content=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # content is {"proxyList":["",""], "vmList":["", ""], "SPName":, "Schdule":}
         # return True / False
@@ -3866,7 +3867,7 @@ class CV_API(object):
         return retCode
 
     def setOracleBackupset(self, client, instanceName, credit, content=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # credit is {"instanceName":"ORCL", "Server":，"userName":, "passwd":, "OCS":, "SPName":, "ORACLE-HOME":}
         # content is {"SPName":, "Schdule":}
         # return True / False
@@ -3880,7 +3881,7 @@ class CV_API(object):
         return retCode
 
     def setMssqlBackupset(self, client, instanceName, credit=None, content=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # credit is {"instanceName":,"Server":, "userName":, "passwd":, SPName":, "useVss":True/False}
         # content is {"SPName":, "Schdule":}
@@ -3894,10 +3895,10 @@ class CV_API(object):
         return retCode
 
     def browse(self, client, agentType, backupset, path, showDeleted=False):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # operator is {"destClient":, "restoreTime":, "destPath":, "Path":, "overwrite":True/False, "OS Restore": True/False}
-        # return JobId 
+        # return JobId
         # or -1 is error
         cvBackupset = CV_Backupset(self.token, client, agentType, backupset)
         if cvBackupset.getIsNewClient() == True:
@@ -3911,10 +3912,10 @@ class CV_API(object):
         return list
 
     def restoreFSBackupset(self, source, dest, backupset, operator=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # backupset is backupsetName or backupsetId
         # operator is {"restoreTime":, "destPath":, "Path":["", ""], "overwrite":True/False, "OS Restore": True/False}
-        # return JobId 
+        # return JobId
         # or -1 is error
         sourceClient = CV_Backupset(self.token, source, "File System", backupset)
         if sourceClient.getIsNewClient() == True:
@@ -3932,7 +3933,7 @@ class CV_API(object):
         return retCode
 
     def restoreOracleBackupset(self, source, dest, instance, operator=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
         # return JobId
         # or -1 is error
@@ -3951,7 +3952,7 @@ class CV_API(object):
         return jobId
 
     def restoreOracleRacBackupset(self, source, dest, instance, operator=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # operator is {"instanceName":, "destClient":, "restoreTime":, "browseJobId":None}
         # return JobId
         # or -1 is error
@@ -3970,7 +3971,7 @@ class CV_API(object):
         return jobId
 
     def restoreMssqlBackupset(self, source, dest, instance, operator=None):
-        # param client is clientName or clientId 
+        # param client is clientName or clientId
         # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
         # return JobId
         # or -1 is error
@@ -3989,10 +3990,10 @@ class CV_API(object):
         return jobId
 
     def restoreVMWareBackupset(self, source, dest, backupset=None, operator=None):
-        # operator is {"vmGUID":"" , "vmName":"" , "vsaBrowseProxy":"", "vsaRestoreProxy":"", 
-        #              "vCenterHost", "DCName", "esxHost", "datastore", "newVMName":"abc", "diskOption":"Auto/Thin/thick", 
+        # operator is {"vmGUID":"" , "vmName":"" , "vsaBrowseProxy":"", "vsaRestoreProxy":"",
+        #              "vCenterHost", "DCName", "esxHost", "datastore", "newVMName":"abc", "diskOption":"Auto/Thin/thick",
         #              "Power":True/False, "overWrite":True/False}
-        # return JobId 
+        # return JobId
         # or -1 is error
 
         sourceBackupset = CV_Backupset(self.token, source, "Virtual Server", backupset)
@@ -4011,10 +4012,10 @@ class CV_API(object):
 
     def getJobList(self, client, agentType=None, backupset=None, type="backup"):
         # param client is clientName or clientId or None is all client
-        # param agentType = 
+        # param agentType =
         # backupset is backsetupName or backsetupId
         # operator is backup, restore, admin and others
-        # return job List, {"jobID":, "clientName":, "clientId":, "Start":, "End":, } 
+        # return job List, {"jobID":, "clientName":, "clientId":, "Start":, "End":, }
         # None is no job
         joblist = []
         jobRec = {}
@@ -4043,7 +4044,7 @@ class CV_API(object):
         return joblist
 
     def getSPList(self):
-        # return SPNameList, {"SPName":, "SPId":} 
+        # return SPNameList, {"SPName":, "SPId":}
         spList = []
         sp = {"SPName": None, "SPId": None}
         info = CV_GetAllInformation(self.token)
@@ -4056,7 +4057,7 @@ class CV_API(object):
         return spList
 
     def getSchduleList(self):
-        # return schdulelist, {"SchduleName":, "SchduleId":} 
+        # return schdulelist, {"SchduleName":, "SchduleId":}
         schduleList = []
         schdule = {"SchduleName": None, "SchduleId": None}
         info = CV_GetAllInformation(self.token)
@@ -4070,7 +4071,7 @@ class CV_API(object):
 
     def getVMWareVMList(self, client):
         # param client is clientName or clientId
-        # return vmlist, {"VMName":, "VMGuID":} 
+        # return vmlist, {"VMName":, "VMGuID":}
         clientInfo = CV_Client(self.token)
         info = clientInfo.getClientInfo(client)
         if info == None:
@@ -4091,7 +4092,7 @@ class CV_API(object):
 
     def getVMWareDataStoreList(self, client):
         # param client is clientName or clientId
-        # return dataStorelist {"DCName":, "DCGuID":, "ESXName":, "ESXGuID":, "DSName":, "DSGuID":, "totalSize":, "freeSize"} 
+        # return dataStorelist {"DCName":, "DCGuID":, "ESXName":, "ESXGuID":, "DSName":, "DSGuID":, "totalSize":, "freeSize"}
         clientInfo = CV_Client(self.token)
         info = clientInfo.getClientInfo(client)
         if info == None:

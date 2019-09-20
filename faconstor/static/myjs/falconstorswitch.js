@@ -110,7 +110,7 @@ $(document).ready(function () {
                     target: $("#target").val(),
                     recovery_time: $("#recovery_time").val(),
                     browseJobId: $("#browseJobId").val(),
-                    SCN: $("#SCN").val()
+                    data_path: $("#data_path").val(),
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {
@@ -143,8 +143,8 @@ $(document).ready(function () {
                     target: $("#target_invited").val(),
                     recovery_time: $("#recovery_time_invited").val(),
                     browseJobId: $("#browseJobIdInvited").val(),
+                    data_path: $("#data_path_invited").val(),
 
-                    SCN: $("#SCN_invited").val()
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {
@@ -383,7 +383,6 @@ $(document).ready(function () {
                 $("input[name='recovery_time_redio'][value='1']").prop("checked", false);
                 $("input[name='recovery_time_redio'][value='2']").prop("checked", true);
                 $("#browseJobId").val(data.jobId);
-                $("#SCN").val(data.SCN);
 
                 $("#static04").modal("hide");
 
@@ -442,7 +441,6 @@ $(document).ready(function () {
                 $("input[name='recovery_time_redio_invited'][value='1']").prop("checked", false);
                 $("input[name='recovery_time_redio_invited'][value='2']").prop("checked", true);
                 $("#browseJobIdInvited").val(data.jobId);
-                $("#SCN_invited").val(data.SCN);
 
                 $("#static04").modal("hide");
             });
@@ -456,6 +454,8 @@ $(document).ready(function () {
         $("#target").val("");
         $("#run_reason").val("");
         $("#recovery_time").val("");
+        $("#data_path").val("");
+
         // 写入当前时间
         var myDate = new Date();
         $("#run_time").val(myDate.toLocaleString());
@@ -467,6 +467,8 @@ $(document).ready(function () {
         $("#target_invited").val("");
         $("#runreason_invited").val("");
         $("#recovery_time_invited").val("");
+        $("#data_path_invited").val("");
+
         // 写入当前时间
         var myDate = new Date();
         $("#runtime_invited").val(myDate.toLocaleString());

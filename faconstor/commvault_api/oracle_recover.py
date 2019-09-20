@@ -3008,8 +3008,8 @@ class CV_Backupset(CV_Client):
             if "browseJobId" not in keys:
                 self.msg = "operator - no browseJobId"
                 return jobId
-            if "SCN" not in keys:
-                self.msg = "operator - no SCN"
+            if "data_path" not in keys:
+                self.msg = "operator - no data_path"
                 return jobId
         else:
             self.msg = "param not set"
@@ -3019,7 +3019,7 @@ class CV_Backupset(CV_Client):
         destClient = dest
         restoreTime = operator["restoreTime"]
         browseJobId = operator["browseJobId"]
-        SCN = operator["SCN"]
+        data_path = operator["data_path"]
 
         restoreoracleRacXML = '''
             <TMMsg_CreateTaskReq>
@@ -3101,7 +3101,7 @@ class CV_Backupset(CV_Client):
                                     <racDataStreamAllcation>3 1</racDataStreamAllcation>
                                     <catalogConnect1></catalogConnect1>
                                     <catalogConnect2>
-                                        <password>||#5!M2NmZTNlZWI4NTRlOGFhNjRlMDE1NWJlYzAxOTY3NGQ1&#xA;</password>
+                                        <password/>
                                     </catalogConnect2>
                                     <catalogConnect3></catalogConnect3>
                                     <restoreControlFile>true</restoreControlFile>
@@ -3154,7 +3154,7 @@ class CV_Backupset(CV_Client):
                                     <resetLogs>0</resetLogs>
                                     <redirectItemsPresent>true</redirectItemsPresent>
                                     <validate>false</validate>
-                                    <renamePathForAllTablespaces>/u01/app/oracle/oradata/ORACLE/datafile
+                                    <renamePathForAllTablespaces>{data_path}
                                     </renamePathForAllTablespaces>
                                     <databaseCopy>false</databaseCopy>
                                     <duplicate>false</duplicate>
@@ -3274,12 +3274,13 @@ class CV_Backupset(CV_Client):
 
             </TMMsg_CreateTaskReq>
         '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()))
+                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), data_path=data_path)
         if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
 
                   <processinginstructioninfo/>
+
                   <taskInfo>
                     <task>
                       <taskFlags>
@@ -3359,7 +3360,7 @@ class CV_Backupset(CV_Client):
                             <racDataStreamAllcation>3 1</racDataStreamAllcation>
                             <catalogConnect1></catalogConnect1>
                             <catalogConnect2>
-                              <password>||#5!M2NmZTNlZWI4NTRlOGFhNjRlMDE1NWJlYzAxOTY3NGQ1&#xA;</password>
+                              <password/>
                             </catalogConnect2>
                             <catalogConnect3></catalogConnect3>
                             <restoreControlFile>true</restoreControlFile>
@@ -3397,11 +3398,11 @@ class CV_Backupset(CV_Client):
                             <restoreTag></restoreTag>
                             <checkReadOnly>false</checkReadOnly>
                             <recover>true</recover>
-                            <recoverFrom>2</recoverFrom>
+                            <recoverFrom>1</recoverFrom>
                             <recoverTime>
                               <timeValue>{restoreTime}</timeValue>
                             </recoverTime>
-                            <recoverSCN>{SCN}</recoverSCN>
+                            <recoverSCN></recoverSCN>
                             <noCatalog>true</noCatalog>
                             <restoreStream>2</restoreStream>
                             <resetDatabase>false</resetDatabase>
@@ -3410,7 +3411,7 @@ class CV_Backupset(CV_Client):
                             <resetLogs>0</resetLogs>
                             <redirectItemsPresent>true</redirectItemsPresent>
                             <validate>false</validate>
-                            <renamePathForAllTablespaces>/u01/app/oracle/oradata/ORACLE/datafile</renamePathForAllTablespaces>
+                            <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
                             <databaseCopy>false</databaseCopy>
                             <duplicate>false</duplicate>
                             <duplicateNoFileNamecheck>false</duplicateNoFileNamecheck>
@@ -3529,7 +3530,7 @@ class CV_Backupset(CV_Client):
 
                 </TMMsg_CreateTaskReq>
             """.format(sourceClient=sourceClient, destClient=destClient, instance=instance, restoreTime=restoreTime,
-                       browseJobId=browseJobId, SCN=SCN)
+                       browseJobId=browseJobId, data_path=data_path)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
@@ -4206,13 +4207,12 @@ def run(origin, target, instance, processrun_id):
         "last_login": 0
     }
 
-
     cvToken = CV_RestApi_Token()
     cvToken.login(info)
     cvAPI = CV_API(cvToken)
 
     jobId = cvAPI.restoreOracleBackupset(origin, target, instance,
-                                            {'browseJobId': browse_job_id, 'restoreTime': recover_time})
+                                         {'browseJobId': browse_job_id, 'restoreTime': recover_time})
     # jobId = 4553295
     if jobId == -1:
         exit(1)

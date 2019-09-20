@@ -788,32 +788,12 @@ class CVApi(DataMonitor):
         return commserv_info
 
     def get_oracle_backup_job_list(self, client_name):
-        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN]
+        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}';""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
         oracle_backuplist = []
         for i in content:
-            ###############################################
-            # 选择一台rac机器，nextSCN-1作为当前备份的SCN号#
-            ##############################################
-            next_SCN = i[5]
-            cur_SCN = ""
-            if next_SCN:
-                com = re.compile(" \d+")
-                all_next_SCN = com.findall(next_SCN)
-                if all_next_SCN:
-                    try:
-                        first_rac_SCN = int(all_next_SCN[0].strip())
-                        second_rac_SCN = int(all_next_SCN[1].strip())
-                    except Exception as e:
-                        print("SCN:", e)
-                    else:
-                        if first_rac_SCN > second_rac_SCN:
-                            cur_SCN = first_rac_SCN - 1
-                        else:
-                            cur_SCN = second_rac_SCN - 1
-
             start_time = "{:%Y-%m-%d %H:%M:%S}".format(i[2].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[2] else ""
             last_time = "{:%Y-%m-%d %H:%M:%S}".format(i[3].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[3] else ""
 
@@ -824,7 +804,6 @@ class CVApi(DataMonitor):
                 "StartTime": start_time,
                 "LastTime": last_time,
                 "instance": i[4],
-                "SCN": cur_SCN
             })
         return oracle_backuplist
 

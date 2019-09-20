@@ -3232,17 +3232,21 @@ def falconstorrun(request):
         target = request.POST.get('target', '')
         recovery_time = request.POST.get('recovery_time', '')
         browseJobId = request.POST.get('browseJobId', '')
-        SCN = request.POST.get('SCN', '')
+        data_path = request.POST.get('data_path', '')
 
         try:
             processid = int(processid)
         except:
             return JsonResponse({"res": "当前流程不存在。"})
 
+        if not data_path.strip():
+            return JsonResponse({"res": "数据文件重定向路径不能为空。"})
+
         try:
             target = int(target)
         except:
             return JsonResponse({"res": "目标客户端未选择。"})
+
 
         process = Process.objects.filter(id=processid).exclude(state="9").filter(type="falconstor")
         if (len(process) <= 0):
@@ -3264,7 +3268,7 @@ def falconstorrun(request):
                     myprocessrun.state = "RUN"
                     myprocessrun.target_id = target
                     myprocessrun.browse_job_id = browseJobId
-                    myprocessrun.SCN = SCN
+                    myprocessrun.data_path = data_path
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
                     # print("processid:{0}, run_reason:{1}, target:{2}, recovery_time:{3}".format(processid, run_reason,
@@ -3343,6 +3347,7 @@ def falconstorrun(request):
                                 exec_process.delay(myprocessrun.id)
                                 result["res"] = "新增成功。"
                                 result["data"] = "/processindex/" + str(myprocessrun.id)
+
         return HttpResponse(json.dumps(result))
 
 
@@ -3361,7 +3366,15 @@ def falconstor_run_invited(request):
         recovery_time = request.POST.get('recovery_time', '')
         browseJobId = request.POST.get('browseJobId', '')
 
-        SCN = request.POST.get('SCN', '')
+        data_path = request.POST.get('data_path', '')
+
+        if not data_path.strip():
+            return JsonResponse({"res": "数据文件重定向路径不能为空。"})
+
+        try:
+            target = int(target)
+        except:
+            return JsonResponse({"res": "目标客户端未选择。"})
 
         if current_process_run:
             current_process_run = current_process_run[0]
@@ -3377,7 +3390,7 @@ def falconstor_run_invited(request):
                 current_process_run.recover_time = datetime.datetime.strptime(recovery_time,
                                                                               "%Y-%m-%d %H:%M:%S") if recovery_time else None
                 current_process_run.browse_job_id = browseJobId
-                current_process_run.SCN = SCN
+                current_process_run.data_path = data_path
 
                 current_process_run.save()
 
@@ -6491,9 +6504,9 @@ def dooraclerecovery(request):
             instanceName = request.POST.get('instanceName', '')
             browseJobId = request.POST.get('browseJobId', '')
             agent = request.POST.get('agent', '')
-            SCN = request.POST.get('SCN', '')
+            data_path = request.POST.get('data_path', '')
 
-            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "SCN": SCN}
+            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path}
             cvToken = CV_RestApi_Token()
             cvToken.login(info)
             cvAPI = CV_API(cvToken)
