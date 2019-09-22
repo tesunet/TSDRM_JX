@@ -4830,10 +4830,10 @@ def custom_pdf_report(request):
         css_path = current_path + os.sep + "faconstor" + os.sep + "static" + os.sep + "new" + os.sep + "css" + os.sep + "bootstrap.css"
         css = [r"{0}".format(css_path)]
 
-        pdfkit.from_string(t.content.decode(encoding="utf-8"), r"falconstor.pdf", configuration=config,
+        pdfkit.from_string(t.content.decode(encoding="utf-8"), r"oracle.pdf", configuration=config,
                            options=options, css=css)
 
-        the_file_name = "falconstor.pdf"
+        the_file_name = "oracle.pdf"
         response = StreamingHttpResponse(file_iterator(the_file_name))
         response['Content-Type'] = 'application/octet-stream; charset=unicode'
         response['Content-Disposition'] = 'attachment;filename="{0}"'.format(the_file_name)
