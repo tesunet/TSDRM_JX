@@ -19,8 +19,7 @@ var util = {
             $(".header-title").css("margin", "50px 0");
             $(".start_hand").css("top", "380px");
             $(".end_pic").css("top", "300px");
-        }
-        else {
+        } else {
             $(".step-box").css("margin", "100px 0 60px 0px");
             $(".header-title").css("margin", "0px 0");
             $(".start_hand").css("top", "300px");
@@ -48,7 +47,7 @@ var util = {
     },
     makeHtml: function (data) {
         state = data.state;
-        var sTag = $("#s_tag").val()
+        var sTag = $("#s_tag").val();
         // 判断是否为计划
         if (state === "PLAN") {
             $(".step-box").hide();
@@ -74,7 +73,7 @@ var util = {
             var date = new Date;
             var year = date.getFullYear();
             headerTitle = data.name;
-            var process_run_url = $("#process_url").val() + "/" + $("#process_run_id").val()
+            var process_run_url = $("#process_url").val() + "/" + $("#process_run_id").val();
             $('.header-title h1').html("<span >" + year + "嘉兴银行自动化恢复演练" + "</span>");
             $('.header-title h2').html("<a href='" + process_run_url + "' target='_parent' style='color:#e8e8e8 '>" + headerTitle + "</a>");
         }
@@ -82,7 +81,7 @@ var util = {
         var progressBar = $('.progress-par');
         var percent = parseInt(data.percent);
         progressBar.attr('style', 'width:' + percent + '%');
-        progressBar.find('i').text(percent + '%')
+        progressBar.find('i').text(percent + '%');
         for (var cindex = 0; cindex < allState.length; cindex++) {
             progressBar.removeClass(allState[cindex]);
         }
@@ -126,14 +125,15 @@ var util = {
 
         // 启动应用服务步骤：当前时间减去当前步骤开始时间的秒数作为百分比，如未结束，差值大于99，停留在99%。
         // 没有子步骤 不需要确认 有脚本
-        if (curStep.c_tag === "yes") {
-            var deltaTime = curStep.delta_time;
-            if (deltaTime <= 99) {
-                curStepPercent = deltaTime
-            } else {
-                curStepPercent = 99
-            }
-        }
+
+        // if (curStep.c_tag === "yes") {
+        //     var deltaTime = curStep.delta_time;
+        //     if (deltaTime <= 99) {
+        //         curStepPercent = deltaTime
+        //     } else {
+        //         curStepPercent = 99
+        //     }
+        // }
 
         Circles.create({
             id: 'current-circles',

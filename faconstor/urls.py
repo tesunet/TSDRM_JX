@@ -48,11 +48,6 @@ urlpatterns = [
     url(r'^origin_save/$', origin_save),
     url(r'^origin_del/$', origin_del),
 
-    url(r'^client_manage/$', client_manage, {'funid': '77'}),
-    url(r'^client_save/$', client_save),
-    url(r'^client_manage_data/$', client_manage_data),
-    url(r'^client_manage_del/$', client_manage_del),
-
     # 主机管理
     url(r'^hosts_manage/$', hosts_manage, {'funid': '68'}),
     url(r'^host_save/$', host_save),
@@ -83,18 +78,18 @@ urlpatterns = [
     url(r'^get_verify_items_data/$', get_verify_items_data),
     url(r'^remove_verify_item/$', remove_verify_item),
 
-    # 切换演练
-    url(r'^falconstorswitch/(?P<process_id>\d+)$', falconstorswitch),
-    url(r'^falconstorswitchdata/$', falconstorswitchdata),
-    url(r'^falconstorrun/$', falconstorrun),
-    url(r'^falconstor/(\d+)/$', falconstor, {'funid': '49'}),
+    # Oracle恢复
+    url(r'^oracle_restore/(?P<process_id>\d+)$', oracle_restore),
+    url(r'^oracle_restore_data/$', oracle_restore_data),
+    url(r'^cv_oracle_run/$', cv_oracle_run),
+    url(r'^cv_oracle/(\d+)/$', cv_oracle, {'funid': '49'}),
     url(r'^save_invitation/$', save_invitation),
-    url(r'^falconstor_run_invited/$', falconstor_run_invited),
+    url(r'^cv_oracle_run_invited/$', cv_oracle_run_invited),
     url(r'^fill_with_invitation/$', fill_with_invitation),
     url(r'^save_modify_invitation/$', save_modify_invitation),
 
     url(r'^getrunsetps/$', getrunsetps),
-    url(r'^falconstorcontinue/$', falconstorcontinue),
+    url(r'^cv_oracle_continue/$', cv_oracle_continue),
     url(r'^processsignsave/$', processsignsave),
     url(r'^get_current_scriptinfo/$', get_current_scriptinfo),
     url(r'^ignore_current_script/$', ignore_current_script),
@@ -112,8 +107,8 @@ urlpatterns = [
 
     # 历史查询
     url(r'^custom_pdf_report/$', custom_pdf_report),
-    url(r'^falconstorsearch/$', falconstorsearch, {'funid': '64'}),
-    url(r'^falconstorsearchdata/$', falconstorsearchdata),
+    url(r'^restore_search/$', restore_search, {'funid': '64'}),
+    url(r'^restore_search_data/$', restore_search_data),
     url(r'^tasksearch/$', tasksearch, {'funid': '65'}),
     url(r'^tasksearchdata/$', tasksearchdata),
 

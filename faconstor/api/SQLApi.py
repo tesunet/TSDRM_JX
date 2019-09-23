@@ -488,7 +488,6 @@ class CVApi(DataMonitor):
                 "agent": instance[1],
                 "instance": instance[2]
             })
-        print(instance_list)
         return instance_list
 
     def get_all_backup_content(self):
@@ -817,9 +816,9 @@ class CVApi(DataMonitor):
         for i in content:
             job_controller_list.append({
                 "jobID": i[0],
-                "operation": i[2],
-                "clientComputer": i[3],
-                "agentType": i[4],
+                "operation": i[1],
+                "clientComputer": i[2],
+                "agentType": i[3],
                 "progress": i[10],
                 "delayReason": i[12]
             })

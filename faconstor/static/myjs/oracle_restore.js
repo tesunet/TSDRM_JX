@@ -6,7 +6,7 @@ $(document).ready(function () {
             "bAutoWidth": true,
             "bSort": false,
             "bProcessing": true,
-            "ajax": "../falconstorswitchdata/",
+            "ajax": "../oracle_restore_data/",
             "fnServerParams": function (aoData) {
                 aoData.push({
                     name: "process_id",
@@ -99,7 +99,7 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             dataType: 'json',
-            url: "../falconstorrun/",
+            url: "../cv_oracle_run/",
             data:
                 {
                     processid: process_id,
@@ -111,6 +111,8 @@ $(document).ready(function () {
                     recovery_time: $("#recovery_time").val(),
                     browseJobId: $("#browseJobId").val(),
                     data_path: $("#data_path").val(),
+
+                    origin: $("#origin").val()
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {
@@ -131,7 +133,7 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             dataType: 'json',
-            url: "../falconstor_run_invited/",
+            url: "../cv_oracle_run_invited/",
             data:
                 {
                     processid: process_id,
@@ -145,6 +147,7 @@ $(document).ready(function () {
                     browseJobId: $("#browseJobIdInvited").val(),
                     data_path: $("#data_path_invited").val(),
 
+                    origin: $("#origin_invited").val()
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {

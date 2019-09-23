@@ -70,7 +70,6 @@ $(document).ready(function() {
         $("#origin").val(data.client_id);
         $("#agent").val(data.agent);
         $("#instance").val(data.instance);
-        console.log(data.target_client)
         $("#target").val(data.target_client);
         $("#os").val(data.os);
     });

@@ -13,7 +13,7 @@ var Dashboard = function () {
                         }
                     },
                     title: {
-                        text: '最近切换RTO',
+                        text: '最近恢复RTO',
                         x: -20 //center
                     },
 

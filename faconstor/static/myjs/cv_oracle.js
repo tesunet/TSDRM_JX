@@ -60,7 +60,7 @@ if (App.isAngularJsApp() === false) {
 
         function timefun() {
             var strUrl = window.location.href;
-            if (strUrl.indexOf("falconstor") > -1) {
+            if (strUrl.indexOf("cv_oracle") > -1) {
                 num++;
                 if (num >= 15) {
                     $('#form_wizard_1').removeData('bootstrapWizard');
@@ -706,7 +706,7 @@ if (App.isAngularJsApp() === false) {
             $.ajax({
                 type: "POST",
                 dataType: 'json',
-                url: "../../falconstorcontinue/",
+                url: "../../cv_oracle_continue/",
                 data:
                     {
                         process: $('#process').val(),

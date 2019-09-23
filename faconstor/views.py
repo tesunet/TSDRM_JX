@@ -174,7 +174,7 @@ def getpagefuns(funid, request=""):
         if len(myurl) > 0:
             myurl = myurl[:-1]
             jsurl = jsurl[:-1]
-            if "falconstorswitch" in myurl:
+            if "oracle_restore" in myurl:
                 compile_obj = re.compile(r"/.*/")
                 jsurl = compile_obj.findall(myurl)[0][:-1]
         mycurfun = {"id": curfun[0].id, "name": curfun[0].name, "url": myurl, "jsurl": jsurl}
@@ -250,7 +250,6 @@ def test(request):
 def processindex(request, processrun_id):
     if request.user.is_authenticated():
         errors = []
-        # processrun_id = request.GET.get("p_run_id", "")
         s_tag = request.GET.get("s", "")
         # exclude
         c_process_run = ProcessRun.objects.filter(id=processrun_id).select_related("process")
@@ -414,6 +413,20 @@ def get_process_index_data(request):
                             else:
                                 delta_time = 0
                         c_tag = "yes"
+
+                        ########################################
+                        # 获取当前运行的流程对应的源客户端，     #
+                        # 获取其最近一次作业控制器中的恢复记录。 #
+                        ########################################
+                        origin = current_processrun.origin
+
+                        dm = SQLApi.CustomFilter(settings.sql_credit)
+                        all_jobs = dm.get_job_controller()
+                        for job in all_jobs:
+                            if origin.upper() == job["clientComputer"].upper():
+                                inner_step_run_percent = job["progress"]
+                                break
+
                     else:
                         c_tag = "no"
                     c_step_run_dict = {
@@ -716,7 +729,7 @@ def index(request, funid):
                 curren_processrun_info_list.append(current_processrun_dict)
 
         # 系统切换成功率
-        all_processes = Process.objects.exclude(state="9").filter(type="falconstor")
+        all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort")
         process_success_rate_list = []
         if all_processes:
             for process in all_processes:
@@ -747,7 +760,7 @@ def index(request, funid):
 def get_process_rto(request):
     if request.user.is_authenticated():
         # 不同流程最近的12次切换RTO
-        all_processes = Process.objects.exclude(state="9").filter(type="falconstor")
+        all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle")
         process_rto_list = []
         if all_processes:
             for process in all_processes:
@@ -828,7 +841,7 @@ def get_daily_processrun(request):
                     "end_time": process_run_invited.endtime,
                     "process_color": process_run_invited.process.color,
                     "process_run_id": process_run_invited.id,
-                    "url": "/falconstorswitch/{0}".format(process_run_invited.process_id),
+                    "url": "/oracle_restore/{0}".format(process_run_invited.process_id),
                     "invite": "1",
                 }
                 process_success_rate_list.append(invitations_dict)
@@ -2728,7 +2741,7 @@ def processconfig(request, funid):
         if process_id:
             process_id = int(process_id)
 
-        processes = Process.objects.exclude(state="9").order_by("sort").filter(type="falconstor")
+        processes = Process.objects.exclude(state="9").order_by("sort").filter(type="cv_oracle")
         processlist = []
         for process in processes:
             processlist.append({"id": process.id, "code": process.code, "name": process.name})
@@ -2935,7 +2948,7 @@ def process_design(request, funid):
 def process_data(request):
     if request.user.is_authenticated() and request.session['isadmin']:
         result = []
-        all_process = Process.objects.exclude(state="9").filter(type="falconstor").order_by("sort").values()
+        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort").values()
         if (len(all_process) > 0):
             for process in all_process:
                 result.append({
@@ -2983,13 +2996,13 @@ def process_save(request):
                         # else:
                         if id == 0:
                             all_process = Process.objects.filter(code=code).exclude(
-                                state="9").filter(type="falconstor")
+                                state="9").filter(type="cv_oracle")
                             if (len(all_process) > 0):
                                 result["res"] = '预案编码:' + code + '已存在。'
                             else:
                                 processsave = Process()
-                                processsave.url = '/falconstor'
-                                processsave.type = 'falconstor'
+                                processsave.url = '/cv_oracle'
+                                processsave.type = 'cv_oracle'
                                 processsave.code = code
                                 processsave.name = name
                                 processsave.remark = remark
@@ -3042,7 +3055,7 @@ def process_del(request):
             return HttpResponse(0)
 
 
-def falconstorswitch(request, process_id):
+def oracle_restore(request, process_id):
     if request.user.is_authenticated():
         all_wrapper_steps = Step.objects.exclude(state="9").filter(process_id=process_id, pnode_id=None)
         wrapper_step_list = []
@@ -3143,9 +3156,9 @@ def falconstorswitch(request, process_id):
             plan_process_run_id = ""
 
         # 根据url寻找到funid
-        falconstor_url = "/falconstorswitch/{0}".format(process_id)
+        oracle_restore_url = "/oracle_restore/{0}".format(process_id)
 
-        c_fun = Fun.objects.filter(url=falconstor_url)
+        c_fun = Fun.objects.filter(url=oracle_restore_url)
         if c_fun.exists():
             c_fun = c_fun[0]
             funid = str(c_fun.id)
@@ -3166,7 +3179,7 @@ def falconstorswitch(request, process_id):
                     origin = cur_script.origin
                     break
 
-        return render(request, 'falconstorswitch.html',
+        return render(request, 'oracle_restore.html',
                       {'username': request.user.userinfo.fullname, "pagefuns": getpagefuns(funid, request=request),
                        "wrapper_step_list": wrapper_step_list, "process_id": process_id,
                        "plan_process_run_id": plan_process_run_id, "all_targets": all_targets, "origin": origin})
@@ -3174,7 +3187,7 @@ def falconstorswitch(request, process_id):
         return HttpResponseRedirect("/login")
 
 
-def falconstorswitchdata(request):
+def oracle_restore_data(request):
     if request.user.is_authenticated():
         result = []
         process_id = request.GET.get("process_id", "")
@@ -3201,7 +3214,7 @@ def falconstorswitchdata(request):
         cursor.execute(exec_sql)
         rows = cursor.fetchall()
         for processrun_obj in rows:
-            if processrun_obj[9] == "falconstor":
+            if processrun_obj[9] == "cv_oracle":
                 create_users = processrun_obj[2] if processrun_obj[2] else ""
                 create_user_objs = User.objects.filter(username=create_users)
                 create_user_fullname = create_user_objs[0].userinfo.fullname if create_user_objs else ""
@@ -3221,7 +3234,7 @@ def falconstorswitchdata(request):
         return JsonResponse({"data": result})
 
 
-def falconstorrun(request):
+def cv_oracle_run(request):
     if request.user.is_authenticated():
         result = {}
         processid = request.POST.get('processid', '')
@@ -3234,6 +3247,8 @@ def falconstorrun(request):
         browseJobId = request.POST.get('browseJobId', '')
         data_path = request.POST.get('data_path', '')
 
+        origin = request.POST.get('origin', '')
+
         try:
             processid = int(processid)
         except:
@@ -3242,13 +3257,16 @@ def falconstorrun(request):
         if not data_path.strip():
             return JsonResponse({"res": "数据文件重定向路径不能为空。"})
 
+        if not origin.strip():
+            return JsonResponse({"res": "流程步骤中未添加Commvault接口，导致源客户端未空。"})
+
         try:
             target = int(target)
         except:
             return JsonResponse({"res": "目标客户端未选择。"})
 
 
-        process = Process.objects.filter(id=processid).exclude(state="9").filter(type="falconstor")
+        process = Process.objects.filter(id=processid).exclude(state="9").filter(type="cv_oracle")
         if (len(process) <= 0):
             result["res"] = '流程启动失败，该流程不存在。'
         else:
@@ -3269,6 +3287,7 @@ def falconstorrun(request):
                     myprocessrun.target_id = target
                     myprocessrun.browse_job_id = browseJobId
                     myprocessrun.data_path = data_path
+                    myprocessrun.origin = origin
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
                     # print("processid:{0}, run_reason:{1}, target:{2}, recovery_time:{3}".format(processid, run_reason,
@@ -3351,7 +3370,7 @@ def falconstorrun(request):
         return HttpResponse(json.dumps(result))
 
 
-def falconstor_run_invited(request):
+def cv_oracle_run_invited(request):
     if request.user.is_authenticated() and request.session['isadmin']:
         result = {}
         process_id = request.POST.get('processid', '')
@@ -3368,8 +3387,13 @@ def falconstor_run_invited(request):
 
         data_path = request.POST.get('data_path', '')
 
+        origin = request.POST.get('origin', '')
+
         if not data_path.strip():
             return JsonResponse({"res": "数据文件重定向路径不能为空。"})
+
+        if not origin.strip():
+            return JsonResponse({"res": "流程步骤中未添加Commvault接口，导致源客户端未空。"})
 
         try:
             target = int(target)
@@ -3391,10 +3415,11 @@ def falconstor_run_invited(request):
                                                                               "%Y-%m-%d %H:%M:%S") if recovery_time else None
                 current_process_run.browse_job_id = browseJobId
                 current_process_run.data_path = data_path
+                current_process_run.origin = origin
 
                 current_process_run.save()
 
-                process = Process.objects.filter(id=process_id).exclude(state="9").filter(type="falconstor")
+                process = Process.objects.filter(id=process_id).exclude(state="9").filter(type="cv_oracle")
 
                 allgroup = process[0].step_set.exclude(state="9").exclude(Q(group="") | Q(group=None)).values(
                     "group").distinct()  # 过滤出需要签字的组,但一个对象只发送一次task
@@ -3447,7 +3472,7 @@ def falconstor_run_invited(request):
         return HttpResponse(json.dumps(result))
 
 
-def falconstor(request, offset, funid):
+def cv_oracle(request, offset, funid):
     if request.user.is_authenticated():
         id = 0
         try:
@@ -3463,7 +3488,7 @@ def falconstor(request, offset, funid):
         else:
             current_run_state = ""
 
-        return render(request, 'falconstor.html',
+        return render(request, 'cv_oracle.html',
                       {'username': request.user.userinfo.fullname, "process": id,
                        "current_run_state": current_run_state,
                        "pagefuns": getpagefuns(funid, request)})
@@ -3773,7 +3798,7 @@ def getrunsetps(request):
             return HttpResponse(json.dumps(processresult))
 
 
-def falconstorcontinue(request):
+def cv_oracle_continue(request):
     if request.user.is_authenticated():
         result = {}
         process = request.POST.get('process', '')
@@ -4074,7 +4099,8 @@ def reload_task_nums(request):
                     current_icon = "fa fa-bell-o"
                     current_color = "label-warning"
                 else:
-                    pass
+                    current_icon = ""
+                    current_color = ""
 
                 time = custom_time(time)
 
@@ -4840,12 +4866,12 @@ def custom_pdf_report(request):
         return response
 
 
-def falconstorsearch(request, funid):
+def restore_search(request, funid):
     if request.user.is_authenticated():
         nowtime = datetime.datetime.now()
         endtime = nowtime.strftime("%Y-%m-%d")
         starttime = (nowtime - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-        all_processes = Process.objects.exclude(state="9").filter(type="falconstor")
+        all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort")
         processname_list = []
         for process in all_processes:
             processname_list.append(process.name)
@@ -4860,7 +4886,7 @@ def falconstorsearch(request, funid):
             "PLAN": "计划",
             "SIGN": "签到",
         }
-        return render(request, "falconstorsearch.html",
+        return render(request, "restore_search.html",
                       {'username': request.user.userinfo.fullname, "starttime": starttime, "endtime": endtime,
                        "processname_list": processname_list, "state_dict": state_dict,
                        "pagefuns": getpagefuns(funid, request=request)})
@@ -4868,7 +4894,7 @@ def falconstorsearch(request, funid):
         return HttpResponseRedirect("/login")
 
 
-def falconstorsearchdata(request):
+def restore_search_data(request):
     """
     :param request: starttime, endtime, runperson, runstate
     :return: starttime,endtime,createuser,state,process_id,processrun_id,runreason
@@ -4980,7 +5006,7 @@ def tasksearch(request, funid):
         nowtime = datetime.datetime.now()
         endtime = nowtime.strftime("%Y-%m-%d")
         starttime = (nowtime - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-        all_processes = Process.objects.exclude(state="9").filter(type="falconstor")
+        all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle")
         processname_list = []
         for process in all_processes:
             processname_list.append(process.name)
@@ -5183,7 +5209,7 @@ def save_invitation(request):
 
         if start_time:
             if end_time:
-                process = Process.objects.filter(id=process_id).exclude(state="9").filter(type="falconstor")
+                process = Process.objects.filter(id=process_id).exclude(state="9").filter(type="cv_oracle")
                 if (len(process) <= 0):
                     result["res"] = '流程计划失败，该流程不存在。'
                 else:
@@ -5203,7 +5229,7 @@ def save_invitation(request):
                             myprocessrun.save()
                             current_process_run_id = myprocessrun.id
 
-                            process = Process.objects.filter(id=process_id).exclude(state="9").filter(type="falconstor")
+                            process = Process.objects.filter(id=process_id).exclude(state="9").filter(type="cv_oracle")
                             mystep = process[0].step_set.exclude(state="9")
                             if (len(mystep) <= 0):
                                 result["res"] = '流程启动失败，没有找到可用步骤。'
@@ -5333,7 +5359,7 @@ def invite(request):
         nowtime = datetime.datetime.now()
         invite_time = nowtime.strftime("%Y-%m-%d")
 
-        current_processes = Process.objects.filter(id=process_id).filter(type="falconstor")
+        current_processes = Process.objects.filter(id=process_id).filter(type="cv_oracle")
         process_name = current_processes[0].name if current_processes else ""
         allgroup = current_processes[0].step_set.exclude(state="9").exclude(Q(group="") | Q(group=None)).values(
             "group").distinct()
@@ -5619,30 +5645,34 @@ def get_contact_info(request):
 # 客户端管理
 def target(request, funid):
     if request.user.is_authenticated():
+        #############################################
+        # clientid, clientname, agent, instance, os #
+        #############################################
         dm = SQLApi.CustomFilter(settings.sql_credit)
+
         oracle_data = dm.get_instance_from_oracle()
 
-        all_client_manage = ClientManage.objects.exclude(state="9")
-        tmp_client_manage = [tmp_client.client_name for tmp_client in all_client_manage]
-
+        # 获取包含oracle模块所有客户端
+        installed_client = dm.get_all_install_clients()
         oracle_data_list = []
         pre_od_name = ""
         for od in oracle_data:
-            if od["clientname"] == pre_od_name:
-                continue
-            if od["clientname"] in tmp_client_manage:
-                cur_client = ClientManage.objects.exclude(state="9").filter(client_name=od["clientname"])
-                os = ""
-                if cur_client:
-                    os = cur_client[0].client_os
+            if "Oracle" in od["agent"]:
+                if od["clientname"] == pre_od_name:
+                    continue
+                client_id = od["clientid"]
+                client_os = ""
+                for ic in installed_client:
+                    if client_id == ic["client_id"]:
+                        client_os = ic["os"]
+
                 oracle_data_list.append({
                     "clientid": od["clientid"],
                     "clientname": od["clientname"],
                     "agent": od["agent"],
                     "instance": od["instance"],
-                    "os": os
+                    "os": client_os
                 })
-
                 # 去重
                 pre_od_name = od["clientname"]
 
@@ -5785,30 +5815,34 @@ def target_del(request):
 
 def origin(request, funid):
     if request.user.is_authenticated():
+        #############################################
+        # clientid, clientname, agent, instance, os #
+        #############################################
         dm = SQLApi.CustomFilter(settings.sql_credit)
+
         oracle_data = dm.get_instance_from_oracle()
 
-        all_client_manage = ClientManage.objects.exclude(state="9")
-        tmp_client_manage = [tmp_client.client_name for tmp_client in all_client_manage]
-
+        # 获取包含oracle模块所有客户端
+        installed_client = dm.get_all_install_clients()
         oracle_data_list = []
         pre_od_name = ""
         for od in oracle_data:
-            if od["clientname"] == pre_od_name:
-                continue
-            cur_client = ClientManage.objects.exclude(state="9").filter(client_name=od["clientname"])
-            os = ""
-            if cur_client:
-                os = cur_client[0].client_os
-            if od["clientname"] in tmp_client_manage:
+            if "Oracle" in od["agent"]:
+                if od["clientname"] == pre_od_name:
+                    continue
+                client_id = od["clientid"]
+                client_os = ""
+                for ic in installed_client:
+                    if client_id == ic["client_id"]:
+                        client_os = ic["os"]
+
                 oracle_data_list.append({
                     "clientid": od["clientid"],
                     "clientname": od["clientname"],
                     "agent": od["agent"],
                     "instance": od["instance"],
-                    "os": os
+                    "os": client_os
                 })
-
                 # 去重
                 pre_od_name = od["clientname"]
 
@@ -6168,7 +6202,8 @@ def serverconfigsave(request):
 def get_backup_status(request):
     whole_list = []
     try:
-        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        # 仅统计源客户端(客户端管理)
+        all_client_manage = Origin.objects.exclude(state="9").values("client_name")
         tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
@@ -6197,7 +6232,7 @@ def backup_status(request, funid):
 def get_backup_content(request):
     whole_list = []
     try:
-        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        all_client_manage = Origin.objects.exclude(state="9").values("client_name")
         tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
@@ -6238,7 +6273,7 @@ def backup_content(request, funid):
 def get_storage_policy(request):
     whole_list = []
     try:
-        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        all_client_manage = Origin.objects.exclude(state="9").values("client_name")
         tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
@@ -6287,7 +6322,7 @@ def schedule_policy(request, funid):
 def get_schedule_policy(request):
     whole_list = []
     try:
-        all_client_manage = ClientManage.objects.exclude(state="9").values("client_name")
+        all_client_manage = Origin.objects.exclude(state="9").values("client_name")
         tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
@@ -6328,143 +6363,6 @@ def get_schedule_policy(request):
                 "row_dict": row_dict,
             },
         })
-
-
-def client_manage(request, funid):
-    if request.user.is_authenticated():
-        # 获取包含oracle模块所有客户端
-        dm = SQLApi.CustomFilter(settings.sql_credit)
-        installed_client = dm.get_all_install_clients()
-        oracle_client = []
-        for client in installed_client:
-            sub_list = dm.get_installed_sub_clients_for_info(client["client_name"])
-            for sub in sub_list:
-                if "Oracle" in sub["idataagent"]:
-                    oracle_client.append({
-                        "client_name": client["client_name"],
-                        "client_id": client["client_id"],
-                        "client_os": client["os"],
-                        "install_time": client["install_time"]
-                    })
-                    break
-        return render(request, 'client_manage.html',
-                      {'username': request.user.userinfo.fullname,
-                       "pagefuns": getpagefuns(funid, request=request),
-                       "oracle_client": oracle_client, "oracle_client_info": json.dumps(oracle_client)})
-    else:
-        return HttpResponseRedirect("/login")
-
-
-def client_save(request):
-    if request.user.is_authenticated():
-        client_manage_id = request.POST.get("client_manage_id", "")
-        client_id = request.POST.get("client_id", "")
-        client_name = request.POST.get("client_name", "")
-        client_os = request.POST.get("client_os", "")
-        install_time = request.POST.get("install_time", "")
-        ret = 0
-        info = ""
-        try:
-            client_manage_id = int(client_manage_id)
-            client_id = int(client_id)
-        except:
-            ret = 0
-            info = "网络错误。"
-        else:
-            print(install_time)
-            if client_manage_id == 0:
-                # 判断主机是否已经存在
-                check_client_manage = ClientManage.objects.filter(client_id=client_id)
-                if check_client_manage.exists():
-                    ret = 0
-                    info = "主机已经存在，请勿重复添加。"
-                else:
-                    try:
-                        cur_host_manage = ClientManage()
-                        cur_host_manage.client_id = client_id
-                        cur_host_manage.client_name = client_name
-                        cur_host_manage.client_os = client_os
-                        cur_host_manage.install_time = datetime.datetime.strptime(install_time,
-                                                                                  "%m/%d/%Y %H:%M:%S") if install_time else None
-                        cur_host_manage.save()
-                    except Exception as e:
-                        print("add ClientManage{0}".format(e))
-                        ret = 0
-                        info = "服务器异常。"
-                    else:
-                        ret = 1
-                        info = "新增主机成功。"
-            else:
-                # 修改
-                try:
-                    cur_host_manage = ClientManage.objects.get(id=client_manage_id)
-                    cur_host_manage.client_id = client_id
-                    cur_host_manage.client_name = client_name
-                    cur_host_manage.client_os = client_os
-                    cur_host_manage.install_time = datetime.datetime.strptime(install_time,
-                                                                              "%m/%d/%Y %H:%M:%S") if install_time else None
-                    cur_host_manage.save()
-
-                    ret = 1
-                    info = "主机信息修改成功。"
-                except Exception as e:
-                    print("modify ClientManage{0}".format(e))
-                    ret = 0
-                    info = "服务器异常。"
-
-            return JsonResponse({
-                "ret": ret,
-                "info": info
-            })
-    else:
-        return HttpResponseRedirect("/login")
-
-
-def client_manage_data(request):
-    if request.user.is_authenticated():
-        all_client_manage = ClientManage.objects.exclude(state="9")
-        all_cm_list = []
-        for client_manage in all_client_manage:
-            all_cm_list.append({
-                "client_manage_id": client_manage.id,
-                "client_id": client_manage.client_id,
-                "client_name": client_manage.client_name,
-                "client_os": client_manage.client_os,
-                "install_time": "{:%Y-%m-%d %H:%M:%S}".format(
-                    client_manage.install_time) if client_manage.install_time else "",
-            })
-        return JsonResponse({"data": all_cm_list})
-    else:
-        return HttpResponseRedirect("/login")
-
-
-def client_manage_del(request):
-    if request.user.is_authenticated():
-        host_id = request.POST.get("host_id", "")
-
-        try:
-            cur_host_manage = HostsManage.objects.get(id=int(host_id))
-        except:
-            return JsonResponse({
-                "ret": 0,
-                "info": "当前网络异常"
-            })
-        else:
-            try:
-                cur_host_manage.state = "9"
-                cur_host_manage.save()
-            except:
-                return JsonResponse({
-                    "ret": 0,
-                    "info": "服务器网络异常。"
-                })
-            else:
-                return JsonResponse({
-                    "ret": 1,
-                    "info": "删除成功。"
-                })
-    else:
-        return HttpResponseRedirect("/login")
 
 
 def manualrecovery(request, funid):

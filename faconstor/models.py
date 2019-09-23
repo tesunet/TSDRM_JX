@@ -126,6 +126,7 @@ class ProcessRun(models.Model):
     recover_time = models.DateTimeField("指定恢复时间点", blank=True, null=True)
     browse_job_id = models.CharField("指点时间点的备份任务ID", blank=True, null=True, max_length=50)
     data_path = models.CharField("数据重定向路径", blank=True, null=True, max_length=512)
+    origin = models.CharField("源客户端", blank=True, null=True, max_length=256)
 
 
 class StepRun(models.Model):
@@ -207,10 +208,3 @@ class Vendor(models.Model):
     content = models.TextField("内容", blank=True, null=True)
     status = models.CharField("状态", blank=True, null=True, max_length=20)
 
-
-class ClientManage(models.Model):
-    client_id = models.IntegerField("客户端ID", blank=True, null=True)
-    client_name = models.CharField("客户端名称", blank=True, null=True, max_length=64)
-    client_os = models.CharField("操作系统", blank=True, null=True, max_length=64)
-    install_time = models.DateTimeField("安装时间", blank=True, null=True)
-    state = models.CharField("状态", blank=True, null=True, max_length=20)

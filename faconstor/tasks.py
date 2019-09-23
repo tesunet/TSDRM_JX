@@ -337,8 +337,17 @@ def runstep(steprun, if_repeat=False):
                         exe_cmd = windows_temp_script_file
 
                     # 执行文件
-                    rm_obj = remote.ServerByPara(exe_cmd, ip, username, password, system_tag)
-                    result = rm_obj.run(script.script.succeedtext)
+                    try:
+                        rm_obj = remote.ServerByPara(exe_cmd, ip, username, password, system_tag)
+                        result = rm_obj.run(script.script.succeedtext)
+                    except Exception as e:
+                        print("服务器连接失败：", e)
+                        result = {
+                            "exec_tag": 1,
+                            "data": "服务器连接失败：{0}".format(e),
+                            "log":  "服务器连接失败：{0}".format(e)
+                        }
+
                 else:
                     result = {}
                     commvault_api_path = os.path.join(os.path.join(settings.BASE_DIR, "faconstor"),
@@ -419,7 +428,7 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.receiveauth = steprun.step.group
                     myprocesstask.type = "ERROR"
                     myprocesstask.state = "0"
-                    myprocesstask.content = "接口" + script_name + "调用执行错误，请处理。"
+                    myprocesstask.content = "接口" + script_name + "调用执行失败，请处理。"
                     myprocesstask.steprun_id = steprun.id
                     myprocesstask.save()
                     return 0
