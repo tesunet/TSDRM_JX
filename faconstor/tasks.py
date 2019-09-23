@@ -453,7 +453,6 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.steprun_id = steprun.id
                     myprocesstask.save()
                     return 0
-
                 script.endtime = datetime.datetime.now()
                 script.state = "DONE"
                 script.save()
