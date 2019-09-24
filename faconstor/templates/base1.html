@@ -655,6 +655,10 @@
 
     //var loadTasksTag = $("#load_tasks_tag").val();
     // if (loadTasksTag == 1) {
+    /*
+    避免页面跳转时定时器的叠加
+     */
+    clearTimeout(my_t);
     var my_t = window.setInterval(getTaskInfo, 6000);
     //}
     //else {
@@ -710,8 +714,7 @@
                     //window.open(data["data"]);
 
                     getTaskInfo();
-                }
-                else {
+                } else {
                     alert(data["res"]);
                 }
                 $('#static_base_01').modal('hide');

@@ -717,6 +717,46 @@ def index(request, funid):
         return HttpResponseRedirect("/login")
 
 
+def get_process_run_rto(processrun):
+    ########################################################
+    # 构造出正确顺序的父级步骤RTO，                         #
+    # 最后一个步骤rto_count_in="0"，记录endtime为rtoendtime #
+    ########################################################
+    cur_process = processrun.process
+
+    # 正确顺序的父级Step
+    all_pnode_steps = Step.objects.exclude(state="9").filter(process_id=cur_process.id, pnode_id=None).order_by(
+        "sort")
+    correct_step_id_list = []
+    if all_pnode_steps:
+        for pnode_step in all_pnode_steps:
+            pnode_step_id = pnode_step.id
+            correct_step_id_list.append(pnode_step_id)
+    else:
+        raise Http404()
+
+    # 正确顺序的父级StepRun
+    correct_step_run_list = []
+    for step_id in correct_step_id_list:
+        current_step_run = StepRun.objects.filter(step_id=step_id).filter(
+            processrun_id=processrun.id).select_related("step")
+        if current_step_run.exists():
+            current_step_run = current_step_run[0]
+            correct_step_run_list.append(current_step_run)
+    starttime = processrun.starttime
+    rtoendtime = processrun.starttime
+    if correct_step_run_list:
+        for c_step_run in reversed(correct_step_run_list):
+            if c_step_run.step.rto_count_in == "1":
+                rtoendtime = c_step_run.endtime
+                break
+    delta_time = 0
+    if rtoendtime:
+        delta_time = (rtoendtime - starttime).total_seconds()
+
+    return delta_time
+
+
 def get_process_run_facts(request):
     if request.user.is_authenticated():
         #######################################################
@@ -753,32 +793,40 @@ def get_process_run_facts(request):
                 rto_sum_seconds = 0
 
                 for processrun in cur_client_succeed_process:
-                    all_step_runs = processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
-                        step__pnode=None)
-                    step_rto = 0
-                    if all_step_runs:
-                        for step_run in all_step_runs:
-                            rto = 0
-                            end_time = step_run.endtime
-                            start_time = step_run.starttime
-                            if end_time and start_time:
-                                delta_time = (end_time - start_time)
-                                rto = delta_time.total_seconds()
-                            step_rto += rto
-                    rto_sum_seconds += step_rto
-                    # 扣除子级步骤中可能的rto_count_in的时间
-                    all_inner_step_runs = processrun.steprun_set.exclude(state="9").filter(
-                        step__rto_count_in="0").exclude(step__pnode=None)
-                    inner_rto_not_count_in = 0
-                    if all_inner_step_runs:
-                        for inner_step_run in all_inner_step_runs:
-                            end_time = inner_step_run.endtime
-                            start_time = inner_step_run.starttime
-                            if end_time and start_time:
-                                delta_time = (end_time - start_time)
-                                rto = delta_time.total_seconds()
-                                inner_rto_not_count_in += rto
-                    rto_sum_seconds -= inner_rto_not_count_in
+                    # all_step_runs = processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
+                    #     step__pnode=None)
+                    # step_rto = 0
+                    # if all_step_runs:
+                    #     for step_run in all_step_runs:
+                    #         rto = 0
+                    #         end_time = step_run.endtime
+                    #         start_time = step_run.starttime
+                    #         if end_time and start_time:
+                    #             delta_time = (end_time - start_time)
+                    #             rto = delta_time.total_seconds()
+                    #         step_rto += rto
+                    # rto_sum_seconds += step_rto
+                    # # 扣除子级步骤中可能的rto_count_in的时间
+                    # all_inner_step_runs = processrun.steprun_set.exclude(state="9").filter(
+                    #     step__rto_count_in="0").exclude(step__pnode=None)
+                    # inner_rto_not_count_in = 0
+                    # if all_inner_step_runs:
+                    #     for inner_step_run in all_inner_step_runs:
+                    #         end_time = inner_step_run.endtime
+                    #         start_time = inner_step_run.starttime
+                    #         if end_time and start_time:
+                    #             delta_time = (end_time - start_time)
+                    #             rto = delta_time.total_seconds()
+                    #             inner_rto_not_count_in += rto
+                    # rto_sum_seconds -= inner_rto_not_count_in
+
+                    ########################################################
+                    # 构造出正确顺序的父级步骤RTO，                         #
+                    # 最后一个步骤rto_count_in="0"，记录endtime为rtoendtime #
+                    ########################################################
+                    delta_time = get_process_run_rto(processrun)
+                    rto_sum_seconds += delta_time
+
                 m, s = divmod(rto_sum_seconds / len(cur_client_succeed_process), 60)
                 h, m = divmod(m, 60)
                 average_rto = "%d时%02d分%02d秒" % (h, m, s)
@@ -819,33 +867,34 @@ def get_process_rto(request):
                 processrun_rto_obj_list = process.processrun_set.filter(state="DONE")
                 current_rto_list = []
                 for processrun_rto_obj in processrun_rto_obj_list:
-                    all_step_runs = processrun_rto_obj.steprun_set.exclude(state="9").exclude(
-                        step__rto_count_in="0").filter(step__pnode=None)
-                    step_rto = 0
-                    if all_step_runs:
-                        for step_run in all_step_runs:
-                            rto = 0
-                            end_time = step_run.endtime
-                            start_time = step_run.starttime
-                            if end_time and start_time:
-                                delta_time = (end_time - start_time)
-                                rto = delta_time.total_seconds()
-
-                            step_rto += rto
-                    # 扣除子级步骤中可能的rto_count_in的时间
-                    all_inner_step_runs = processrun_rto_obj.steprun_set.exclude(state="9").filter(
-                        step__rto_count_in="0").exclude(
-                        step__pnode=None).filter(step__pnode__rto_count_in="1")
-                    inner_rto_not_count_in = 0
-                    if all_inner_step_runs:
-                        for inner_step_run in all_inner_step_runs:
-                            end_time = inner_step_run.endtime
-                            start_time = inner_step_run.starttime
-                            if end_time and start_time:
-                                delta_time = (end_time - start_time)
-                                rto = delta_time.total_seconds()
-                                inner_rto_not_count_in += rto
-                    step_rto -= inner_rto_not_count_in
+                    step_rto = get_process_run_rto(processrun_rto_obj)
+                    # all_step_runs = processrun_rto_obj.steprun_set.exclude(state="9").exclude(
+                    #     step__rto_count_in="0").filter(step__pnode=None)
+                    # step_rto = 0
+                    # if all_step_runs:
+                    #     for step_run in all_step_runs:
+                    #         rto = 0
+                    #         end_time = step_run.endtime
+                    #         start_time = step_run.starttime
+                    #         if end_time and start_time:
+                    #             delta_time = (end_time - start_time)
+                    #             rto = delta_time.total_seconds()
+                    #
+                    #         step_rto += rto
+                    # # 扣除子级步骤中可能的rto_count_in的时间
+                    # all_inner_step_runs = processrun_rto_obj.steprun_set.exclude(state="9").filter(
+                    #     step__rto_count_in="0").exclude(
+                    #     step__pnode=None).filter(step__pnode__rto_count_in="1")
+                    # inner_rto_not_count_in = 0
+                    # if all_inner_step_runs:
+                    #     for inner_step_run in all_inner_step_runs:
+                    #         end_time = inner_step_run.endtime
+                    #         start_time = inner_step_run.starttime
+                    #         if end_time and start_time:
+                    #             delta_time = (end_time - start_time)
+                    #             rto = delta_time.total_seconds()
+                    #             inner_rto_not_count_in += rto
+                    # step_rto -= inner_rto_not_count_in
 
                     current_rto = float("%.2f" % (step_rto / 60))
 
@@ -4490,32 +4539,34 @@ def show_result(request):
         show_result_dict["end_time"] = current_processrun.endtime.strftime(
             "%Y-%m-%d %H:%M:%S") if current_processrun.endtime else ""
 
-        all_step_runs = current_processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
-            step__pnode=None)
-        step_rto = 0
-        if all_step_runs:
-            for step_run in all_step_runs:
-                rto = 0
-                end_time = step_run.endtime
-                start_time = step_run.starttime
-                if end_time and start_time:
-                    delta_time = (end_time - start_time)
-                    rto = delta_time.total_seconds()
-                step_rto += rto
-        # 扣除子级步骤中可能的rto_count_in的时间
-        all_inner_step_runs = current_processrun.steprun_set.exclude(state="9").filter(
-            step__rto_count_in="0").exclude(
-            step__pnode=None)
-        inner_rto_not_count_in = 0
-        if all_inner_step_runs:
-            for inner_step_run in all_inner_step_runs:
-                end_time = inner_step_run.endtime
-                start_time = inner_step_run.starttime
-                if end_time and start_time:
-                    delta_time = (end_time - start_time)
-                    rto = delta_time.total_seconds()
-                    inner_rto_not_count_in += rto
-                    step_rto -= inner_rto_not_count_in
+        step_rto = get_process_run_rto(current_processrun)
+
+        # all_step_runs = current_processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
+        #     step__pnode=None)
+        # step_rto = 0
+        # if all_step_runs:
+        #     for step_run in all_step_runs:
+        #         rto = 0
+        #         end_time = step_run.endtime
+        #         start_time = step_run.starttime
+        #         if end_time and start_time:
+        #             delta_time = (end_time - start_time)
+        #             rto = delta_time.total_seconds()
+        #         step_rto += rto
+        # # 扣除子级步骤中可能的rto_count_in的时间
+        # all_inner_step_runs = current_processrun.steprun_set.exclude(state="9").filter(
+        #     step__rto_count_in="0").exclude(
+        #     step__pnode=None)
+        # inner_rto_not_count_in = 0
+        # if all_inner_step_runs:
+        #     for inner_step_run in all_inner_step_runs:
+        #         end_time = inner_step_run.endtime
+        #         start_time = inner_step_run.starttime
+        #         if end_time and start_time:
+        #             delta_time = (end_time - start_time)
+        #             rto = delta_time.total_seconds()
+        #             inner_rto_not_count_in += rto
+        #             step_rto -= inner_rto_not_count_in
 
         m, s = divmod(step_rto, 60)
         h, m = divmod(m, 60)
@@ -4613,33 +4664,34 @@ def custom_pdf_report(request):
         first_el_dict["end_time"] = r"{0}".format(
             end_time.strftime("%Y-%m-%d %H:%M:%S") if end_time else "")
 
-        all_step_runs = process_run_obj.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
-            step__pnode=None)
-        step_rto = 0
-        if all_step_runs:
-            for step_run in all_step_runs:
-                rto = 0
-                end_time = step_run.endtime
-                start_time = step_run.starttime
-                if end_time and start_time:
-                    delta_time = (end_time - start_time)
-                    rto = delta_time.total_seconds()
-                step_rto += rto
-
-        # 扣除子级步骤中可能的rto_count_in的时间
-        all_inner_step_runs = process_run_obj.steprun_set.exclude(state="9").filter(
-            step__rto_count_in="0").exclude(
-            step__pnode=None)
-        inner_rto_not_count_in = 0
-        if all_inner_step_runs:
-            for inner_step_run in all_inner_step_runs:
-                end_time = inner_step_run.endtime
-                start_time = inner_step_run.starttime
-                if end_time and start_time:
-                    delta_time = (end_time - start_time)
-                    rto = delta_time.total_seconds()
-                    inner_rto_not_count_in += rto
-                    step_rto -= inner_rto_not_count_in
+        step_rto = get_process_run_rto(process_run_obj)
+        # all_step_runs = process_run_obj.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
+        #     step__pnode=None)
+        # step_rto = 0
+        # if all_step_runs:
+        #     for step_run in all_step_runs:
+        #         rto = 0
+        #         end_time = step_run.endtime
+        #         start_time = step_run.starttime
+        #         if end_time and start_time:
+        #             delta_time = (end_time - start_time)
+        #             rto = delta_time.total_seconds()
+        #         step_rto += rto
+        #
+        # # 扣除子级步骤中可能的rto_count_in的时间
+        # all_inner_step_runs = process_run_obj.steprun_set.exclude(state="9").filter(
+        #     step__rto_count_in="0").exclude(
+        #     step__pnode=None)
+        # inner_rto_not_count_in = 0
+        # if all_inner_step_runs:
+        #     for inner_step_run in all_inner_step_runs:
+        #         end_time = inner_step_run.endtime
+        #         start_time = inner_step_run.starttime
+        #         if end_time and start_time:
+        #             delta_time = (end_time - start_time)
+        #             rto = delta_time.total_seconds()
+        #             inner_rto_not_count_in += rto
+        #             step_rto -= inner_rto_not_count_in
 
         m, s = divmod(step_rto, 60)
         h, m = divmod(m, 60)
