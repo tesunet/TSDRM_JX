@@ -767,7 +767,6 @@ def get_process_run_facts(request):
                                 rto = delta_time.total_seconds()
                             step_rto += rto
                     rto_sum_seconds += step_rto
-                    print(rto_sum_seconds)
                     # 扣除子级步骤中可能的rto_count_in的时间
                     all_inner_step_runs = processrun.steprun_set.exclude(state="9").filter(
                         step__rto_count_in="0").exclude(step__pnode=None)
