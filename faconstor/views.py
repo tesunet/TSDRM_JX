@@ -842,8 +842,19 @@ def get_process_run_facts(request):
             process_run_rate = "%.0f" % ((
                                              cur_client_succeed_process_times / cur_client_process_times if cur_client_process_times != 0 else 0) * 100)
 
+
+            # 客户端
+            client_name = ""
+            all_steps = cur_process.step_set.exclude(state="9")
+            for step in all_steps:
+                all_scripts = step.script_set.exclude(state="9")
+                for script in all_scripts:
+                    if script.origin:
+                        client_name = script.origin.client_name
+                        break
+
             cv_oracle_process_list.append({
-                "client_name": all_process_run.first().origin if all_process_run.exists() else "",
+                "client_name": client_name,
                 "process_run_today": process_run_today,
                 "average_rto": average_rto,
                 "cur_client_process_times": cur_client_process_times,
