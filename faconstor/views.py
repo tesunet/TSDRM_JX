@@ -726,13 +726,12 @@ def get_process_run_facts(request):
         #######################################################
         cv_oracle_process_list = []
 
-        all_origins = Origin.objects.exclude(state="9").all()
-        for origin in all_origins:
-            client_name = origin.client_name
+        all_process = Process.objects.exclude(state="9").order_by("sort").filter(type="cv_oracle")
 
+        for cur_process in all_process:
             # 今日演练(状态)  0/1/2
             # 演练一次成功就算成功
-            all_process_run = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP")).filter(origin=client_name)
+            all_process_run = cur_process.processrun_set.filter(Q(state="DONE") | Q(state="STOP"))
 
             process_run_today = 2
             today_date = datetime.datetime.now().date()
@@ -748,7 +747,7 @@ def get_process_run_facts(request):
                             process_run_today = 1
 
             # 平均RTO
-            cur_client_succeed_process = ProcessRun.objects.filter(state="DONE").filter(origin=client_name)
+            cur_client_succeed_process = cur_process.processrun_set.filter(state="DONE")
 
             if cur_client_succeed_process:
                 rto_sum_seconds = 0
@@ -787,7 +786,7 @@ def get_process_run_facts(request):
                 average_rto = "00时00分00秒"
 
             # 演练次数
-            cur_client_process = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP")).filter(origin=client_name)
+            cur_client_process = cur_process.processrun_set.filter(Q(state="DONE") | Q(state="STOP"))
             cur_client_process_times = len(cur_client_process) if cur_client_process else 0
 
             # 演练成功率
@@ -796,12 +795,14 @@ def get_process_run_facts(request):
                                              cur_client_succeed_process_times / cur_client_process_times if cur_client_process_times != 0 else 0) * 100)
 
             cv_oracle_process_list.append({
-                "client_name": client_name,
+                "client_name": all_process_run.first().origin if all_process_run.exists() else "",
                 "process_run_today": process_run_today,
                 "average_rto": average_rto,
                 "cur_client_process_times": cur_client_process_times,
                 "process_run_rate": process_run_rate,
+                "process_id": cur_process.id,
             })
+
         return JsonResponse({"data": cv_oracle_process_list})
     else:
         return HttpResponseRedirect("/login")
