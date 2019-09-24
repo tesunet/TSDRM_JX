@@ -268,7 +268,7 @@ var util = {
             if (!end) {
                 clearInterval(tmInterval);
                 tmInterval = setInterval(function () {
-                    var currentTime = 0
+                    var currentTime = 0;
                     $.ajax({
                         url: '/get_server_time_very_second/',
                         type: 'POST',
@@ -277,7 +277,7 @@ var util = {
                         },
                         dataType: 'json',
                         success: function (data) {
-                            currentTime = data.current_time
+                            currentTime = data.current_time;
                             timer = util.timeFn(starTime, currentTime);
                             util.showTimer(timer);
                         },

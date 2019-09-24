@@ -339,11 +339,11 @@ def get_process_index_data(request):
                 else:
                     for num, c_step_run in enumerate(correct_step_run_list):
                         c_rto_count_in = c_step_run.step.rto_count_in
+
                         if c_rto_count_in == "0" and c_step_run.state == "DONE":
                             rtostate = "DONE"
                             c_step_index = num
                             break
-
                     if c_step_index > 0 and rtostate == "DONE":
                         pre_step_index = c_step_index - 1
                         rtoendtime = correct_step_run_list[pre_step_index].endtime.strftime('%Y-%m-%d %H:%M:%S')
@@ -419,13 +419,13 @@ def get_process_index_data(request):
                         # 获取其最近一次作业控制器中的恢复记录。 #
                         ########################################
                         origin = current_processrun.origin
-
-                        dm = SQLApi.CustomFilter(settings.sql_credit)
-                        all_jobs = dm.get_job_controller()
-                        for job in all_jobs:
-                            if origin.upper() == job["clientComputer"].upper():
-                                inner_step_run_percent = job["progress"]
-                                break
+                        if origin:
+                            dm = SQLApi.CustomFilter(settings.sql_credit)
+                            all_jobs = dm.get_job_controller()
+                            for job in all_jobs:
+                                if origin.upper() == job["clientComputer"].upper():
+                                    inner_step_run_percent = job["progress"]
+                                    break
 
                     else:
                         c_tag = "no"
@@ -2014,7 +2014,6 @@ def scriptsave(request):
             origin = request.POST.get('origin', '')
             commv_interface = request.POST.get('commv_interface', '')
 
-            print(request.POST)
 
             # 定义存储的方法
             def script_save(save_data, cur_host_manage=None):
@@ -2177,7 +2176,6 @@ def scriptexport(request):
 
         if len(allscript) > 0:
             for i in range(len(allscript)):
-                print(allscript[i].hosts_manage)
                 # host_id, host_ip, type, username, password
                 cur_host_manage = allscript[i].hosts_manage
                 host_ip = cur_host_manage.host_ip
@@ -5889,7 +5887,6 @@ def origin_save(request):
         instance = request.POST.get("instance", "").strip()
         client_os = request.POST.get("os", "")
         target_client = request.POST.get("target_client", "")
-        print(target_client)
         ret = 0
         info = ""
         try:
