@@ -2014,7 +2014,6 @@ def scriptsave(request):
             origin = request.POST.get('origin', '')
             commv_interface = request.POST.get('commv_interface', '')
 
-
             # 定义存储的方法
             def script_save(save_data, cur_host_manage=None):
                 result = {}
@@ -3262,7 +3261,6 @@ def cv_oracle_run(request):
             target = int(target)
         except:
             return JsonResponse({"res": "目标客户端未选择。"})
-
 
         process = Process.objects.filter(id=processid).exclude(state="9").filter(type="cv_oracle")
         if (len(process) <= 0):
