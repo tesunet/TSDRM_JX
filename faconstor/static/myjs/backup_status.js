@@ -14,7 +14,7 @@ $(document).ready(function () {
                 var whole_list = data.data;
 
                 // 加载数据
-                var content_el = ''
+                var content_el = '';
                 for (var i = 0; i < whole_list.length; i++) {
 
                     var agent_job_list = whole_list[i].agent_job_list;

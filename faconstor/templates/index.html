@@ -187,9 +187,9 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span data-counter="counterup" data-value="0">{{ average_rto }}</span>
+                                    <span data-counter="counterup" data-value="0">{{ today_process_run_length }}/{{ all_process|length }}次</span>
                                 </div>
-                                <div class="desc"> 平均RTO</div>
+                                <div class="desc"> 今日演练</div>
                             </div>
                         </div>
                     </div>
@@ -200,9 +200,26 @@
                             </div>
                             <div class="details">
                                 <div class="number">
-                                    <span data-counter="counterup" data-value="0">{{ last_processrun_time }}</span>
+                                    <span data-counter="counterup" data-value="0">
+                                        {% if curren_processrun_info_list %}
+
+                                            <a style="color: #ffffff" href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                                {{ curren_processrun_info_list|length }}
+                                            </a>
+                                            <ul class="dropdown-menu">
+                                            {% for current_processrun in curren_processrun_info_list %}
+                                                {% if current_processrun.current_process_run_state == "执行中" or current_processrun.current_process_run_state == "执行失败" or current_processrun.current_process_run_state == "计划" or current_processrun.current_process_run_state == "签到" or current_processrun.current_process_run_state == "错误"%}
+                                                    <li style="text-align: left"><a target="_blank" href="/processindex/{{ current_processrun.processrun_id }}">{{ current_processrun.current_process_name }}</a></li>
+                                                {% endif %}
+                                            {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            0
+                                        {% endif %}
+
+                                        套系统</span>
                                 </div>
-                                <div class="desc"> 最新恢复</div>
+                                <div class="desc"> 正在切换</div>
                             </div>
                         </div>
                     </div>
@@ -224,16 +241,29 @@
                         <div class="panel-body easypiechart-panel">
                             <div class="col-md-12">
                                 <span class="caption-subject bold uppercase font-green"
-                                      style="font-size:16px">恢复成功率</span>
+                                      style="font-size:16px">演练概况</span>
                             </div>
-                            {% for process in process_success_rate_list %}
-                                <div class="col-md-1-5" align="center">
-                                    <h4>{{ process.process_name }}</h4>
-                                    <input readonly class="knob" data-width="200"
-                                           data-fgcolor="{{ process.color }}" data-min="-100"
-                                           data-displayprevious=true value="{{ process.current_process_success_rate }}">
+                            <div class="col-md-12">
+                                <div class="table-scrollable">
+                                    <table class="table table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th> #</th>
+                                            <th> 客户端</th>
+                                            <th> 今日演练</th>
+                                            <th> 平均RTO</th>
+                                            <th> 演练次数</th>
+                                            <th> 演练成功率</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="process_run_facts">
+
+                                        </tbody>
+                                    </table>
+                                    <div id="loading" hidden="" style="display: none;"></div>
                                 </div>
-                            {% endfor %}
+
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -355,7 +385,8 @@
 
             <div style="text-align:center">
                 <div class="copyright">
-                    <img src="/static/new/images/tesunet.png" class="m-r-sm" alt="scale" style="width:25px;height: 25px">
+                    <img src="/static/new/images/tesunet.png" class="m-r-sm" alt="scale"
+                         style="width:25px;height: 25px">
                     <span class="hidden-nav-xs">上海特速网络科技有限公司</span>
                 </div>
                 <div class="copyright"> CopyRight &copy;2005-2018 Tesunet Inc.</div>

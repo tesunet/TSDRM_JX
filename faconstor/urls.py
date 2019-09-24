@@ -153,4 +153,7 @@ urlpatterns = [
 
     url(r'^dooraclerecovery/$', dooraclerecovery),
     url(r'^oraclerecoverydata/$', oraclerecoverydata),
+
+    # 演练概况
+    url(r'^get_process_run_facts/$', get_process_run_facts),
 ]

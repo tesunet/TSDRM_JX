@@ -212,6 +212,38 @@ $("ul#locate_task").on("click", " li", function () {
 });
 
 
+$.ajax({
+    type: 'POST',
+    dataType: 'json',
+    url: '../get_process_run_facts/',
+    data: {
+        "csrfmiddlewaretoken": $("[name='csrfmiddlewaretoken']").val(),
+    },
+    success: function (data) {
+        var whole_list = data.data;
+        $("tbody#process_run_facts").empty();
+        // 加载数据
+        for (var i = 0; i < whole_list.length; i++) {
+            var labelStatus = "";
+            if (whole_list[i].process_run_today == 0){
+                labelStatus = '<span class="label label-sm label-success" title="演练成功">√</span>';
+            } else if (whole_list[i].process_run_today == 1){
+                labelStatus = '<span class="label label-sm label-error" title="演练失败">×</span>';
+            } else {
+                labelStatus = '<span class="label label-sm label-warning" title="未演练">○</span>';
+            }
 
+            $("tbody#process_run_facts").append('<tr>\n' +
+                '    <td style="vertical-align:middle">'+ i +'</td>\n' +
+                '    <td style="vertical-align:middle">'+ whole_list[i].client_name +'</td>\n' +
+                '    <td style="vertical-align:middle">\n' + labelStatus +
+                '    </td>\n' +
+                '    <td style="vertical-align:middle">'+ whole_list[i].average_rto +'</td>\n' +
+                '    <td style="vertical-align:middle">'+ whole_list[i].cur_client_process_times +'</td>\n' +
+                '    <td style="vertical-align:middle">'+ whole_list[i].process_run_rate +' %</td>\n' +
+                '</tr>');
+        }
+    }
+});
 
 

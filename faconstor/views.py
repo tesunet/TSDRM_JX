@@ -625,45 +625,6 @@ def index(request, funid):
         last_processrun_time = successful_processruns.last().starttime if successful_processruns else ""
         all_processruns = len(processrun_times_obj) if processrun_times_obj else 0
 
-        if successful_processruns:
-            rto_sum_seconds = 0
-
-            for processrun in successful_processruns:
-                all_step_runs = processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
-                    step__pnode=None)
-                step_rto = 0
-                if all_step_runs:
-                    for step_run in all_step_runs:
-                        rto = 0
-                        end_time = step_run.endtime
-                        start_time = step_run.starttime
-                        if end_time and start_time:
-                            delta_time = (end_time - start_time)
-                            rto = delta_time.total_seconds()
-                        step_rto += rto
-                rto_sum_seconds += step_rto
-
-                # 扣除子级步骤中可能的rto_count_in的时间
-                all_inner_step_runs = processrun.steprun_set.exclude(state="9").filter(step__rto_count_in="0").exclude(
-                    step__pnode=None)
-                inner_rto_not_count_in = 0
-                if all_inner_step_runs:
-                    for inner_step_run in all_inner_step_runs:
-                        end_time = inner_step_run.endtime
-                        start_time = inner_step_run.starttime
-                        if end_time and start_time:
-                            delta_time = (end_time - start_time)
-                            rto = delta_time.total_seconds()
-                            inner_rto_not_count_in += rto
-                rto_sum_seconds -= inner_rto_not_count_in
-
-            m, s = divmod(rto_sum_seconds / len(successful_processruns), 60)
-            h, m = divmod(m, 60)
-            average_rto = "%d时%02d分%02d秒" % (h, m, s)
-        else:
-            average_rto = "00时00分00秒"
-
-        # 正在切换:start_time, delta_time, current_step, current_operator， current_process_name, all_steps
         current_processruns = ProcessRun.objects.exclude(state__in=["DONE", "STOP", "REJECT"]).exclude(
             state="9").select_related("process")
         curren_processrun_info_list = []
@@ -728,31 +689,121 @@ def index(request, funid):
 
                 curren_processrun_info_list.append(current_processrun_dict)
 
-        # 系统切换成功率
-        all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort")
-        process_success_rate_list = []
-        if all_processes:
-            for process in all_processes:
-                process_name = process.name
-                all_processrun_list = process.processrun_set.filter(Q(state="DONE") | Q(state="STOP"))
-                successful_processruns = process.processrun_set.filter(state="DONE")
-                current_process_success_rate = "%.0f" % (len(successful_processruns) / len(
-                    all_processrun_list) * 100) if all_processrun_list and successful_processruns else 0
 
-                process_dict = {
-                    "process_name": process_name,
-                    "current_process_success_rate": current_process_success_rate,
-                    "color": process.color
-                }
-                process_success_rate_list.append(process_dict)
+        ##################################
+        # 今日演练：                      #
+        #   今天演练过的系统个数/总系统数  #
+        ##################################
+        today_process_run_length = 0
+        today_date = datetime.datetime.now().date()
+        pre_client = ""
+        for processrun_obj in all_processrun_objs:
+            if today_date == processrun_obj.starttime.date():
+                if pre_client == processrun_obj.origin:
+                    continue
+                today_process_run_length += 1
 
+                pre_client = processrun_obj.origin
+
+        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle")
         # 右上角消息任务
         return render(request, "index.html",
                       {'username': request.user.userinfo.fullname, "alltask": alltask, "homepage": True,
                        "pagefuns": getpagefuns(funid, request), "success_rate": success_rate,
                        "all_processruns": all_processruns, "last_processrun_time": last_processrun_time,
-                       "average_rto": average_rto, "curren_processrun_info_list": curren_processrun_info_list,
-                       "process_success_rate_list": process_success_rate_list})
+                       "curren_processrun_info_list": curren_processrun_info_list,
+                       "today_process_run_length": today_process_run_length, "all_process": all_process})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def get_process_run_facts(request):
+    if request.user.is_authenticated():
+        #######################################################
+        # 演练概况：                                          #
+        # 客户端名称/今日演练(状态:√/×/○>> 成功/失败/未演练) #
+        # /平均RTO/演练次数/演练成功率                         #
+        #######################################################
+        cv_oracle_process_list = []
+
+        all_origins = Origin.objects.exclude(state="9").all()
+        for origin in all_origins:
+            client_name = origin.client_name
+
+            # 今日演练(状态)  0/1/2
+            # 演练一次成功就算成功
+            all_process_run = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP")).filter(origin=client_name)
+
+            process_run_today = 2
+            today_date = datetime.datetime.now().date()
+            for cur_process_run in all_process_run:
+                start_time = cur_process_run.starttime
+                if start_time:
+                    date_strp_time = start_time.date()
+                    if date_strp_time == today_date:
+                        if cur_process_run.state == "DONE":
+                            process_run_today = 0
+                            break
+                        else:
+                            process_run_today = 1
+
+            # 平均RTO
+            cur_client_succeed_process = ProcessRun.objects.filter(state="DONE").filter(origin=client_name)
+
+            if cur_client_succeed_process:
+                rto_sum_seconds = 0
+
+                for processrun in cur_client_succeed_process:
+                    all_step_runs = processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
+                        step__pnode=None)
+                    step_rto = 0
+                    if all_step_runs:
+                        for step_run in all_step_runs:
+                            rto = 0
+                            end_time = step_run.endtime
+                            start_time = step_run.starttime
+                            if end_time and start_time:
+                                delta_time = (end_time - start_time)
+                                rto = delta_time.total_seconds()
+                            step_rto += rto
+                    rto_sum_seconds += step_rto
+                    print(rto_sum_seconds)
+                    # 扣除子级步骤中可能的rto_count_in的时间
+                    all_inner_step_runs = processrun.steprun_set.exclude(state="9").filter(
+                        step__rto_count_in="0").exclude(step__pnode=None)
+                    inner_rto_not_count_in = 0
+                    if all_inner_step_runs:
+                        for inner_step_run in all_inner_step_runs:
+                            end_time = inner_step_run.endtime
+                            start_time = inner_step_run.starttime
+                            if end_time and start_time:
+                                delta_time = (end_time - start_time)
+                                rto = delta_time.total_seconds()
+                                inner_rto_not_count_in += rto
+                    rto_sum_seconds -= inner_rto_not_count_in
+                m, s = divmod(rto_sum_seconds / len(cur_client_succeed_process), 60)
+                h, m = divmod(m, 60)
+                average_rto = "%d时%02d分%02d秒" % (h, m, s)
+            else:
+                average_rto = "00时00分00秒"
+
+            # 演练次数
+            cur_client_process = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP")).filter(origin=client_name)
+            cur_client_process_times = len(cur_client_process) if cur_client_process else 0
+
+            # 演练成功率
+            cur_client_succeed_process_times = len(cur_client_succeed_process) if cur_client_succeed_process else 0
+            process_run_rate = "%.0f" % ((
+                                             cur_client_succeed_process_times / cur_client_process_times if cur_client_process_times != 0 else 0) * 100)
+
+            cv_oracle_process_list.append({
+                "client_name": client_name,
+                "process_run_today": process_run_today,
+                "average_rto": average_rto,
+                "cur_client_process_times": cur_client_process_times,
+                "process_run_rate": process_run_rate,
+            })
+        return JsonResponse({"data": cv_oracle_process_list})
     else:
         return HttpResponseRedirect("/login")
 
