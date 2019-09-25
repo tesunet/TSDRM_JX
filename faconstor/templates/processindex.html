@@ -10,9 +10,10 @@
 </head>
 <body>
     <div class="logo">
-        <img style="height: 61px" src="/static/processindex/images/logo.png">
+        <img style="height: 61px" src="/static/processindex/images/logo1.png">
     </div>
     <div class="wrapper">
+        <input type="text" id="oldpercent" name="oldpercent" value="" hidden>
         <input type="text" id="process_run_id" name="process_run_id" value="{{ processrun_id }}" hidden>
         <input type="text" id="process_url" name="process_url" value="{{ process_url }}" hidden>
         <input type="text" id="process_id" name="process_id" value="{{ process_id }}" hidden>
@@ -22,10 +23,9 @@
         <div class="head-content" style="z-index: 100">
             <div class="header-title">
                 <h1></h1>
-                <h2></h2>
             </div>
 
-            <div class="header-timeout" hidden>
+            <div class="header-timeout">
                 <ul>
                     <li><span>RTO</span></li>
                     <li><em>  </em></li>
@@ -52,88 +52,39 @@
             <div class="endtext">恢 复 成 功</div>
         </div>
 
-        <div class="step-box" hidden>
+        <div class="walkthrough_run" >
+            <div class="progress_list" >
 
-            <div class="box-left">
-                <div class="step-item step-left4">
-                    <div class="lbox-4" style="display: none">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
-                    </div>
-                </div>
-                <div class="step-item step-left3">
-                    <div class="lbox-3" style="display: none">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
-                    </div>
-                </div>
-                <div class="step-item step-left2">
-                    <div class="lbox-2" style="display: none">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
-                    </div>
-                </div>
 
-                <div class="step-item step-left1">
-                    <div class="lbox-1" style="display: none">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
-                    </div>
-                </div>
             </div>
+            <div class="progress_run" >
+                <h2></h2>
 
-            <div class="box-center">
-                <div class="step-current">
-                    <div class="step-item">
-                        <div class="cur-item-wb">
-                            <div class="circle progress-circle" id="current-circles"></div>
+                <canvas id="pie1" class="canvas" width="350px" height="350px"></canvas>
+
+
+                <div class="box-progress" hidden>
+                    <div class="box-progress-container">
+                        <div class="progress-left-time"></div>
+                        <div class="progress-right-time"></div>
+                        <div class='progress active'>
+                            <div class='progress-par bar' style='width:1%;text-align: center;'><span></span><i>0%</i></div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="box-right">
-                <div class="step-item step-right1">
-                    <div class="rbox-1" style="display: none;">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
-                    </div>
-                </div>
-                <div class="step-item step-right2">
-                    <div class="rbox-2" style="display: none;">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
-                    </div>
-                </div>
-                <div class="step-item step-right3">
-                    <div class="rbox-3" style="display: none;">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
-                    </div>
-                </div>
-                <div class="step-item step-right4">
-                    <div class="rbox-4" style="display: none;">
-                        <div class="con-circle"></div>
-                        <div class="con-text"></div>
+            <div class="progress_logs" >
+                <div class="container">
+                    <div class="window">
+                        <div class="console"></div>
                     </div>
                 </div>
             </div>
-
         </div>
-
-        <div class="box-progress" hidden>
-            <div class="box-progress-container">
-                <div class="progress-left-time"></div>
-                <div class="progress-right-time"></div>
-                <div class='progress active'>
-                    <div class='progress-par bar' style='width:1%;text-align: center;'><span></span><i>0%</i></div>
-                </div>
-            </div>
-        </div>
-
     </div>
     <script src="/static/processindex/js/common.js"></script>
     <script src="/static/processindex/js/circles.min.js"></script>
+    <script src="/static/processindex/js/Charts.js"></script>
 
     <script>
         util.run();

@@ -50,6 +50,7 @@ funlist = []
 
 info = {"webaddr": "cv-server", "port": "81", "username": "admin", "passwd": "Admin@2017", "token": "",
         "lastlogin": 0}
+walkthroughinfo = {}
 
 
 def file_iterator(file_name, chunk_size=512):
@@ -252,6 +253,8 @@ def processindex(request, processrun_id):
         errors = []
         s_tag = request.GET.get("s", "")
         # exclude
+        global walkthroughinfo
+        walkthroughinfo = {}
         c_process_run = ProcessRun.objects.filter(id=processrun_id).select_related("process")
         if c_process_run.exists():
             process_url = c_process_run[0].process.url
@@ -385,7 +388,7 @@ def get_process_index_data(request):
                     all_done_step_list = []
                     for step in all_steps:
                         step_id = step.id
-                        done_step_run = StepRun.objects.filter(step_id=step_id).filter(
+                        done_step_run = StepRun.objects.filter(
                             processrun_id=processrun_id).filter(state="DONE")
                         if done_step_run.exists():
                             all_done_step_list.append(done_step_run[0])
@@ -447,6 +450,16 @@ def get_process_index_data(request):
             else:
                 done_num = 0
 
+            #消息列表
+            showtasks = []
+            tasks = ProcessTask.objects.filter(type='info').filter(processrun=current_processrun).exclude(state='9')
+            for task in tasks:
+                showtasks.append({
+                    "taskid": task.id,
+                    "taskname": name,
+                    "taskcontent": task.content,
+                    "tasktime": task.starttime.strftime('%Y-%m-%d %H:%M:%S') if task.starttime else "",
+                })
             # 构造展示步骤
             process_rate = "%02d" % (done_num / len(current_processrun.steprun_set.all()) * 100)
 
@@ -463,8 +476,13 @@ def get_process_index_data(request):
                 "state": state,
                 "rtostate": rtostate,
                 "percent": process_rate,
-                "steps": steps
+                "steps": steps,
+                "showtasks":showtasks
             }
+            global walkthroughinfo
+            oldwalkthroughinfo = walkthroughinfo
+            walkthroughinfo = c_step_run_data
+            c_step_run_data["oldwalkthroughinfo"]=oldwalkthroughinfo
         else:
             c_step_run_data = {}
         return JsonResponse(c_step_run_data)

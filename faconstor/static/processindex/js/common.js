@@ -1,4 +1,4 @@
-﻿﻿var csrfToken = $("[name='csrfmiddlewaretoken']").val();
+﻿﻿﻿var csrfToken = $("[name='csrfmiddlewaretoken']").val();
 var state = '',
     interval = 0,
     tmInterval = 0,
@@ -14,17 +14,6 @@ var util = {
             }
             util.request();
         }, 3 * 1000); //3秒/次请求
-        if (document.body.clientHeight > 900) {
-            $(".step-box").css("margin", "230px 0 60px 0px");
-            $(".header-title").css("margin", "50px 0");
-            $(".start_hand").css("top", "380px");
-            $(".end_pic").css("top", "300px");
-        } else {
-            $(".step-box").css("margin", "100px 0 60px 0px");
-            $(".header-title").css("margin", "0px 0");
-            $(".start_hand").css("top", "300px");
-            $(".end_pic").css("top", "200px");
-        }
     },
     request: function () {
         $.ajax({
@@ -47,39 +36,30 @@ var util = {
     },
     makeHtml: function (data) {
         state = data.state;
-        var sTag = $("#s_tag").val();
-        // 判断是否为计划
-        if (state === "PLAN") {
-            $(".step-box").hide();
-            $(".box-progress").hide();
-            $(".header-timeout").hide();
-            $(".end_pic").hide();
-            $(".start_hand").show();
-        } else if (state === "DONE" && sTag !== "true") {
-            $(".step-box").hide();
-            $(".box-progress").hide();
-            $(".header-timeout").hide();
-            $(".start_hand").hide();
-            $(".end_pic").show();
-        } else {
-            $(".end_pic").hide();
-            $(".start_hand").hide();
-            $(".step-box").show();
-            $(".box-progress").show();
-            $(".header-timeout").show();
-        }
+        var sTag = $("#s_tag").val()
+        util.makeCommand(data.showtasks,data.oldwalkthroughinfo.showtasks);
+
 
         if (headerTitle === '') {
             var date = new Date;
             var year = date.getFullYear();
             headerTitle = data.name;
-            var process_run_url = $("#process_url").val() + "/" + $("#process_run_id").val();
-            $('.header-title h1').html("<span >" + year + "嘉兴银行自动化恢复演练" + "</span>");
-            $('.header-title h2').html("<a href='" + process_run_url + "' target='_parent' style='color:#e8e8e8 '>" + headerTitle + "</a>");
+            var process_run_url = $("#process_url").val() + "/" + $("#process_run_id").val()
+            $('.header-title h1').html("<span >嘉兴银行自动化恢复演练" + "</span>");
+            $('.progress_run h2').html("<a href='" + process_run_url + "' target='_parent' style='color:#e8e8e8 '>" + headerTitle + "</a>");
         }
+        $(".progress_list").html("");
+        var percent = parseInt(data.percent);
+        var oldpercent=$("#oldpercent").val()
+        if (oldpercent=="")
+            new Chart("pie1").ratePie(percent);
+        else {
+            new Chart("pie1").ratePie1($("#oldpercent").val(), percent);
+        }
+        $("#oldpercent").val(percent)
+
 
         var progressBar = $('.progress-par');
-        var percent = parseInt(data.percent);
         progressBar.attr('style', 'width:' + percent + '%');
         progressBar.find('i').text(percent + '%');
         for (var cindex = 0; cindex < allState.length; cindex++) {
@@ -95,6 +75,14 @@ var util = {
         var curStep = [];
         var curIndex = 0;
         for (var j = 0; j < data.steps.length; j++) {
+            if(data.steps[j].state=="DONE")
+                $(".progress_list").append("<div class=\"processname1\"><h3>" +data.steps[j].name + "</h3> </div>");
+            else if(data.walkthroughstate=="RUN")
+                $(".progress_list").append("<div class=\"processname\"><h3>" + data.steps[j].name + "</h3> </div>");
+            else if(data.walkthroughstate=="EDIT")
+                $(".progress_list").append("<div class=\"processname2\"><h3>" + data.steps[j].name + "</h3> </div>");
+            else
+                $(".progress_list").append("<div class=\"processname\"><h3>" + data.steps[j].name + "</h3> </div>");
 
             if (data.steps[j].type === 'cur') {
                 curIndex = j;
@@ -125,15 +113,14 @@ var util = {
 
         // 启动应用服务步骤：当前时间减去当前步骤开始时间的秒数作为百分比，如未结束，差值大于99，停留在99%。
         // 没有子步骤 不需要确认 有脚本
-
-        // if (curStep.c_tag === "yes") {
-        //     var deltaTime = curStep.delta_time;
-        //     if (deltaTime <= 99) {
-        //         curStepPercent = deltaTime
-        //     } else {
-        //         curStepPercent = 99
-        //     }
-        // }
+        if (curStep.c_tag === "yes") {
+            var deltaTime = curStep.delta_time;
+            if (deltaTime <= 99) {
+                curStepPercent = deltaTime
+            } else {
+                curStepPercent = 99
+            }
+        }
 
         Circles.create({
             id: 'current-circles',
@@ -184,6 +171,78 @@ var util = {
         // 写入RTO
         util.makeTimer(data.rtostate, data.starttime, data.endtime, data.rtoendtime, data.current_time);
 
+    },
+    makeCommand: function (showtasks,oldshowtasks) {
+        var console = $(".console");
+        console.html("")
+        if (oldshowtasks) {
+            var showtext = ""
+            for (var i = 0; i < showtasks.length; i++) {
+                var isshow=false;
+                for(var j = 0; j < oldshowtasks.length; j++) {
+                    if (showtasks[i].taskid == oldshowtasks[j].taskid) {
+                        isshow = true
+                        break
+                    }
+                }
+                var str = showtasks[i].taskname + ":" + showtasks[i].taskcontent + "(" + showtasks[i].tasktime + ")"
+                    if (str.length > 45)
+                        str = str.substring(0, 45) + "<br>    " + str.substring(45)
+                if(isshow) {
+                    console.append("<span class=\"prompt\">➜</span> ");
+                    console.append("<span class=\"path\">~</span>" + str)
+                    console.append("<br>");
+                    console.append("<br>");
+                }
+                else{
+                    showtext = showtext + "➜" + "~" + str + "^";
+                    showtext = showtext.replace("<br>","$");
+                }
+            }
+            if(showtext.length>0) {
+                var str = showtext
+                var myindex = 0;
+                //$text.html()和$(this).html('')有区别
+                var timer = setInterval(function () {
+                        var current = str.substr(myindex, 1);
+                        myindex++;
+                        if(current=="➜")
+                            console.append("<span class=\"prompt\">➜</span> ");
+                        else if(current=="~")
+                            console.append("<span class=\"path\">~</span>");
+                        else if(current=="^"){
+                            console.append("<br>");
+                            console.append("<br>");
+                            console[0].scrollTop = console[0].scrollHeight;
+                        }
+                        else if(current=="$"){
+                            console.append("<br>");
+                            console[0].scrollTop = console[0].scrollHeight;
+                        }
+                        else{
+                            console.append(current);
+                        }
+                        if (myindex >= str.length) {
+                            clearInterval(timer);
+                        }
+                    },
+                    100);
+            }
+
+            console[0].scrollTop = console[0].scrollHeight;
+        }
+        else {
+            for (var i = 0; i < showtasks.length; i++) {
+                var str = showtasks[i].taskname + ":" + showtasks[i].taskcontent + "(" + showtasks[i].tasktime + ")"
+                if (str.length > 45)
+                    str = str.substring(0, 45) + "<br>    " + str.substring(45)
+                console.append("<span class=\"prompt\">➜</span> ");
+                console.append("<span class=\"path\">~</span>" + str)
+                console.append("<br>");
+                console.append("<br>");
+            }
+            console[0].scrollTop = console[0].scrollHeight;
+        }
     },
     makeR: function (rightData) {
         for (var n = 0; n < 4; n++) {
