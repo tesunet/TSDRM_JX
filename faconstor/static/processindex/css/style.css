@@ -259,6 +259,117 @@ input {
     color: #e8e8e8 !important;
 }
 
+/*进度条*/
+.box-progress {
+    margin: 50px;
+    clear: both;
+}
+
+.box-progress-container .progress-left-time {
+    position: absolute;
+    left: 0;
+    top: 65px;
+    font-size: 16px;
+}
+
+.box-progress-container .progress-right-time {
+    position: absolute;
+    right: 0px;
+    top: 65px;
+    font-size: 16px;
+}
+
+.box-progress-container {
+    width: 500px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.progress {
+
+    width: 100%;
+    /*height: 35px;*/
+    height: 20px;
+    background-color: #e8e8e8;
+    margin-top: 8px;
+    /* overflow: hidden;*/
+    box-shadow: -5px 10px 20px #181a1c;
+}
+
+.progress-par {
+    background-color: #5091C7;
+    width: 75%;
+    position: relative;
+    height: 8px;
+    -webkit-transition: 0.4s linear;
+    -moz-transition: 0.4s linear;
+    -o-transition: 0.4s linear;
+    transition: 0.4s linear;
+    -webkit-transition-property: width, background-color;
+    -moz-transition-property: width, background-color;
+    -o-transition-property: width, background-color;
+    transition-property: width, background-color;
+}
+
+.progress .bar i {
+    position: absolute;
+    line-height: 2em;
+    top:-5px;
+    margin-left: -20px;
+    font-size: 16px;
+!important;
+    font-weight: 700;
+}
+
+.progress .bar {
+    float: left;
+    width: 0;
+    height: 100%;
+    font-size: 12px;
+    color: #ffffff;
+    text-align: center;
+    position: relative;
+
+    -webkit-background-size: 10px 10px;
+    -moz-background-size: 10px 10px;
+    -o-background-size: 10px 10px;
+    background-size: 10px 10px;
+}
+.progress .bar, .progress .bar.run, .progress .bar.done {
+    background-color: #87cefa;
+    background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0.25, #06b7f1), color-stop(0.25, transparent), color-stop(0.5, transparent), color-stop(0.5, #06b7f1), color-stop(0.75, #06b7f1), color-stop(0.75, transparent), to(transparent));
+    background-image: -webkit-linear-gradient(135deg, #06b7f1 25%, transparent 25%, transparent 50%, #06b7f1 50%, #06b7f1 75%, transparent 75%, transparent);
+    background-image: -moz-linear-gradient(135deg, #06b7f1 25%, transparent 25%, transparent 50%, #06b7f1 50%, #06b7f1 75%, transparent 75%, transparent);
+    background-image: -o-linear-gradient(135deg, #06b7f1 25%, transparent 25%, transparent 50%, #06b7f1 50%, #06b7f1 75%, transparent 75%, transparent);
+    background-image: linear-gradient(135deg, #06b7f1 25%, transparent 25%, transparent 50%, #06b7f1 50%, #06b7f1 75%, transparent 75%, transparent);
+}
+
+.progress .bar.error {
+    background-color: #e0b200;
+    background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0.25, #e0c400), color-stop(0.25, transparent), color-stop(0.5, transparent), color-stop(0.5, #e0c400), color-stop(0.75, #e0c400), color-stop(0.75, transparent), to(transparent));
+    background-image: -webkit-linear-gradient(135deg, #e0c400 25%, transparent 25%, transparent 50%, #e0c400 50%, #e0c400 75%, transparent 75%, transparent);
+    background-image: -moz-linear-gradient(135deg, #e0c400 25%, transparent 25%, transparent 50%, #e0c400 50%, #e0c400 75%, transparent 75%, transparent);
+    background-image: -o-linear-gradient(135deg, #e0c400 25%, transparent 25%, transparent 50%, #e0c400 50%, #e0c400 75%, transparent 75%, transparent);
+    background-image: linear-gradient(135deg, #e0c400 25%, transparent 25%, transparent 50%, #e0c400 50%, #e0c400 75%, transparent 75%, transparent);
+}
+
+.progress .bar.stop {
+    background-color: #ff0000;
+    background-image: -webkit-gradient(linear, left top, right bottom, color-stop(0.25, #ff4005), color-stop(0.25, transparent), color-stop(0.5, transparent), color-stop(0.5, #ff4005), color-stop(0.75, #ff4005), color-stop(0.75, transparent), to(transparent));
+    background-image: -webkit-linear-gradient(135deg, #ff4005 25%, transparent 25%, transparent 50%, #ff4005 50%, #ff4005 75%, transparent 75%, transparent);
+    background-image: -moz-linear-gradient(135deg, #ff4005 25%, transparent 25%, transparent 50%, #ff4005 50%, #ff4005 75%, transparent 75%, transparent);
+    background-image: -o-linear-gradient(135deg, #ff4005 25%, transparent 25%, transparent 50%, #ff4005 50%, #ff4005 75%, transparent 75%, transparent);
+    background-image: linear-gradient(135deg, #ff4005 25%, transparent 25%, transparent 50%, #ff4005 50%, #ff4005 75%, transparent 75%, transparent);
+}
+
+.progress.active .bar {
+    -webkit-animation: progress-bar 2s linear infinite;
+    -moz-animation: progress-bar 2s linear infinite;
+    -ms-animation: progress-bar 2s linear infinite;
+    -o-animation: progress-bar 2s linear infinite;
+    animation: progress-bar 2s linear infinite;
+    transition: all 1s;
+}
 
 /*end*/
 
@@ -313,5 +424,5 @@ input {
 
 /*环形进度条*/
 .canvas {
-    margin: 140px  0 0 125;
+    margin: 40px  0 0 125;
 }
