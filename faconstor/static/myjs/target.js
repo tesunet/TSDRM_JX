@@ -65,10 +65,12 @@ $(document).ready(function() {
         var table = $('#target_dt').DataTable();
         var data = table.row($(this).parents('tr')).data();
         $("#target_id").val(data.id);
-        $("#client_id").val(data.client_id);
+        $("#target").val(data.client_id);
+        // $("#client_id").val(data.client_id);
         $("#agent").val(data.agent);
         $("#instance").val(data.instance);
         $("#os").val(data.os);
+        $("#data_path").val(data.data_path);
     });
 
     // 加载oracle_data
@@ -102,11 +104,11 @@ $(document).ready(function() {
         $("#agent").val("");
         $("#instance").val("");
         $("#os").val("");
+        $("#data_path").val("");
     });
 
     $('#save').click(function() {
         var table = $('#target_dt').DataTable();
-        console.log($("select#target:selected").text());
         $.ajax({
             type: "POST",
             dataType: 'json',
@@ -117,7 +119,8 @@ $(document).ready(function() {
                 client_name: $("#target").find("option:selected").text(),
                 agent: $("#agent").val(),
                 instance: $("#instance").val(),
-                os: $("#os").val()
+                os: $("#os").val(),
+                data_path: $("#data_path").val()
             },
             success: function(data) {
                 if (data.ret == 1) {

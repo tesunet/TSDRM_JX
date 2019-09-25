@@ -454,10 +454,9 @@ $(document).ready(function () {
 
     // modal.show事件
     $("#static").on("shown.bs.modal", function (event) {
-        $("#target").val("");
+        $("#target").val($("#target_selected").val());
         $("#run_reason").val("");
         $("#recovery_time").val("");
-        $("#data_path").val("");
 
         // 写入当前时间
         var myDate = new Date();
@@ -467,10 +466,9 @@ $(document).ready(function () {
     });
 
     $("#static02").on("shown.bs.modal", function (event) {
-        $("#target_invited").val("");
+        $("#target_invited").val($("#target_selected_invited").val());
         $("#runreason_invited").val("");
         $("#recovery_time_invited").val("");
-        $("#data_path_invited").val("");
 
         // 写入当前时间
         var myDate = new Date();

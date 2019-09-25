@@ -3297,18 +3297,22 @@ def oracle_restore(request, process_id):
         # commvault源客户端
         all_steps = Step.objects.exclude(state="9").filter(process_id=process_id)
 
+        target_id = ""
         origin = ""
+        data_path = ""
         for cur_step in all_steps:
             all_scripts = Script.objects.filter(step_id=cur_step.id)
             for cur_script in all_scripts:
                 if cur_script.origin:
                     origin = cur_script.origin
+                    target_id = cur_script.origin.target.id
+                    data_path = cur_script.origin.target.data_path
                     break
-
         return render(request, 'oracle_restore.html',
                       {'username': request.user.userinfo.fullname, "pagefuns": getpagefuns(funid, request=request),
-                       "wrapper_step_list": wrapper_step_list, "process_id": process_id,
-                       "plan_process_run_id": plan_process_run_id, "all_targets": all_targets, "origin": origin})
+                       "wrapper_step_list": wrapper_step_list, "process_id": process_id, "data_path": data_path,
+                       "plan_process_run_id": plan_process_run_id, "all_targets": all_targets, "origin": origin,
+                       "target_id": target_id})
     else:
         return HttpResponseRedirect("/login")
 
@@ -5823,6 +5827,7 @@ def target_data(request):
                 "client_id": target.client_id,
                 "client_name": target.client_name,
                 "os": target.os,
+                "data_path": target.data_path,
                 "agent": target_info["agent"],
                 "instance": target_info["instance"]
             })
@@ -5839,6 +5844,7 @@ def target_save(request):
         agent = request.POST.get("agent", "").strip()
         instance = request.POST.get("instance", "").strip()
         os = request.POST.get("os", "").strip()
+        data_path = request.POST.get("data_path", "").strip()
         ret = 0
         info = ""
         try:
@@ -5851,47 +5857,25 @@ def target_save(request):
                 client_id = int(client_id)
             except:
                 ret = 0
-                info = "终端未选择。"
+                info = "目标客户端未选择。"
             else:
-                if target_id == 0:
-                    # 判断是否存在
-                    check_target = Target.objects.exclude(state="9").filter(client_id=client_id)
-                    if check_target.exists():
-                        ret = 0
-                        info = "该客户端已选为终端，请勿重复添加。"
-                    else:
-                        try:
-                            cur_target = Target()
-                            cur_target.client_id = client_id
-                            cur_target.client_name = client_name
-                            cur_target.os = os
-                            cur_target.info = json.dumps({
-                                "agent": agent,
-                                "instance": instance
-                            })
-                            cur_target.save()
-                        except:
-                            ret = 0
-                            info = "数据保存失败。"
-                        else:
-                            ret = 1
-                            info = "新增成功。"
+                if not data_path:
+                    ret = 0
+                    info = "数据重定向路径未填写。"
                 else:
-                    check_target = Target.objects.exclude(state="9").exclude(id=target_id).filter(client_id=client_id)
-                    if check_target.exists():
-                        ret = 0
-                        info = "该客户端已选为终端，请勿重复添加。"
-                    else:
-                        try:
-                            cur_target = Target.objects.get(id=target_id)
-                        except Target.DoesNotExist as e:
+                    if target_id == 0:
+                        # 判断是否存在
+                        check_target = Target.objects.exclude(state="9").filter(client_id=client_id)
+                        if check_target.exists():
                             ret = 0
-                            info = "终端不存在，请联系管理员。"
+                            info = "该客户端已选为目标客户端，请勿重复添加。"
                         else:
                             try:
+                                cur_target = Target()
                                 cur_target.client_id = client_id
                                 cur_target.client_name = client_name
                                 cur_target.os = os
+                                cur_target.data_path = data_path
                                 cur_target.info = json.dumps({
                                     "agent": agent,
                                     "instance": instance
@@ -5899,10 +5883,38 @@ def target_save(request):
                                 cur_target.save()
                             except:
                                 ret = 0
-                                info = "数据修改失败。"
+                                info = "数据保存失败。"
                             else:
                                 ret = 1
-                                info = "修改成功"
+                                info = "新增成功。"
+                    else:
+                        check_target = Target.objects.exclude(state="9").exclude(id=target_id).filter(client_id=client_id)
+                        if check_target.exists():
+                            ret = 0
+                            info = "该客户端已选为终端，请勿重复添加。"
+                        else:
+                            try:
+                                cur_target = Target.objects.get(id=target_id)
+                            except Target.DoesNotExist as e:
+                                ret = 0
+                                info = "终端不存在，请联系管理员。"
+                            else:
+                                try:
+                                    cur_target.client_id = client_id
+                                    cur_target.client_name = client_name
+                                    cur_target.os = os
+                                    cur_target.data_path = data_path
+                                    cur_target.info = json.dumps({
+                                        "agent": agent,
+                                        "instance": instance
+                                    })
+                                    cur_target.save()
+                                except:
+                                    ret = 0
+                                    info = "数据修改失败。"
+                                else:
+                                    ret = 1
+                                    info = "修改成功"
 
         return JsonResponse({
             "ret": ret,

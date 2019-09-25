@@ -75,6 +75,7 @@ class Target(models.Model):
     info = models.TextField("客户端相关信息", blank=True, null=True)
     state = models.CharField("状态", blank=True, null=True, max_length=20)
     os = models.CharField("系统", blank=True, null=True, max_length=50)
+    data_path = models.CharField("数据文件重定向路径", blank=True, null=True, max_length=512)
 
 
 class Origin(models.Model):

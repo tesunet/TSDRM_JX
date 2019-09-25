@@ -114,7 +114,7 @@
     <input type="text" hidden id="plan_process_run_id" value="{{ plan_process_run_id }}">
 
     <div id="static" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
@@ -170,15 +170,16 @@
                                 <label class="col-md-2 control-label"><span
                                         style="color:red; ">*</span>数据重定向路径</label>
                                 <div class="col-md-10">
-                                    <input id="data_path" type="text" name="data_path" class="form-control "
-                                           placeholder="">
+                                    <input id="data_path" type="text" name="data_path" class="form-control"
+                                           value="{{ data_path }}"
+                                           placeholder="" readonly>
                                     <div class="form-control-focus"></div>
 
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
-                                        style="color:red; "></span>源客户端</label>
+                                        style="color:red; ">*</span>源客户端</label>
                                 <div class="col-md-10">
                                     <input id="origin" autocomplete="off" type="text" readonly
                                            name="origin" class="form-control" value="{{ origin.client_name }}">
@@ -187,8 +188,11 @@
                             </div>
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span
-                                        style="color:red; "></span>选择目标客户端</label>
+                                        style="color:red; ">*</span>选择目标客户端</label>
                                 <div class="col-md-10">
+                                    <input type="text" id="target_selected" name="target_selected"
+                                           value="{{ target_id }}" hidden>
+
                                     <select name="target" id="target" class="form-control">
                                         {% for target in all_targets %}
                                             <option value="{{ target.id }}">{{ target.client_name }}</option>
@@ -292,7 +296,7 @@
     </div>
 
     <div id="static02" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
@@ -346,8 +350,9 @@
                             <label class="col-md-2 control-label"><span
                                     style="color:red; ">*</span>数据重定向路径</label>
                             <div class="col-md-10">
-                                <input id="data_path_invited" type="text" name="data_path_invited" class="form-control "
-                                       placeholder="">
+                                <input id="data_path_invited" type="text" name="data_path_invited" class="form-control"
+                                       value="{{ data_path }}"
+                                       placeholder="" readonly>
                                 <div class="form-control-focus"></div>
 
                             </div>
@@ -363,9 +368,12 @@
                         </div>
                         <div class="form-group">
                             <label class="col-md-2 control-label"><span
-                                    style="color:red; "></span>选择目标客户端</label>
+                                    style="color:red; ">*</span>选择目标客户端</label>
                             <div class="col-md-10">
+                                <input type="text" id="target_selected_invited" name="target_selected_invited"
+                                       value="{{ target_id }}" hidden>
                                 <select name="target_invited" id="target_invited" class="form-control">
+
                                     {% for target in all_targets %}
                                         <option value="{{ target.id }}">{{ target.client_name }}</option>
                                     {% endfor %}
