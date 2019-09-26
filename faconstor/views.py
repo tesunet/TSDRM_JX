@@ -6525,7 +6525,8 @@ def manualrecoverydata(request):
                 "client_name": origin.client_name,
                 "client_id": origin.client_id,
                 "client_os": origin.os,
-                "model": json.loads(origin.info)["agent"]
+                "model": json.loads(origin.info)["agent"],
+                "data_path": origin.target.data_path
             })
         return JsonResponse({"data": result})
     else:

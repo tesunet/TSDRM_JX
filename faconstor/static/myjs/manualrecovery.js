@@ -14,7 +14,7 @@ $(document).ready(function () {
         "columnDefs": [{
             "targets": 0,
             "mRender": function (data, type, full) {
-                return "<a id='edit' data-toggle='modal' data-target='#static1'>" + data + "</a>"
+                return "<a id='edit' data-toggle='modal' data-target='#static1'>" + data + "</a><input type='text' value='" + full.data_path + "' hidden>"
             }
         }],
         "oLanguage": {
@@ -39,8 +39,9 @@ $(document).ready(function () {
         var el = e.relatedTarget;
         var jQuery_el = $(el);
         var agent = jQuery_el.parent().next().html();
+        var data_path = jQuery_el.next().val();
         $("#agent").val(agent);
-        $("#data_path").val("");
+        $("#data_path").val(data_path);
 
         $("#sourceClient").val(el.innerText);
         var datatable = $("#backup_point").dataTable();
