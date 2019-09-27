@@ -1,8 +1,9 @@
 from django.conf.urls import url
 from faconstor.views import *
-
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
+    url(r'^favicon.ico$', RedirectView.as_view(url=r'static/new/images/favicon.ico')),
     url(r'^$', index, {'funid': '2'}),
     url(r'^test/$', test),
     url(r'^processindex/(\d+)/$', processindex),

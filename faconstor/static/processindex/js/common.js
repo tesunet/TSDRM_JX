@@ -95,14 +95,14 @@ var util = {
         var curStepPercent = curStep.percent;
         // 启动应用服务步骤：当前时间减去当前步骤开始时间的秒数作为百分比，如未结束，差值大于99，停留在99%。
         // 没有子步骤 不需要确认 有脚本
-        if (curStep.c_tag === "yes") {
-            var deltaTime = curStep.delta_time;
-            if (deltaTime <= 99) {
-                curStepPercent = deltaTime
-            } else {
-                curStepPercent = 99
-            }
-        }
+        // if (curStep.c_tag === "yes") {
+        //     var deltaTime = curStep.delta_time;
+        //     if (deltaTime <= 99) {
+        //         curStepPercent = deltaTime
+        //     } else {
+        //         curStepPercent = 99
+        //     }
+        // }
 
         var progressBar = $('.progress-par');
         progressBar.attr('style', 'width:' + curStepPercent + '%');
@@ -111,9 +111,6 @@ var util = {
             progressBar.removeClass(allState[cindex]);
         }
         progressBar.addClass(curState);
-
-
-
 
 
         var stateArr = ['DONE', 'STOP', 'ERROR'];

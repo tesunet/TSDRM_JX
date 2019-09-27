@@ -67,8 +67,7 @@ if (App.isAngularJsApp() === false) {
                     getstep();
                     num = 0;
                 }
-            }
-            else {
+            } else {
                 window.clearInterval(t2);
             }
         }
@@ -185,8 +184,8 @@ if (App.isAngularJsApp() === false) {
                     {"data": "received"},
                 ],
                 "columnDefs": [{
-                  targets: 0,
-                  width:"340px",
+                    targets: 0,
+                    width: "340px",
                 },],
                 "oLanguage": {
                     "sLengthMenu": "每页显示 _MENU_ 条记录",
@@ -537,8 +536,7 @@ if (App.isAngularJsApp() === false) {
                             var stepbar = "0";
                             stepbar = Math.round(stepdonesteps / stepallsteps * 100).toString();
                             $("#step_bar_" + (i + 1).toString()).width(stepbar + "%");
-                        }
-                        catch (err) {
+                        } catch (err) {
 
                         }
 
@@ -554,8 +552,7 @@ if (App.isAngularJsApp() === false) {
                         var processbar = "0";
                         processbar = Math.round(processdonesteps / processallsteps * 100).toString();
                         $("#process_bar").width(processbar + "%");
-                    }
-                    catch (err) {
+                    } catch (err) {
 
                     }
                     FormWizard.init();
@@ -590,7 +587,7 @@ if (App.isAngularJsApp() === false) {
                                     type: "post",
                                     data: {"steprunid": steprunid, "scriptid": scriptid},
                                     success: function (data) {
-                                        if (data.data.interface_type == "commvault"){
+                                        if (data.data.interface_type == "commvault") {
                                             $("#script_ip_div").hide();
                                             $("#origin_div").show();
                                             $("#target_div").show();
@@ -636,6 +633,18 @@ if (App.isAngularJsApp() === false) {
 
                     // 确认
                     $("#confirmbtn").click(function () {
+                        /*
+                            多个确认项处理：
+                                verify_run_id
+                         */
+                        var verify_array = [];
+                        var verify_els = $("#confirmbtn").parent().prev().find('div[id^="verifyitems_"]').find('input');
+                        verify_els.each(function (index, element) {
+                            if (element.checked == true) {
+                                verify_array.push(element.id);
+                            }
+                        });
+
                         var step_id = $(this).prev().val();
                         var notChecked = "";
                         $(this).parent().siblings().find("input[type='checkbox']:not(:checked)").each(function (index, element) {
@@ -647,6 +656,7 @@ if (App.isAngularJsApp() === false) {
                                     url: "/verify_items/",
                                     type: "post",
                                     data: {
+                                        "verify_array": JSON.stringify(verify_array),
                                         "step_id": step_id,
                                     },
                                     success: function (data) {
@@ -667,6 +677,7 @@ if (App.isAngularJsApp() === false) {
                                 url: "/verify_items/",
                                 type: "post",
                                 data: {
+                                    "verify_array": JSON.stringify(verify_array),
                                     "step_id": step_id,
                                 },
                                 success: function (data) {
@@ -719,8 +730,7 @@ if (App.isAngularJsApp() === false) {
                         // 重启定时器
                         window.clearInterval(t2);
                         t2 = window.setInterval(timefun, 1000);
-                    }
-                    else
+                    } else
                         alert(data["res"]);
                 },
                 error: function (e) {
