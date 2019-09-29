@@ -162,5 +162,5 @@ urlpatterns = [
     url(r'^process_schedule/$', process_schedule, {'funid': '84'}),
     url(r'^process_schedule_save/$', process_schedule_save),
     url(r'^process_schedule_data/$', process_schedule_data),
-    url(r'^open_periodictask/$', open_periodictask),
+    url(r'^change_periodictask/$', change_periodictask),
 ]

@@ -28,10 +28,10 @@ $(document).ready(function () {
             "render": function (data, type, full) {
                 // 定时任务状态
                 var status = "";
-                if (full.status == 0) {
+                if (full.status == false) {
                     status = "关闭"
                 }
-                if (full.status == 1) {
+                if (full.status == true) {
                     status = "开启"
                 }
                 return "<td>" + status + "</td>";
@@ -40,7 +40,15 @@ $(document).ready(function () {
             "targets": -1,
             "data": null,
             "width": "100px",
-            "defaultContent": "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>"
+            "render": function (data, type, full) {
+                var statusButton = "";
+                if (full.status == true) {
+                    statusButton = "<button title='关闭'  id='reload' class='btn btn-xs btn-danger' type='button'><i class='fa fa-power-off'></i></button>";
+                } else {
+                    statusButton = "<button title='启动'  id='reload' class='btn btn-xs btn-primary' type='button'><i class='fa fa-power-off'></i></button>";
+                }
+                return statusButton + "<button  id='edit' title='编辑' data-toggle='modal'  data-target='#static'  class='btn btn-xs btn-primary' type='button'><i class='fa fa-edit'></i></button><button title='删除'  id='delrow' class='btn btn-xs btn-primary' type='button'><i class='fa fa-trash-o'></i></button>";
+            },
         }],
         "oLanguage": {
             "sLengthMenu": "每页显示 _MENU_ 条记录",
@@ -59,6 +67,41 @@ $(document).ready(function () {
         }
     });
     // 行按钮
+    $('#process_schedule_dt tbody').on('click', 'button#reload', function () {
+        var table = $('#process_schedule_dt').DataTable();
+        var data = table.row($(this).parents('tr')).data();
+        var confirmInfo = "";
+        var status = 0;
+
+        if (data.status == true){
+            confirmInfo = "确定要关闭该流程计划？";
+            status = 0;
+        } else {
+            confirmInfo = "确定要启动该流程计划？";
+            status = 1;
+        }
+
+        if (confirm(confirmInfo)) {
+            $.ajax({
+                type: "POST",
+                url: "../change_periodictask/",
+                data: {
+                    process_schedule_id: data.process_schedule_id,
+                    process_periodictask_status: status
+                },
+                success: function (data) {
+                    if (data.ret == 1) {
+                        table.ajax.reload();
+                    }
+                    alert(data.info);
+                },
+                error: function (e) {
+                    alert("定时任务状态修改失败，请于管理员联系。");
+                }
+            });
+
+        }
+    });
     $('#process_schedule_dt tbody').on('click', 'button#delrow', function () {
         if (confirm("确定要删除该条数据？")) {
             var table = $('#process_schedule_dt').DataTable();
@@ -86,13 +129,6 @@ $(document).ready(function () {
         var table = $('#process_schedule_dt').DataTable();
         var data = table.row($(this).parents('tr')).data();
 
-        $("#status_div").show();
-        if (data.status == 1) {
-            $("#status").bootstrapSwitch("state", true);
-        } else {
-            $("#status").bootstrapSwitch("state", false);
-        }
-
         $("#process_schedule_id").val(data.process_schedule_id);
         $("#process").val(data.process_id);
         $("#process_schedule_name").val(data.process_schedule_name);
@@ -103,44 +139,6 @@ $(document).ready(function () {
         $("#per_month").val(data.per_month != "*" ? data.per_month : 0).trigger("change");
         $("#process_schedule_remark").val(data.remark);
     });
-
-    // // bootstrap-switch
-    // $("#status").bootstrapSwitch({
-    //     onSwitchChange: function (event, state) {
-    //         var status = "";
-    //         var confirmString = "";
-    //         if (state) {
-    //             status = 1;
-    //             confirmString = "是否确定关闭定时器？"
-    //         } else {
-    //             status = 0;
-    //             confirmString = "是否确定开启定时器？"
-    //         }
-    //         if (confirm(confirmString)) {
-    //             $.ajax({
-    //                 type: "POST",
-    //                 url: "../open_periodictask/",
-    //                 data:
-    //                     {
-    //                         process_schedule_id: $("#process_schedule_id").val(),
-    //                         process_periodictask_status: status
-    //                     },
-    //                 success: function (data) {
-    //                     if (data.ret == 1 && status == 1) {
-    //                         // 切换关闭
-    //                     }
-    //                     if (data.ret == 1 && status == 0) {
-    //                         // 切换关闭
-    //                     }
-    //                     alert(data);
-    //                 },
-    //                 error: function (e) {
-    //                     alert("页面出现错误，请于管理员联系。");
-    //                 }
-    //             });
-    //         }
-    //     }
-    // });
 
     // time-picker
     $("#per_time").timepicker({

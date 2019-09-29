@@ -6741,13 +6741,14 @@ def process_schedule_data(request):
         return HttpResponseRedirect("/login")
 
 
-def open_periodictask(request):
+def change_periodictask(request):
     if request.user.is_authenticated():
         process_schedule_id = request.POST.get("process_schedule_id", "")
         process_periodictask_status = request.POST.get("process_periodictask_status", "")
 
         try:
             process_schedule_id = int(process_schedule_id)
+            process_periodictask_status = int(process_periodictask_status)
         except ValueError as e:
             return JsonResponse({
                 "ret": 0,
@@ -6764,8 +6765,8 @@ def open_periodictask(request):
         else:
             cur_periodictask = cur_process_schedule.dj_periodictask
             if cur_periodictask:
-                cur_periodictask.enabled = 0
-
+                cur_periodictask.enabled = process_periodictask_status
+                cur_periodictask.save()
                 return JsonResponse({
                     "ret": 1,
                     "info": "定时任务状态修改成功。"
