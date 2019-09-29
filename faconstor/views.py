@@ -38,6 +38,7 @@ from django.utils.encoding import escape_uri_path
 from django.core.mail import send_mail
 from django.forms.models import model_to_dict
 from django.template.response import TemplateResponse
+from djcelery.models import CrontabSchedule, PeriodicTask, IntervalSchedule
 
 from faconstor.tasks import *
 from faconstor.models import *
@@ -450,7 +451,7 @@ def get_process_index_data(request):
             else:
                 done_num = 0
 
-            #消息列表
+            # 消息列表
             showtasks = []
             tasks = ProcessTask.objects.filter(type='info').filter(processrun=current_processrun).exclude(state='9')
             for task in tasks:
@@ -477,12 +478,12 @@ def get_process_index_data(request):
                 "rtostate": rtostate,
                 "percent": process_rate,
                 "steps": steps,
-                "showtasks":showtasks
+                "showtasks": showtasks
             }
             global walkthroughinfo
             oldwalkthroughinfo = walkthroughinfo
             walkthroughinfo = c_step_run_data
-            c_step_run_data["oldwalkthroughinfo"]=oldwalkthroughinfo
+            c_step_run_data["oldwalkthroughinfo"] = oldwalkthroughinfo
         else:
             c_step_run_data = {}
         return JsonResponse(c_step_run_data)
@@ -707,7 +708,6 @@ def index(request, funid):
 
                 curren_processrun_info_list.append(current_processrun_dict)
 
-
         ##################################
         # 今日演练：                      #
         #   今天演练过的系统个数/总系统数  #
@@ -859,7 +859,6 @@ def get_process_run_facts(request):
             cur_client_succeed_process_times = len(cur_client_succeed_process) if cur_client_succeed_process else 0
             process_run_rate = "%.0f" % ((
                                              cur_client_succeed_process_times / cur_client_process_times if cur_client_process_times != 0 else 0) * 100)
-
 
             # 客户端
             client_name = ""
@@ -5902,7 +5901,8 @@ def target_save(request):
                                 ret = 1
                                 info = "新增成功。"
                     else:
-                        check_target = Target.objects.exclude(state="9").exclude(id=target_id).filter(client_id=client_id)
+                        check_target = Target.objects.exclude(state="9").exclude(id=target_id).filter(
+                            client_id=client_id)
                         if check_target.exists():
                             ret = 0
                             info = "该客户端已选为终端，请勿重复添加。"
@@ -6589,3 +6589,192 @@ def oraclerecoverydata(request):
         return JsonResponse({"data": result})
     else:
         return HttpResponseRedirect("/login")
+
+
+def process_schedule(request, funid):
+    if request.user.is_authenticated():
+        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort").only("id", "name")
+
+        return render(request, 'process_schedule.html', {'username': request.user.userinfo.fullname,
+                                                         "pagefuns": getpagefuns(funid, request=request),
+                                                         "all_process": all_process})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def process_schedule_save(request):
+    if request.user.is_authenticated():
+        process_schedule_id = request.POST.get('process_schedule_id', '')
+        process_schedule_name = request.POST.get('process_schedule_name', '')
+        process = request.POST.get('process', '')
+        process_schedule_remark = request.POST.get('process_schedule_remark', '')
+
+        per_time = request.POST.get('per_time', '')
+        per_month = request.POST.get('per_month', '')
+        per_week = request.POST.get('per_week', '')
+
+        ret = 1
+        info = ""
+
+        if not process_schedule_name:
+            return JsonResponse({
+                "ret": 0,
+                "info": "计划名称不能为空。"
+            })
+
+        try:
+            process = int(process)
+        except ValueError as e:
+            return JsonResponse({
+                "ret": 0,
+                "info": "流程未选择。"
+            })
+
+        try:
+            process_schedule_id = int(process_schedule_id)
+        except ValueError as e:
+            return JsonResponse({
+                "ret": 0,
+                "info": "网络异常。"
+            })
+
+        try:
+            cur_process = Process.objects.get(id=process)
+        except Process.DoesNotExist as e:
+            ret = 0
+            info = "流程不存在。"
+        else:
+            if not per_time:
+                ret = 0
+                info = "时间未填写。"
+            else:
+                # 保存定时任务
+                hour, minute = per_time.split(':')
+                cur_crontab_schedule = CrontabSchedule()
+                cur_crontab_schedule.hour = hour
+                cur_crontab_schedule.minute = minute
+                cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
+                cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
+                cur_crontab_schedule.save()
+                cur_crontab_schedule_id = cur_crontab_schedule.id
+
+                # 启动定时任务
+                cur_periodictask = PeriodicTask()
+                cur_periodictask.crontab_id = cur_crontab_schedule_id
+                cur_periodictask.name = uuid.uuid1()
+                # 默认关闭
+                cur_periodictask.enabled = 0
+                # 任务名称
+                cur_periodictask.task = "dbom.tasks.create_process_run"
+                cur_periodictask.args = [cur_process.id]
+                cur_periodictask.save()
+                cur_periodictask_id = cur_periodictask.id
+
+                if process_schedule_id == 0:
+                    ps = ProcessSchedule()
+                    ps.dj_periodictask_id = cur_periodictask_id
+                    ps.process = cur_process
+                    ps.name = process_schedule_name
+                    ps.remark = process_schedule_remark
+                    ps.save()
+                    ret = 1
+                    info = "保存成功。"
+                else:
+                    try:
+                        ps = ProcessSchedule.objects.get(id=process_schedule_id)
+                    except ProcessSchedule.DoesNotExist as e:
+                        ret = 0
+                        info = "计划流程不存在。"
+                    else:
+                        ps.dj_periodictask_id = cur_periodictask_id
+                        ps.process = cur_process
+                        ps.name= process_schedule_name
+                        ps.remark = process_schedule_remark
+                        ps.save()
+                        ret = 1
+                        info = "保存成功。"
+        return JsonResponse({
+            "ret": ret,
+            "info": info
+        })
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def process_schedule_data(request):
+    if request.user.is_authenticated():
+        result = []
+
+        all_process_schedules = ProcessSchedule.objects.exclude(state="9")
+
+        for process_schedule in all_process_schedules:
+            process_id = process_schedule.process.id
+            process_name = process_schedule.process.name
+            remark = process_schedule.remark
+
+            # 定时任务
+            status, minutes, hours, per_week, per_month = "", "", "", "", ""
+            periodictask = process_schedule.dj_periodictask
+            if periodictask:
+                status = periodictask.enabled
+                cur_crontab_schedule = periodictask.crontab
+                if cur_crontab_schedule:
+                    minutes = cur_crontab_schedule.minute
+                    hours = cur_crontab_schedule.hour
+                    per_week = cur_crontab_schedule.day_of_week
+                    per_month = cur_crontab_schedule.month_of_year
+
+            result.append({
+                "process_schedule_id": process_schedule.id,
+                "process_schedule_name": process_schedule.name,
+                "process_id": process_id,
+                "process_name": process_name,
+                "remark": remark,
+                "minutes": minutes,
+                "hours": hours,
+                "per_week": per_week,
+                "per_month": per_month,
+                "status": status,
+            })
+        return JsonResponse({"data": result})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def open_periodictask(request):
+    if request.user.is_authenticated():
+        process_schedule_id = request.POST.get("process_schedule_id", "")
+        process_periodictask_status = request.POST.get("process_periodictask_status", "")
+
+        try:
+            process_schedule_id = int(process_schedule_id)
+        except ValueError as e:
+            return JsonResponse({
+                "ret": 0,
+                "info": "网络异常。"
+            })
+
+        try:
+            cur_process_schedule = ProcessSchedule.objects.get(id=process_schedule_id)
+        except ProcessSchedule.DoesNotExist as e:
+            return JsonResponse({
+                "ret": 0,
+                "info": "该计划流程不存在。"
+            })
+        else:
+            cur_periodictask = cur_process_schedule.dj_periodictask
+            if cur_periodictask:
+                cur_periodictask.enabled = 0
+
+                return JsonResponse({
+                    "ret": 1,
+                    "info": "定时任务状态修改成功。"
+                })
+            else:
+                return JsonResponse({
+                    "ret": 0,
+                    "info": "该计划流程对应的定时任务不存在。"
+                })
+    else:
+        return HttpResponseRedirect("/login")
+

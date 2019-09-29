@@ -675,3 +675,14 @@ def exec_process(processrunid, if_repeat=False):
     #         myprocesstask.state = "0"
     #         myprocesstask.content = processrun.process.name + " 流程运行出错，请处理。"
     #         myprocesstask.save()
+
+
+@shared_task
+def create_process_run(process):
+    """
+    创建计划流程
+    :param process:
+    :return:
+    """
+    # exec_process(processrunid)
+    pass
