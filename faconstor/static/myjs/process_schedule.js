@@ -99,7 +99,6 @@ $(document).ready(function () {
                     alert("定时任务状态修改失败，请于管理员联系。");
                 }
             });
-
         }
     });
     $('#process_schedule_dt tbody').on('click', 'button#delrow', function () {
