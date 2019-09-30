@@ -4172,9 +4172,15 @@ def run(origin, target, instance, processrun_id):
     except:
         pass
 
-    recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"]) if recovery_result else ""
-    browse_job_id = recovery_result["browse_job_id"] if recovery_result else ""
-    data_path = recovery_result["data_path"] if recovery_result else ""
+    recover_time = ""
+    browse_job_id = ""
+    data_path = ""
+
+    if recovery_result:
+        if recovery_result["recover_time"]:
+            recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"])
+        browse_job_id = recovery_result["browse_job_id"]
+        data_path = recovery_result["data_path"]
 
     webaddr = ""
     port = ""

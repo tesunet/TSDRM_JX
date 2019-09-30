@@ -163,4 +163,5 @@ urlpatterns = [
     url(r'^process_schedule_save/$', process_schedule_save),
     url(r'^process_schedule_data/$', process_schedule_data),
     url(r'^change_periodictask/$', change_periodictask),
+    url(r'^process_schedule_del/$', process_schedule_del),
 ]

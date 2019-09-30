@@ -107,9 +107,9 @@ $(document).ready(function () {
             var data = table.row($(this).parents('tr')).data();
             $.ajax({
                 type: "POST",
-                url: "../hosts_manage_del/",
+                url: "../process_schedule_del/",
                 data: {
-                    host_id: data.host_id,
+                    process_schedule_id: data.process_schedule_id,
                 },
                 success: function (data) {
                     if (data.ret == 1) {
@@ -134,8 +134,8 @@ $(document).ready(function () {
 
         var per_time = data.hours + ":" + data.minutes;
         $("#per_time").val(per_time).timepicker("setTime", per_time);
-        $("#per_week").val(data.per_week != "*" ? data.per_week : 0).trigger("change");
-        $("#per_month").val(data.per_month != "*" ? data.per_month : 0).trigger("change");
+        $("#per_week").val(data.per_week != "*" ? data.per_week : "").trigger("change");
+        $("#per_month").val(data.per_month != "*" ? data.per_month : "").trigger("change");
         $("#process_schedule_remark").val(data.remark);
     });
 

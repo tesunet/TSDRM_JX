@@ -280,6 +280,7 @@ def runstep(steprun, if_repeat=False):
                             myprocesstask.senduser = steprun.processrun.creatuser
                             myprocesstask.receiveauth = steprun.step.group
                             myprocesstask.type = "ERROR"
+                            myprocesstask.logtype = "SCRIPT"
                             myprocesstask.state = "0"
                             myprocesstask.content = "Linux脚本" + script_name + "内容写入失败，请处理。"
                             myprocesstask.steprun_id = steprun.id
@@ -306,6 +307,7 @@ def runstep(steprun, if_repeat=False):
                             myprocesstask.senduser = steprun.processrun.creatuser
                             myprocesstask.receiveauth = steprun.step.group
                             myprocesstask.type = "ERROR"
+                            myprocesstask.logtype = "SCRIPT"
                             myprocesstask.state = "0"
                             myprocesstask.content = "上传" + script_name + "脚本时，连接服务器失败。"
                             myprocesstask.steprun_id = steprun.id
@@ -329,6 +331,7 @@ def runstep(steprun, if_repeat=False):
                                 myprocesstask.senduser = steprun.processrun.creatuser
                                 myprocesstask.receiveauth = steprun.step.group
                                 myprocesstask.type = "ERROR"
+                                myprocesstask.logtype = "SCRIPT"
                                 myprocesstask.state = "0"
                                 myprocesstask.content = "脚本" + script_name + "上传失败：{0}。".format(e)
                                 myprocesstask.steprun_id = steprun.id
@@ -368,6 +371,7 @@ def runstep(steprun, if_repeat=False):
                                 myprocesstask.senduser = steprun.processrun.creatuser
                                 myprocesstask.receiveauth = steprun.step.group
                                 myprocesstask.type = "ERROR"
+                                myprocesstask.logtype = "SCRIPT"
                                 myprocesstask.state = "0"
                                 myprocesstask.content = "脚本" + script_name + "内容写入失败，请处理。"
                                 myprocesstask.steprun_id = steprun.id
@@ -401,6 +405,7 @@ def runstep(steprun, if_repeat=False):
                         myprocesstask.senduser = steprun.processrun.creatuser
                         myprocesstask.receiveauth = steprun.step.group
                         myprocesstask.type = "ERROR"
+                        myprocesstask.logtype = "SCRIPT"
                         myprocesstask.state = "0"
                         myprocesstask.content = "脚本" + script_name + "执行错误，请处理。"
                         myprocesstask.steprun_id = steprun.id
@@ -427,6 +432,12 @@ def runstep(steprun, if_repeat=False):
                         instance = oracle_info["instance"]
 
                     oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
+
+                    # # 测试定时任务
+                    # print("oracle_param",oracle_param)
+                    # result["exec_tag"] = 0
+                    # result["data"] = "调用commvault接口成功。"
+                    # result["log"] = "调用commvault接口成功。"
                     try:
                         ret = subprocess.getstatusoutput(commvault_api_path + " %s" % oracle_param)
                         exec_status, recover_job_id = ret
@@ -487,6 +498,7 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.senduser = steprun.processrun.creatuser
                     myprocesstask.receiveauth = steprun.step.group
                     myprocesstask.type = "ERROR"
+                    myprocesstask.logtype = "SCRIPT"
                     myprocesstask.state = "0"
                     myprocesstask.content = "接口" + script_name + "调用执行失败，请处理。"
                     myprocesstask.steprun_id = steprun.id
@@ -509,6 +521,7 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.senduser = steprun.processrun.creatuser
                     myprocesstask.receiveauth = steprun.step.group
                     myprocesstask.type = "ERROR"
+                    myprocesstask.logtype = "SCRIPT"
                     myprocesstask.state = "0"
                     myprocesstask.content = "接口" + script_name + "调用过程中，Oracle恢复异常。"
                     myprocesstask.steprun_id = steprun.id
@@ -564,6 +577,7 @@ def runstep(steprun, if_repeat=False):
                 myprocesstask.starttime = datetime.datetime.now()
                 myprocesstask.senduser = steprun.processrun.creatuser
                 myprocesstask.receiveauth = steprun.step.group
+                myprocesstask.logtype = "STEP"
                 myprocesstask.type = "RUN"
                 myprocesstask.state = "0"
                 task_content = "步骤" + steprun_name + "等待确认，请处理。"
@@ -684,5 +698,74 @@ def create_process_run(process):
     :param process:
     :return:
     """
-    # exec_process(processrunid)
-    pass
+    # exec_process.delay(processrunid)
+    # data_path/target/origin/
+    origin_name, target_id, data_path = "", None, ""
+    try:
+        process_id = int(process)
+    except ValueError as e:
+        pass
+    else:
+        try:
+            cur_process = Process.objects.get(id=process_id)
+        except Process.DoesNotExist as e:
+            pass
+        else:
+            # 过滤所有脚本
+            all_steps = cur_process.step_set.exclude(state="9")
+            for cur_step in all_steps:
+                all_scripts = cur_step.script_set.exclude(state="9")
+                for cur_script in all_scripts:
+                    if cur_script.origin:
+                        origin_name = cur_script.origin.client_name
+                        if cur_script.origin.target:
+                            target_id = cur_script.origin.target.id
+                            data_path = cur_script.origin.target.data_path
+                        break
+
+            running_process = ProcessRun.objects.filter(process=cur_process, state__in=["RUN", "ERROR"])
+            if running_process.exists():
+                pass
+                # result["res"] = '流程启动失败，该流程正在进行中，请勿重复启动。'
+            else:
+                myprocessrun = ProcessRun()
+                myprocessrun.process = cur_process
+                myprocessrun.starttime = datetime.datetime.now()
+                myprocessrun.state = "RUN"
+                myprocessrun.target_id = target_id
+                myprocessrun.data_path = data_path
+                myprocessrun.origin = origin_name
+                myprocessrun.save()
+                mystep = cur_process.step_set.exclude(state="9")
+                if not mystep.exists():
+                    pass
+                    # result["res"] = '流程启动失败，没有找到可用步骤。'
+                else:
+                    for step in mystep:
+                        mysteprun = StepRun()
+                        mysteprun.step = step
+                        mysteprun.processrun = myprocessrun
+                        mysteprun.state = "EDIT"
+                        mysteprun.save()
+
+                        myscript = step.script_set.exclude(state="9")
+                        for script in myscript:
+                            myscriptrun = ScriptRun()
+                            myscriptrun.script = script
+                            myscriptrun.steprun = mysteprun
+                            myscriptrun.state = "EDIT"
+                            myscriptrun.save()
+
+                    prosssigns = ProcessTask.objects.filter(processrun=myprocessrun, state="0")
+                    if not prosssigns.exists():
+                        myprocesstask = ProcessTask()
+                        myprocesstask.processrun = myprocessrun
+                        myprocesstask.starttime = datetime.datetime.now()
+                        myprocesstask.type = "INFO"
+                        myprocesstask.logtype = "START"
+                        myprocesstask.state = "1"
+                        myprocesstask.content = "流程已启动。"
+                        myprocesstask.save()
+
+                        exec_process.delay(myprocessrun.id)
+

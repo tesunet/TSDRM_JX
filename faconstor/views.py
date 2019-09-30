@@ -6650,27 +6650,28 @@ def process_schedule_save(request):
             else:
                 # 保存定时任务
                 hour, minute = per_time.split(':')
-                cur_crontab_schedule = CrontabSchedule()
-                cur_crontab_schedule.hour = hour
-                cur_crontab_schedule.minute = minute
-                cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
-                cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
-                cur_crontab_schedule.save()
-                cur_crontab_schedule_id = cur_crontab_schedule.id
-
-                # 启动定时任务
-                cur_periodictask = PeriodicTask()
-                cur_periodictask.crontab_id = cur_crontab_schedule_id
-                cur_periodictask.name = uuid.uuid1()
-                # 默认关闭
-                cur_periodictask.enabled = 0
-                # 任务名称
-                cur_periodictask.task = "dbom.tasks.create_process_run"
-                cur_periodictask.args = [cur_process.id]
-                cur_periodictask.save()
-                cur_periodictask_id = cur_periodictask.id
-
+                # 新增
                 if process_schedule_id == 0:
+                    cur_crontab_schedule = CrontabSchedule()
+                    cur_crontab_schedule.hour = hour
+                    cur_crontab_schedule.minute = minute
+                    cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
+                    cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
+                    cur_crontab_schedule.save()
+                    cur_crontab_schedule_id = cur_crontab_schedule.id
+
+                    # 启动定时任务
+                    cur_periodictask = PeriodicTask()
+                    cur_periodictask.crontab_id = cur_crontab_schedule_id
+                    cur_periodictask.name = uuid.uuid1()
+                    # 默认关闭
+                    cur_periodictask.enabled = 0
+                    # 任务名称
+                    cur_periodictask.task = "dbom.tasks.create_process_run"
+                    cur_periodictask.args = [cur_process.id]
+                    cur_periodictask.save()
+                    cur_periodictask_id = cur_periodictask.id
+
                     ps = ProcessSchedule()
                     ps.dj_periodictask_id = cur_periodictask_id
                     ps.process = cur_process
@@ -6680,19 +6681,37 @@ def process_schedule_save(request):
                     ret = 1
                     info = "保存成功。"
                 else:
+                    # 修改
                     try:
                         ps = ProcessSchedule.objects.get(id=process_schedule_id)
                     except ProcessSchedule.DoesNotExist as e:
                         ret = 0
                         info = "计划流程不存在。"
                     else:
-                        ps.dj_periodictask_id = cur_periodictask_id
-                        ps.process = cur_process
-                        ps.name= process_schedule_name
-                        ps.remark = process_schedule_remark
-                        ps.save()
-                        ret = 1
-                        info = "保存成功。"
+
+                        cur_periodictask_id = ps.dj_periodictask_id
+
+                        # 启动定时任务
+                        try:
+                            cur_periodictask = PeriodicTask.objects.get(id=cur_periodictask_id)
+                        except PeriodicTask.DoesNotExist as e:
+                            ret = 0
+                            info = "定时任务不存在。"
+                        else:
+
+                            cur_crontab_schedule = cur_periodictask.crontab
+                            cur_crontab_schedule.hour = hour
+                            cur_crontab_schedule.minute = minute
+                            cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
+                            cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
+                            cur_crontab_schedule.save()
+
+                            ps.process = cur_process
+                            ps.name= process_schedule_name
+                            ps.remark = process_schedule_remark
+                            ps.save()
+                            ret = 1
+                            info = "保存成功。"
         return JsonResponse({
             "ret": ret,
             "info": info
@@ -6779,3 +6798,40 @@ def change_periodictask(request):
     else:
         return HttpResponseRedirect("/login")
 
+
+def process_schedule_del(request):
+    if request.user.is_authenticated():
+        process_schedule_id = request.POST.get("process_schedule_id", "")
+
+        try:
+            process_schedule_id = int(process_schedule_id)
+        except ValueError as e:
+            return JsonResponse({
+                "ret": 0,
+                "info": "网络异常。"
+            })
+
+        ret = 1
+        info = "流程计划删除成功。"
+        # 删除process_schedule/crontab/periodictask
+        try:
+            cur_process_schedule = ProcessSchedule.objects.get(id=process_schedule_id)
+        except ProcessSchedule.DoesNotExist as e:
+            ret = 0
+            info = "该流程计划不存在。"
+        else:
+            cur_process_schedule.state = "9"
+            cur_process_schedule.save()
+
+            try:
+                cur_process_schedule.dj_periodictask.crontab.delete()
+                cur_process_schedule.dj_periodictask.delete()
+            except:
+                ret = 0
+                info = "定时任务删除失败。"
+        return JsonResponse({
+            "ret": ret,
+            "info": info
+        })
+    else:
+        return HttpResponseRedirect("/login")
