@@ -51,7 +51,7 @@ var Activate = function () {
         });
 
 
-    }
+    };
 
     return {
         //main function to initiate the module
@@ -70,7 +70,6 @@ jQuery(document).ready(function () {
 });
 
 $('#activatebtn').click(function () {
-    console.log(1)
     if ($("#formactivate").validate().form())
         $.ajax({
             type: "POST",

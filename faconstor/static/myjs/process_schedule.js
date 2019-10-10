@@ -8,6 +8,7 @@ $(document).ready(function () {
             {"data": "process_schedule_id"},
             {"data": "process_schedule_name"},
             {"data": "process_name"},
+            {"data": "schedule_type_display"},
             {"data": null},
             {"data": "remark"},
             {"data": null},
@@ -17,10 +18,26 @@ $(document).ready(function () {
             "data": null,
             "targets": -4,
             "render": function (data, type, full) {
-                // 定时任务
-                var per_week = full.per_week && full.per_week != "*" ? '/ 周per_week/ '.replace("per_week", full.per_week) : "";
-                var per_month = full.per_month && full.per_month != "*" ? 'per_month月'.replace("per_month", full.per_month) : "";
-                return "<td>" + full.hours + ":" + full.minutes + per_week + per_month + "</td>"
+                /*
+                    日：
+                        00:00
+                    周：
+                        00:00 周六
+                    月：
+                        00:00 第2天(月)
+                 */
+                var time = full.hours + ":" + full.minutes;
+                var week_map = {1: "周一", 2: "周二", 3: "周三", 4: "周四", 5: "周五", 6: "周六", 7: "周日"};
+                var per_week = week_map[full.per_week];
+                var per_month = full.per_month;
+
+                if (full.schedule_type == 2) {
+                    time += " " + per_week;
+                }
+                if (full.schedule_type == 3) {
+                    time += " 第" + per_month + "天(月)";
+                }
+                return "<td>" + time + "</td>"
             },
         }, {
             "data": null,
@@ -73,7 +90,7 @@ $(document).ready(function () {
         var confirmInfo = "";
         var status = 0;
 
-        if (data.status == true){
+        if (data.status == true) {
             confirmInfo = "确定要关闭该流程计划？";
             status = 0;
         } else {
@@ -131,6 +148,23 @@ $(document).ready(function () {
         $("#process_schedule_id").val(data.process_schedule_id);
         $("#process").val(data.process_id);
         $("#process_schedule_name").val(data.process_schedule_name);
+        $("#schedule_type").val(data.schedule_type);
+
+        if (data.schedule_type == 1) {
+            $("#per_week_div").hide();
+            $("#per_month_div").hide();
+        }
+        if (data.schedule_type == 2) {
+            $("#per_week").val(1);
+            $("#per_week_div").show();
+            $("#per_month_div").hide();
+        }
+        if (data.schedule_type == 3) {
+            $("#per_month").val(1);
+            $("#per_week_div").hide();
+            $("#per_month_div").show();
+        }
+
 
         var per_time = data.hours + ":" + data.minutes;
         $("#per_time").val(per_time).timepicker("setTime", per_time);
@@ -157,6 +191,7 @@ $(document).ready(function () {
         $("#per_week").val("").trigger("change");
         $("#per_month").val("").trigger("change");
         $("#process_schedule_remark").val("");
+        $("#schedule_type").val("");
     });
 
     $('#save').click(function () {
@@ -170,10 +205,11 @@ $(document).ready(function () {
                 process_schedule_name: $("#process_schedule_name").val(),
                 process_schedule_id: $("#process_schedule_id").val(),
                 process: $("#process").val(),
+                schedule_type: $("#schedule_type").val(),
                 per_time: $("#per_time").val(),
                 per_week: $("#per_week").val(),
                 per_month: $("#per_month").val(),
-                process_schedule_remark: $("#process_schedule_remark").val(),
+                process_schedule_remark: $("#process_schedule_remark").val()
             },
             success: function (data) {
                 if (data.ret == 1) {
@@ -188,7 +224,22 @@ $(document).ready(function () {
         });
     });
 
-    $('#error').click(function () {
-        $(this).hide()
+
+    $("#schedule_type").change(function () {
+        var schedule_type = $(this).val();
+        if (schedule_type == 1) {
+            $("#per_week_div").hide();
+            $("#per_month_div").hide();
+        }
+        if (schedule_type == 2) {
+            $("#per_week").val(1);
+            $("#per_week_div").show();
+            $("#per_month_div").hide();
+        }
+        if (schedule_type == 3) {
+            $("#per_month").val(1);
+            $("#per_week_div").hide();
+            $("#per_month_div").show();
+        }
     });
 });

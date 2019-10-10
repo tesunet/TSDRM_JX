@@ -347,6 +347,7 @@ $(document).ready(function () {
             $('#backup_point').dataTable({
                 "bAutoWidth": true,
                 "bProcessing": true,
+                "bSort": false,
                 "ajax": "../../oraclerecoverydata?clientName=" + origin,
                 "columns": [
                     {"data": "jobId"},
@@ -405,6 +406,7 @@ $(document).ready(function () {
             $('#backup_point').dataTable({
                 "bAutoWidth": true,
                 "bProcessing": true,
+                "bSort": false,
                 "ajax": "../../oraclerecoverydata?clientName=" + origin,
                 "columns": [
                     {"data": "jobId"},

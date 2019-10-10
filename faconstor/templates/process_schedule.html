@@ -25,7 +25,8 @@
             <th style="width:40px;"> 序号</th>
             <th> 计划名称</th>
             <th> 流程</th>
-            <th> 计划模式</th>
+            <th> 计划类型</th>
+            <th> 计划时间</th>
             <th> 计划说明</th>
             <th> 是否开启</th>
             <th style="width:50px;"> 操作</th>
@@ -65,6 +66,41 @@
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>周期类型</label>
+                                <div class="col-md-10">
+                                    <select name="schedule_type" id="schedule_type" class="form-control select2">
+                                        <option value="1">每日</option>
+                                        <option value="2">每周</option>
+                                        <option value="3">每月</option>
+                                    </select>
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+                            <div class="form-group" id="per_week_div" hidden>
+                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>周几</label>
+                                <div class="col-md-10">
+                                    <select name="per_week" id="per_week" class="form-control select2">
+                                        <option value="1">周一</option>
+                                        <option value="2">周二</option>
+                                        <option value="3">周三</option>
+                                        <option value="4">周四</option>
+                                        <option value="5">周五</option>
+                                        <option value="6">周六</option>
+                                        <option value="7">周日</option>
+                                    </select>
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+                            <div class="form-group" id="per_month_div" hidden>
+                                <label class="col-md-2 control-label"><span style="color:red; ">*</span>第几天</label>
+                                <div class="col-md-10">
+                                    <input type="number" id="per_month" name="per_month"
+                                           class="form-control">
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
                                 <label class="col-md-2 control-label"><span style="color:red; ">*</span>时间</label>
                                 <div class="col-md-10">
                                     <div class="input-group">
@@ -77,44 +113,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; "></span>每周</label>
-                                <div class="col-md-10">
-                                    <select name="per_week" id="per_week" class="form-control select2">
-                                        <option value="">默认</option>
-                                        <option value="1">周一</option>
-                                        <option value="2">周二</option>
-                                        <option value="3">周三</option>
-                                        <option value="4">周四</option>
-                                        <option value="5">周五</option>
-                                        <option value="6">周六</option>
-                                        <option value="7">周日</option>
-                                    </select>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="col-md-2 control-label"><span style="color:red; "></span>每月</label>
-                                <div class="col-md-10">
-                                    <select name="per_month" id="per_month" class="form-control select2"
-                                            placeholder="test">
-                                        <option value="">默认</option>
-                                        <option value="1">一月</option>
-                                        <option value="2">二月</option>
-                                        <option value="3">三月</option>
-                                        <option value="4">四月</option>
-                                        <option value="5">五月</option>
-                                        <option value="6">六月</option>
-                                        <option value="7">七月</option>
-                                        <option value="8">八月</option>
-                                        <option value="9">九月</option>
-                                        <option value="10">十月</option>
-                                        <option value="11">十一月</option>
-                                        <option value="12">十二月</option>
-                                    </select>
-                                    <div class="form-control-focus"></div>
-                                </div>
-                            </div>
+
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span style="color:red; "></span>计划说明</label>
                                 <div class="col-md-10">
@@ -123,14 +122,13 @@
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-actions ">
-                            <div class="modal-footer">
-                                <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
-                                </button>
-                                <button type="button" id="save" name="save" class="btn green">保存</button>
+                            <div class="form-actions ">
+                                <div class="modal-footer">
+                                    <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
+                                    </button>
+                                    <button type="button" id="save" name="save" class="btn green">保存</button>
+                                </div>
                             </div>
-                        </div>
                     </form>
                 </div>
             </div>

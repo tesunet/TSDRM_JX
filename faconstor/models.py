@@ -208,7 +208,6 @@ class KnowledgeFileDownload(models.Model):
 
 class Vendor(models.Model):
     content = models.TextField("内容", blank=True, null=True)
-    status = models.CharField("状态", blank=True, null=True, max_length=20)
 
 
 class ProcessSchedule(models.Model):
@@ -217,3 +216,10 @@ class ProcessSchedule(models.Model):
     name = models.CharField("流程计划名称", blank=True, null=True, max_length=256)
     remark = models.TextField("计划说明", null=True, blank=True)
     state = models.CharField("状态", blank=True, null=True, max_length=20)
+    schedule_type_choices = (
+        (1, "每日"),
+        (2, "每周"),
+        (3, "每月"),
+    )
+    schedule_type = models.IntegerField(choices=schedule_type_choices, default=1, null=True)
+

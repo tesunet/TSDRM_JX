@@ -2955,7 +2955,7 @@ class CV_Backupset(CV_Client):
         destClient = dest
         # instance = operator["instanceName"]
         restoreTime = operator["restoreTime"]
-        restorePath = operator["restorePath"]
+        data_path = operator["data_path"]
         try:
             sourceclients = root.findall(".//associations/clientName")
             for node in sourceclients:

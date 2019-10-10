@@ -49,8 +49,6 @@ from .CVApi import *
 
 funlist = []
 
-info = {"webaddr": "cv-server", "port": "81", "username": "admin", "passwd": "Admin@2017", "token": "",
-        "lastlogin": 0}
 walkthroughinfo = {}
 
 
@@ -2660,7 +2658,14 @@ def setpsave(request):
             step.approval = approval
             step.group = group
             step.rto_count_in = rto_count_in
-            step.time = time if time else None
+
+            if time:
+                try:
+                    time = int(time)
+                except:
+                    time = None
+
+            step.time = time if time != "" else None
             step.name = name
             step.process_id = process_id
             step.pnode_id = pid
@@ -2684,11 +2689,7 @@ def setpsave(request):
             step = Step.objects.filter(id=id)
             if (len(step) > 0):
                 step[0].name = name
-                try:
-                    time = int(time)
-                    step[0].time = time
-                except:
-                    pass
+                step[0].time = time if time != "" else None
                 step[0].skip = skip
                 step[0].approval = approval
                 step[0].group = group
@@ -6303,6 +6304,11 @@ def serverconfig(request, funid):
         port = ""
         usernm = ""
         passwd = ""
+
+        SQLServerHost = ""
+        SQLServerUser = ""
+        SQLServerPasswd = ""
+        SQLServerDataBase = ""
         if cvvendor:
             id = cvvendor.id
             doc = parseString(cvvendor.content)
@@ -6322,9 +6328,30 @@ def serverconfig(request, funid):
                 passwd = (doc.getElementsByTagName("passwd"))[0].childNodes[0].data
             except:
                 pass
+
+            # SQLServer
+            try:
+                SQLServerHost = (doc.getElementsByTagName("SQLServerHost"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                SQLServerUser = (doc.getElementsByTagName("SQLServerUser"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                SQLServerPasswd = (doc.getElementsByTagName("SQLServerPasswd"))[0].childNodes[0].data
+            except:
+                pass
+            try:
+                SQLServerDataBase = (doc.getElementsByTagName("SQLServerDataBase"))[0].childNodes[0].data
+            except:
+                pass
+
         return render(request, 'serverconfig.html',
                       {'username': request.user.userinfo.fullname, "serverconfigpage": True, "id": id,
                        "webaddr": webaddr, "port": port, "usernm": usernm, "passwd": passwd,
+                       "SQLServerHost": SQLServerHost, "SQLServerUser": SQLServerUser,
+                       "SQLServerPasswd": SQLServerPasswd, "SQLServerDataBase": SQLServerDataBase,
                        "pagefuns": getpagefuns(funid, request=request)})
     else:
         return HttpResponseRedirect("/login")
@@ -6338,14 +6365,41 @@ def serverconfigsave(request):
         port = request.POST.get('port', '')
         usernm = request.POST.get('usernm', '')
         passwd = request.POST.get('passwd', '')
+
+        SQLServerHost = request.POST.get('SQLServerHost', '')
+        SQLServerUser = request.POST.get('SQLServerUser', '')
+        SQLServerPasswd = request.POST.get('SQLServerPasswd', '')
+        SQLServerDataBase = request.POST.get('SQLServerDataBase', '')
+
+        cvvendor_content = """<?xml version="1.0" ?>
+            <vendor>
+                <webaddr>{webaddr}</webaddr>
+                <port>{port}</port>
+                <username>{username}</username>
+                <passwd>{passwd}</passwd>
+                <SQLServerHost>{SQLServerHost}</SQLServerHost>
+                <SQLServerUser>{SQLServerUser}</SQLServerUser>
+                <SQLServerPasswd>{SQLServerPasswd}</SQLServerPasswd>
+                <SQLServerDataBase>{SQLServerDataBase}</SQLServerDataBase>
+            </vendor>""".format(**{
+            "webaddr": webaddr,
+            "port": port,
+            "username": usernm,
+            "passwd": passwd,
+            "SQLServerHost": SQLServerHost,
+            "SQLServerUser": SQLServerUser,
+            "SQLServerPasswd": SQLServerPasswd,
+            "SQLServerDataBase": SQLServerDataBase
+        })
+
         cvvendor = Vendor.objects.first()
         if cvvendor:
-            cvvendor.content = "<?xml version=\"1.0\" ?><vendor><webaddr>" + webaddr + "</webaddr><port>" + port + "</port><username>" + usernm + "</username><passwd>" + passwd + "</passwd></vendor>"
+            cvvendor.content = cvvendor_content
             cvvendor.save()
             result = "保存成功。"
         else:
             cvvendor = Vendor()
-            cvvendor.content = "<?xml version=\"1.0\" ?><vendor><webaddr>" + webaddr + "</webaddr><port>" + port + "</port><username>" + usernm + "</username><passwd>" + passwd + "</passwd></vendor>"
+            cvvendor.content = cvvendor_content
             cvvendor.save()
             result = "保存成功。"
         return HttpResponse(result)
@@ -6553,23 +6607,41 @@ def dooraclerecovery(request):
             sourceClient = request.POST.get('sourceClient', '')
             destClient = request.POST.get('destClient', '')
             restoreTime = request.POST.get('restoreTime', '')
-            instanceName = request.POST.get('instanceName', '')
             browseJobId = request.POST.get('browseJobId', '')
             agent = request.POST.get('agent', '')
             data_path = request.POST.get('data_path', '')
 
+            #################################
+            # sourceClient>> instance_name  #
+            #################################
+            instance = ""
+            try:
+                cur_origin = Origin.objects.exclude(state="9").get(client_name=sourceClient)
+            except Origin.DoesNotExist as e:
+                return HttpResponse("恢复任务启动失败, 源客户端不存在。")
+            else:
+                oracle_info = json.loads(cur_origin.info)
+
+                if oracle_info:
+                    try:
+                        instance = oracle_info["instance"]
+                    except:
+                        pass
+            if not instance:
+                return HttpResponse("恢复任务启动失败, 数据库实例不存在。")
+
             oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path}
             cvToken = CV_RestApi_Token()
-            cvToken.login(info)
+            cvToken.login(settings.CVApi_credit)
             cvAPI = CV_API(cvToken)
             if agent.upper() == "ORACLE DATABASE":
-                if cvAPI.restoreOracleBackupset(sourceClient, destClient, instanceName, oraRestoreOperator):
+                if cvAPI.restoreOracleBackupset(sourceClient, destClient, instance, oraRestoreOperator):
                     return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
                 else:
                     return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
             elif agent.upper() == "ORACLE RAC":
                 oraRestoreOperator["browseJobId"] = browseJobId
-                if cvAPI.restoreOracleRacBackupset(sourceClient, destClient, instanceName, oraRestoreOperator):
+                if cvAPI.restoreOracleRacBackupset(sourceClient, destClient, instance, oraRestoreOperator):
                     return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
                 else:
                     return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
@@ -6609,6 +6681,8 @@ def process_schedule_save(request):
         process = request.POST.get('process', '')
         process_schedule_remark = request.POST.get('process_schedule_remark', '')
 
+        schedule_type = request.POST.get('schedule_type', '')
+
         per_time = request.POST.get('per_time', '')
         per_month = request.POST.get('per_month', '')
         per_week = request.POST.get('per_week', '')
@@ -6638,6 +6712,31 @@ def process_schedule_save(request):
                 "info": "网络异常。"
             })
 
+        # 周期类型
+        try:
+            schedule_type = int(schedule_type)
+        except ValueError as e:
+            return JsonResponse({
+                "ret": 0,
+                "info": "周期类型未选择。"
+            })
+        else:
+            if schedule_type == 2:
+                per_month = "*"
+                if not per_week:
+                    return JsonResponse({
+                        "ret": 0,
+                        "info": "周几未选择。"
+                    })
+
+            if schedule_type == 3:
+                per_week = "*"
+                if not per_month:
+                    return JsonResponse({
+                        "ret": 0,
+                        "info": "每月第几天未选择。"
+                    })
+
         try:
             cur_process = Process.objects.get(id=process)
         except Process.DoesNotExist as e:
@@ -6653,10 +6752,12 @@ def process_schedule_save(request):
                 # 新增
                 if process_schedule_id == 0:
                     cur_crontab_schedule = CrontabSchedule()
+
                     cur_crontab_schedule.hour = hour
                     cur_crontab_schedule.minute = minute
-                    cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
-                    cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
+                    cur_crontab_schedule.day_of_week = per_week
+                    cur_crontab_schedule.day_of_month = per_month
+
                     cur_crontab_schedule.save()
                     cur_crontab_schedule_id = cur_crontab_schedule.id
 
@@ -6677,6 +6778,7 @@ def process_schedule_save(request):
                     ps.process = cur_process
                     ps.name = process_schedule_name
                     ps.remark = process_schedule_remark
+                    ps.schedule_type = schedule_type
                     ps.save()
                     ret = 1
                     info = "保存成功。"
@@ -6702,13 +6804,15 @@ def process_schedule_save(request):
                             cur_crontab_schedule = cur_periodictask.crontab
                             cur_crontab_schedule.hour = hour
                             cur_crontab_schedule.minute = minute
-                            cur_crontab_schedule.day_of_week = per_week if per_week != "" else "*"
-                            cur_crontab_schedule.month_of_year = per_month if per_month != "" else "*"
+                            cur_crontab_schedule.day_of_week = per_week
+                            cur_crontab_schedule.day_of_month = per_month
                             cur_crontab_schedule.save()
 
                             ps.process = cur_process
-                            ps.name= process_schedule_name
+                            ps.name = process_schedule_name
                             ps.remark = process_schedule_remark
+                            ps.schedule_type = schedule_type
+
                             ps.save()
                             ret = 1
                             info = "保存成功。"
@@ -6730,7 +6834,8 @@ def process_schedule_data(request):
             process_id = process_schedule.process.id
             process_name = process_schedule.process.name
             remark = process_schedule.remark
-
+            schedule_type = process_schedule.schedule_type
+            schedule_type_display = process_schedule.get_schedule_type_display()
             # 定时任务
             status, minutes, hours, per_week, per_month = "", "", "", "", ""
             periodictask = process_schedule.dj_periodictask
@@ -6741,7 +6846,7 @@ def process_schedule_data(request):
                     minutes = cur_crontab_schedule.minute
                     hours = cur_crontab_schedule.hour
                     per_week = cur_crontab_schedule.day_of_week
-                    per_month = cur_crontab_schedule.month_of_year
+                    per_month = cur_crontab_schedule.day_of_month
 
             result.append({
                 "process_schedule_id": process_schedule.id,
@@ -6749,6 +6854,8 @@ def process_schedule_data(request):
                 "process_id": process_id,
                 "process_name": process_name,
                 "remark": remark,
+                "schedule_type": schedule_type,
+                "schedule_type_display": schedule_type_display,
                 "minutes": minutes,
                 "hours": hours,
                 "per_week": per_week,

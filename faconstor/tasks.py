@@ -243,8 +243,8 @@ def runstep(steprun, if_repeat=False):
                 script.result = ""
                 script.state = "RUN"
                 script.save()
-                linux_temp_script_file = "/tmp/tmp_script.sh"
-                windows_temp_script_file = "C:/tmp_script.bat"
+                linux_temp_script_file = "/tmp/{0}_script.sh".format(script.script.code)
+                windows_temp_script_file = "C:/{0}_script.bat".format(script.script.code)
 
                 if script.script.interface_type == "脚本":
                     # HostsManage

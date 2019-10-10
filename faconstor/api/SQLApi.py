@@ -789,7 +789,7 @@ class CVApi(DataMonitor):
     def get_oracle_backup_job_list(self, client_name):
         oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
-                            WHERE [jobstatus]='Success' AND [clientname]='{0}';""".format(client_name)
+                            WHERE [jobstatus]='Success' AND [clientname]='{0}' ORDER BY [startdate] DESC;""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
         oracle_backuplist = []
         for i in content:

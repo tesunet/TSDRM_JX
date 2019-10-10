@@ -50,6 +50,7 @@ $(document).ready(function () {
         $('#backup_point').dataTable({
             "bAutoWidth": true,
             "bProcessing": true,
+            "bSort": false,
             "ajax": "../../oraclerecoverydata?clientName=" + $('#sourceClient').val(),
             "columns": [
                 {"data": "jobId"},
@@ -88,7 +89,6 @@ $(document).ready(function () {
             $("#datetimepicker").val(data.LastTime);
             $("input[name='optionsRadios'][value='1']").prop("checked", false);
             $("input[name='optionsRadios'][value='2']").prop("checked", true);
-            $("#ora_instance").val(data.instance);
             $("#browseJobId").val(data.jobId);
 
         });
@@ -119,7 +119,6 @@ $(document).ready(function () {
                     type: "POST",
                     url: "../../dooraclerecovery/",
                     data: {
-                        instanceName: $("#ora_instance").val(),
                         sourceClient: $('#sourceClient').val(),
                         destClient: $('#destClient').val(),
                         restoreTime: myrestoreTime,
