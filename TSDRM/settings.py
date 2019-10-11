@@ -16,13 +16,6 @@ import pymysql.cursors
 import xml.dom.minidom
 from xml.dom.minidom import parse, parseString
 
-# SQLApi
-sql_credit = {
-    "host": "192.168.100.149\COMMVAULT",
-    "user": "sa_cloud",
-    "password": "1qaz@WSX",
-    "database": "CommServ",
-}
 
 db_host = '192.168.100.154'
 db_name = "js_tesudrm"
@@ -51,6 +44,11 @@ webaddr = ""
 port = ""
 usernm = ""
 passwd = ""
+
+SQLServerHost = ""
+SQLServerUser = ""
+SQLServerPasswd = ""
+SQLServerDataBase = ""
 if result:
     doc = parseString(result["content"])
     try:
@@ -70,14 +68,47 @@ if result:
     except:
         pass
 
+    # SQLServer
+    try:
+        SQLServerHost = (doc.getElementsByTagName("SQLServerHost"))[0].childNodes[0].data
+    except:
+        pass
+    try:
+        SQLServerUser = (doc.getElementsByTagName("SQLServerUser"))[0].childNodes[0].data
+    except:
+        pass
+    try:
+        SQLServerPasswd = (doc.getElementsByTagName("SQLServerPasswd"))[0].childNodes[0].data
+    except:
+        pass
+    try:
+        SQLServerDataBase = (doc.getElementsByTagName("SQLServerDataBase"))[0].childNodes[0].data
+    except:
+        pass
+
 CVApi_credit = {
-    "web_addr": webaddr,
+    "webaddr": webaddr,
     "port": port,
     "username": usernm,
-    "pass_wd": passwd,
+    "passwd": passwd,
     "token": "",
-    "last_login": 0
+    "lastlogin": 0
 }
+
+# SQLApi
+sql_credit = {
+    "host": SQLServerHost,
+    "user": SQLServerUser,
+    "password": SQLServerPasswd,
+    "database": SQLServerDataBase,
+}
+
+# sql_credit = {
+#     "host": "192.168.100.149\COMMVAULT",
+#     "user": "sa_cloud",
+#     "password": "1qaz@WSX",
+#     "database": "CommServ",
+# }
 
 djcelery.setup_loader()
 # BROKER_URL = 'django://'
@@ -92,7 +123,6 @@ CELERY_TIMEZONE = 'Asia/Shanghai'  # 时区
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'  # 定时任务
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
