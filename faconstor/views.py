@@ -6808,6 +6808,12 @@ def process_schedule_save(request):
                             cur_crontab_schedule.day_of_month = per_month
                             cur_crontab_schedule.save()
 
+                            # 刷新定时器状态
+                            cur_periodictask.args = [cur_process.id]
+                            cur_periodictask_status = cur_periodictask.enabled
+                            cur_periodictask.enabled = cur_periodictask_status
+                            cur_periodictask.save()
+
                             ps.process = cur_process
                             ps.name = process_schedule_name
                             ps.remark = process_schedule_remark
