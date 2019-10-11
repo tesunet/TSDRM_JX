@@ -3275,7 +3275,7 @@ class CV_Backupset(CV_Client):
             </TMMsg_CreateTaskReq>
         '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
                    restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), data_path=data_path)
-        if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
+        if "Last" not in restoreTime or not restoreTime:
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
 
@@ -4177,8 +4177,16 @@ def run(origin, target, instance, processrun_id):
     data_path = ""
 
     if recovery_result:
-        if recovery_result["recover_time"]:
-            recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"])
+        try:
+            recover_time = recovery_result["recover_time"]
+        except Exception as e:
+            recover_time = ""
+
+        if recover_time:
+            recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recover_time)
+        else:
+            recover_time = ""
+
         browse_job_id = recovery_result["browse_job_id"]
         data_path = recovery_result["data_path"]
 
@@ -4223,6 +4231,7 @@ def run(origin, target, instance, processrun_id):
                                             {'browseJobId': browse_job_id, 'restoreTime': recover_time, 'data_path': data_path})
     # jobId = 4553295
     if jobId == -1:
+        print("oracleRac恢复接口调用失败。")
         exit(1)
     else:
         while True:
@@ -4247,4 +4256,5 @@ def run(origin, target, instance, processrun_id):
 if len(sys.argv) == 5:
     run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 else:
+    print("脚本传参出现异常。")
     exit(1)

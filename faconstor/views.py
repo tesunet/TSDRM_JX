@@ -3301,7 +3301,7 @@ def oracle_restore(request, process_id):
         origin = ""
         data_path = ""
         for cur_step in all_steps:
-            all_scripts = Script.objects.filter(step_id=cur_step.id)
+            all_scripts = Script.objects.filter(step_id=cur_step.id).exclude(state="9")
             for cur_script in all_scripts:
                 if cur_script.origin:
                     origin = cur_script.origin
@@ -3384,8 +3384,8 @@ def cv_oracle_run(request):
         except:
             return JsonResponse({"res": "当前流程不存在。"})
 
-        if not data_path.strip():
-            return JsonResponse({"res": "数据文件重定向路径不能为空。"})
+        # if not data_path.strip():
+        #     return JsonResponse({"res": "数据文件重定向路径不能为空。"})
 
         if not origin.strip():
             return JsonResponse({"res": "流程步骤中未添加Commvault接口，导致源客户端未空。"})
@@ -5873,19 +5873,48 @@ def target_save(request):
                 ret = 0
                 info = "目标客户端未选择。"
             else:
-                if not data_path:
-                    ret = 0
-                    info = "数据重定向路径未填写。"
-                else:
-                    if target_id == 0:
-                        # 判断是否存在
-                        check_target = Target.objects.exclude(state="9").filter(client_id=client_id)
-                        if check_target.exists():
+                # if not data_path:
+                #     ret = 0
+                #     info = "数据重定向路径未填写。"
+                # else:
+                if target_id == 0:
+                    # 判断是否存在
+                    check_target = Target.objects.exclude(state="9").filter(client_id=client_id)
+                    if check_target.exists():
+                        ret = 0
+                        info = "该客户端已选为目标客户端，请勿重复添加。"
+                    else:
+                        try:
+                            cur_target = Target()
+                            cur_target.client_id = client_id
+                            cur_target.client_name = client_name
+                            cur_target.os = os
+                            cur_target.data_path = data_path
+                            cur_target.info = json.dumps({
+                                "agent": agent,
+                                "instance": instance
+                            })
+                            cur_target.save()
+                        except:
                             ret = 0
-                            info = "该客户端已选为目标客户端，请勿重复添加。"
+                            info = "数据保存失败。"
+                        else:
+                            ret = 1
+                            info = "新增成功。"
+                else:
+                    check_target = Target.objects.exclude(state="9").exclude(id=target_id).filter(
+                        client_id=client_id)
+                    if check_target.exists():
+                        ret = 0
+                        info = "该客户端已选为终端，请勿重复添加。"
+                    else:
+                        try:
+                            cur_target = Target.objects.get(id=target_id)
+                        except Target.DoesNotExist as e:
+                            ret = 0
+                            info = "终端不存在，请联系管理员。"
                         else:
                             try:
-                                cur_target = Target()
                                 cur_target.client_id = client_id
                                 cur_target.client_name = client_name
                                 cur_target.os = os
@@ -5897,39 +5926,10 @@ def target_save(request):
                                 cur_target.save()
                             except:
                                 ret = 0
-                                info = "数据保存失败。"
+                                info = "数据修改失败。"
                             else:
                                 ret = 1
-                                info = "新增成功。"
-                    else:
-                        check_target = Target.objects.exclude(state="9").exclude(id=target_id).filter(
-                            client_id=client_id)
-                        if check_target.exists():
-                            ret = 0
-                            info = "该客户端已选为终端，请勿重复添加。"
-                        else:
-                            try:
-                                cur_target = Target.objects.get(id=target_id)
-                            except Target.DoesNotExist as e:
-                                ret = 0
-                                info = "终端不存在，请联系管理员。"
-                            else:
-                                try:
-                                    cur_target.client_id = client_id
-                                    cur_target.client_name = client_name
-                                    cur_target.os = os
-                                    cur_target.data_path = data_path
-                                    cur_target.info = json.dumps({
-                                        "agent": agent,
-                                        "instance": instance
-                                    })
-                                    cur_target.save()
-                                except:
-                                    ret = 0
-                                    info = "数据修改失败。"
-                                else:
-                                    ret = 1
-                                    info = "修改成功"
+                                info = "修改成功"
 
         return JsonResponse({
             "ret": ret,

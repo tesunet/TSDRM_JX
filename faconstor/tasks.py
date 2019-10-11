@@ -434,13 +434,14 @@ def runstep(steprun, if_repeat=False):
                     oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
 
                     # # 测试定时任务
-                    # print("oracle_param",oracle_param)
+                    print("oracle_param",oracle_param)
                     # result["exec_tag"] = 0
                     # result["data"] = "调用commvault接口成功。"
                     # result["log"] = "调用commvault接口成功。"
                     try:
                         ret = subprocess.getstatusoutput(commvault_api_path + " %s" % oracle_param)
                         exec_status, recover_job_id = ret
+                        print(ret)
                     except Exception as e:
                         result["exec_tag"] = 1
                         result["data"] = "执行commvault接口出现异常{0}。".format(e)
@@ -450,11 +451,7 @@ def runstep(steprun, if_repeat=False):
                             result["exec_tag"] = 0
                             result["data"] = "调用commvault接口成功。"
                             result["log"] = "调用commvault接口成功。"
-                        elif exec_status == 1:
-                            result["exec_tag"] = 1
-                            result["data"] = "调用commvault接口错误。"
-                            result["log"] = "调用commvault接口错误。"
-                        else:
+                        elif exec_status == 2:
                             #######################################
                             # ret=2时，查看任务错误信息写入日志    #
                             # Oracle恢复出错                      #
@@ -476,6 +473,10 @@ def runstep(steprun, if_repeat=False):
                             # 查看任务错误信息写入>>result["data"]
                             result["data"] = recover_error
                             result["log"] = "Oracle恢复出错。"
+                        else:
+                            result["exec_tag"] = 1
+                            result["data"] = recover_job_id
+                            result["log"] = recover_job_id
 
                 script.endtime = datetime.datetime.now()
                 script.result = result['exec_tag']
@@ -485,7 +486,7 @@ def runstep(steprun, if_repeat=False):
                 if result["exec_tag"] == 1:
                     script.runlog = result['log']  # 写入错误类型
                     script.explain = result['data']
-                    print("当前接口执行失败,结束任务!")
+                    print(result['data'])
                     script.state = "ERROR"
                     script.save()
                     steprun.state = "ERROR"
@@ -768,4 +769,3 @@ def create_process_run(process):
                         myprocesstask.save()
 
                         exec_process.delay(myprocessrun.id)
-

@@ -2948,7 +2948,7 @@ class CV_Backupset(CV_Client):
         destClient = dest
         # instance = operator["instanceName"]
         restoreTime = operator["restoreTime"]
-        restorePath = operator["restorePath"]
+        # data_path = operator["data_path"]
         try:
             sourceclients = root.findall(".//associations/clientName")
             for node in sourceclients:
@@ -3275,7 +3275,7 @@ class CV_Backupset(CV_Client):
             </TMMsg_CreateTaskReq>
         '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
                    restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), data_path=data_path)
-        if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
+        if "Last" not in restoreTime or not restoreTime:
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
 
@@ -3927,7 +3927,7 @@ class CV_API(object):
 
     def restoreOracleBackupset(self, source, dest, instance, operator=None):
         # param client is clientName or clientId
-        # operator is {"instanceName":, "destClient":, "restoreTime":, "restorePath":None}
+        # operator is {"instanceName":, "destClient":, "restoreTime":, "data_path":None}
         # return JobId
         # or -1 is error
 
@@ -4177,13 +4177,16 @@ def run(origin, target, instance, processrun_id):
 
     if recovery_result:
         try:
-            recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recovery_result["recover_time"])
-        except KeyError as e:
-            pass
-        try:
-            browse_job_id = recovery_result["browse_job_id"]
-        except KeyError as e:
-            pass
+            recover_time = recovery_result["recover_time"]
+        except Exception as e:
+            recover_time = ""
+
+        if recover_time:
+            recover_time = '{0:%Y-%m-%d %H:%M:%S}'.format(recover_time)
+        else:
+            recover_time = ""
+
+        browse_job_id = recovery_result["browse_job_id"]
 
     webaddr = ""
     port = ""
@@ -4225,6 +4228,7 @@ def run(origin, target, instance, processrun_id):
                                          {'browseJobId': browse_job_id, 'restoreTime': recover_time})
     # jobId = 4553295
     if jobId == -1:
+        print("oracle恢复接口调用失败，{0}。".format(cvAPI.msg))
         exit(1)
     else:
         while True:
@@ -4244,9 +4248,15 @@ def run(origin, target, instance, processrun_id):
                         print(jobId)
                         exit(2)
             time.sleep(4)
+        #################################
+        # exit() 1:调用Oracle恢复接口失败#
+        #        2:Oracle恢复出现异常    #
+        #        0:执行Oracle恢复成功    #
+        #################################
 
 
 if len(sys.argv) == 5:
     run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
 else:
+    print("脚本传参出现异常。")
     exit(1)
