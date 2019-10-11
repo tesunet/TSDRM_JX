@@ -480,7 +480,10 @@ def runstep(steprun, if_repeat=False):
 
                 script.endtime = datetime.datetime.now()
                 script.result = result['exec_tag']
-                script.explain = result['data'] if len(result['data']) <= 5000 else result['data'][-4999:]
+                if result['data']:
+                    script.explain = result['data'] if len(result['data']) <= 5000 else result['data'][-4999:]
+                else:
+                    script.explain = ""
 
                 # 处理接口调用执行失败问题
                 if result["exec_tag"] == 1:
