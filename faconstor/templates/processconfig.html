@@ -91,6 +91,17 @@
 
                                     </div>
                                 </div>
+                                <div class="form-group">
+                                    <label class="col-md-3 control-label">流程关闭时强制执行</label>
+                                    <div class="col-md-9">
+                                        <select class="form-control" id="force_exec" name="force_exec">
+                                            <option value="1">是</option>
+                                            <option value="2">否</option>
+                                        </select>
+                                        <div class="form-control-focus"></div>
+
+                                    </div>
+                                </div>
                                 <div class="form-group ">
                                     <label class="col-md-3 control-label">备注</label>
                                     <div class="col-md-9">
@@ -190,6 +201,16 @@
                                     <div class="form-control-focus"></div>
                                 </div>
                             </div>
+                            <div class="form-group ">
+                                <label class="col-md-2 control-label"><span
+                                        style="color:red; ">*</span>排序</label>
+                                <div class="col-md-10">
+                                    <input id="script_sort" type="number" name="script_sort" class="form-control "
+                                           placeholder="">
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label class="col-md-2 control-label"><span style="color:red; ">*</span>接口类型</label>
                                 <div class="col-md-10">
@@ -228,7 +249,7 @@
                                 <div class="col-md-10">
                                     <select class="form-control" id="commv_interface" name="commv_interface">
                                         {% for file in commv_file_list %}
-                                        <option value="{{ file }}">{{ file }}</option>
+                                            <option value="{{ file }}">{{ file }}</option>
                                         {% endfor %}
                                     </select>
                                     <div class="form-control-focus"></div>

@@ -5,6 +5,8 @@ import copy
 import datetime
 import pymysql
 from xml.dom.minidom import parse, parseString
+import os
+from lxml import etree
 
 try:
     import xml.etree.cElementTree as ET
@@ -4149,13 +4151,26 @@ class DoMysql(object):
 
 
 def run(origin, target, instance, processrun_id):
-    #################
-    # 数据库认证信息 #
-    #################
-    db_host = '192.168.100.154'
-    db_name = "js_tesudrm"
-    db_user = "root"
-    db_password = "password"
+    #############################################
+    # 从config/db_config.xml中读取数据库认证信息 #
+    #############################################
+    db_host, db_name, db_user, db_password = '', '', '', ''
+
+    try:
+        db_config_file = os.path.join(os.path.join(os.path.dirname(os.getcwd()), "config"), "db_config.xml")
+
+        with open(db_config_file, "r") as f:
+            content = etree.XML(f.read())
+            db_config = content.xpath('./DB_CONFIG')
+            if db_config:
+                db_config = db_config[0]
+                db_host = db_config.attrib.get("db_host", "")
+                db_name = db_config.attrib.get("db_name", "")
+                db_user = db_config.attrib.get("db_user", "")
+                db_password = db_config.attrib.get("db_password", "")
+    except:
+        print("获取数据库信息失败。")
+        exit(1)
 
     db = DoMysql(db_host, db_user, db_password, db_name)
 
@@ -4253,7 +4268,6 @@ def run(origin, target, instance, processrun_id):
         #        2:Oracle恢复出现异常    #
         #        0:执行Oracle恢复成功    #
         #################################
-
 
 if len(sys.argv) == 5:
     run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
