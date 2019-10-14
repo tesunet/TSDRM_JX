@@ -15,12 +15,32 @@ import djcelery
 import pymysql.cursors
 import xml.dom.minidom
 from xml.dom.minidom import parse, parseString
+from lxml import etree
 
 
-db_host = '192.168.100.154'
-db_name = "js_tesudrm"
-db_user = "root"
-db_password = "password"
+#############################################
+# 从config/db_config.xml中读取数据库认证信息 #
+#############################################
+db_host, db_name, db_user, db_password = '', '', '', ''
+
+try:
+    db_config_file = os.path.join(os.path.join(os.path.join(os.getcwd(), "faconstor"), "config"), "db_config.xml")
+    with open(db_config_file, "r") as f:
+        content = etree.XML(f.read())
+        db_config = content.xpath('./DB_CONFIG')
+        if db_config:
+            db_config = db_config[0]
+            db_host = db_config.attrib.get("db_host", "")
+            db_name = db_config.attrib.get("db_name", "")
+            db_user = db_config.attrib.get("db_user", "")
+            db_password = db_config.attrib.get("db_password", "")
+except:
+    print("获取数据库信息失败。")
+
+# db_host = '192.168.100.154'
+# db_name = "js_tesudrm"
+# db_user = "root"
+# db_password = "password"
 
 # commvault账户
 connection = pymysql.connect(host=db_host,
