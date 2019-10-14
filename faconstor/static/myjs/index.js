@@ -226,11 +226,11 @@ $.ajax({
         for (var i = 0; i < whole_list.length; i++) {
             var labelStatus = "";
             if (whole_list[i].process_run_today == 0) {
-                labelStatus = '<span class="label label-sm label-success" title="演练成功">√</span>';
+                labelStatus = '<span title="演练成功"><i class="fa fa-check" style="color:#26C281;"></i></span>';
             } else if (whole_list[i].process_run_today == 1) {
-                labelStatus = '<span class="label label-sm label-error" title="演练失败">×</span>';
+                labelStatus = '<span title="演练失败"><i class="fa fa-times" style="color:#c51b26;"></i></span>';
             } else {
-                labelStatus = '<span class="label label-sm label-warning" title="未演练">○</span>';
+                labelStatus = '<span title="未演练"><i class="fa fa-circle-o" style="color:#F1C40F;"></i></span>';
             }
 
             $("tbody#process_run_facts").append('<tr>\n' +

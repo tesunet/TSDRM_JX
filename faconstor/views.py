@@ -787,21 +787,16 @@ def get_process_run_facts(request):
         for cur_process in all_process:
             # 今日演练(状态)  0/1/2
             # 演练一次成功就算成功
-            all_process_run = cur_process.processrun_set.filter(Q(state="DONE") | Q(state="STOP"))
-
-            process_run_today = 2
             today_date = datetime.datetime.now().date()
-            for cur_process_run in all_process_run:
-                start_time = cur_process_run.starttime
-                if start_time:
-                    date_strp_time = start_time.date()
-                    if date_strp_time == today_date:
-                        if cur_process_run.state == "DONE":
-                            process_run_today = 0
-                            break
-                        else:
-                            process_run_today = 1
 
+            all_process_run = cur_process.processrun_set.filter(state__in=["DONE", "STOP", "ERROR"]).filter(starttime__startswith=today_date)
+            process_run_today = 2
+            for cur_process_run in all_process_run:
+                if cur_process_run.state == "DONE":
+                    process_run_today = 0
+                    break
+                else:
+                    process_run_today = 1
             # 平均RTO
             cur_client_succeed_process = cur_process.processrun_set.filter(state="DONE")
 
@@ -2349,6 +2344,8 @@ def processscriptsave(request):
             origin = request.POST.get('origin', '')
             commv_interface = request.POST.get('commv_interface', '')
 
+            script_sort = request.POST.get('script_sort', '')
+
             # 定义存储的方法
             def process_script_save(save_data, cur_host_manage=None):
                 result = {}
@@ -2364,6 +2361,7 @@ def processscriptsave(request):
                             scriptsave = Script()
                             scriptsave.code = save_data["code"]
                             scriptsave.name = save_data["name"]
+                            scriptsave.sort = save_data["script_sort"]
 
                             # 判断是否commvault/脚本
                             if save_data["interface_type"] == "commvault":
@@ -2387,7 +2385,20 @@ def processscriptsave(request):
                             scriptsave.interface_type = save_data["interface_type"]
                             scriptsave.save()
                             result["res"] = "新增成功。"
-                            result["data"] = scriptsave.id
+
+                            ############################################################
+                            # result["data"] = [{"script_id": 1, "script_name": "2"}]  #
+                            # 当前脚本所在步骤的所有脚本按排序构造数组                   #
+                            ############################################################
+                            script_info_list = []
+                            cur_step = scriptsave.step
+                            all_scripts = cur_step.script_set.exclude(state="9").order_by("sort")
+                            for script in all_scripts:
+                                script_info_list.append({
+                                    "script_id": script.id,
+                                    "script_name": script.name
+                                })
+                            result["data"] = script_info_list
                 else:
                     # 修改
                     allscript = Script.objects.filter(code=save_data["code"]).exclude(id=save_data["id"]).exclude(
@@ -2404,6 +2415,7 @@ def processscriptsave(request):
                             else:
                                 scriptsave.code = save_data["code"]
                                 scriptsave.name = save_data["name"]
+                                scriptsave.sort = save_data["script_sort"]
 
                                 # 判断是否commvault/脚本
                                 if save_data["interface_type"] == "commvault":
@@ -2426,7 +2438,21 @@ def processscriptsave(request):
                                 scriptsave.interface_type = save_data["interface_type"]
                                 scriptsave.save()
                                 result["res"] = "修改成功。"
-                                result["data"] = scriptsave.id
+
+                                ############################################################
+                                # result["data"] = [{"script_id": 1, "script_name": "2"}]  #
+                                # 当前脚本所在步骤的所有脚本按排序构造数组                   #
+                                ############################################################
+                                script_info_list = []
+                                cur_step = scriptsave.step
+                                all_scripts = cur_step.script_set.exclude(state="9").order_by("sort")
+                                for script in all_scripts:
+                                    script_info_list.append({
+                                        "script_id": script.id,
+                                        "script_name": script.name
+                                    })
+                                result["data"] = script_info_list
+
                         except Exception as e:
                             print("scriptsave edit error:%s" % e)
                             result["res"] = "修改失败。"
@@ -2446,53 +2472,60 @@ def processscriptsave(request):
                     if name.strip() == '':
                         result["res"] = '接口名称不能为空。'
                     else:
-                        # 区分interface_type: commvault/脚本
-                        if interface_type.strip() == "":
-                            result["res"] = '接口类型未选择。'
+                        try:
+                            script_sort = int(script_sort)
+                        except ValueError as e:
+                            result["res"] = '脚本排序不能为空。'
                         else:
-                            save_data = {
-                                "processid": processid,
-                                "pid": pid,
-                                "id": id,
-                                "code": code,
-                                "name": name,
-                                "script_text": script_text,
-                                "success_text": success_text,
-                                "log_address": log_address,
-                                "host_id": host_id,
-                                "interface_type": interface_type,
-                                "origin": origin,
-                                "commv_interface": commv_interface
-                            }
-
-                            if interface_type == "commvault":
-                                if origin.strip() == "":
-                                    result["res"] = 'commvault源端未选择。'
-                                else:
-                                    if commv_interface.strip() == "":
-                                        result["res"] = 'commvault接口未选择。'
-                                    else:
-                                        result = process_script_save(save_data, cur_host_manage=None)
+                            # 区分interface_type: commvault/脚本
+                            if interface_type.strip() == "":
+                                result["res"] = '接口类型未选择。'
                             else:
-                                try:
-                                    host_id = int(host_id)
-                                except ValueError as e:
-                                    print("host_id:%s" % e)
-                                    result["res"] = '网络连接异常。'
-                                else:
-                                    if not host_id:
-                                        result["res"] = '脚本存放的主机未选择。'
+                                save_data = {
+                                    "processid": processid,
+                                    "pid": pid,
+                                    "id": id,
+                                    "code": code,
+                                    "name": name,
+                                    "script_text": script_text,
+                                    "success_text": success_text,
+                                    "log_address": log_address,
+                                    "host_id": host_id,
+                                    "interface_type": interface_type,
+                                    "origin": origin,
+                                    "commv_interface": commv_interface,
+                                    "script_sort": script_sort
+                                }
+
+                                if interface_type == "commvault":
+                                    if origin.strip() == "":
+                                        result["res"] = 'commvault源端未选择。'
                                     else:
-                                        if script_text.strip() == '':
-                                            result["res"] = '脚本内容不能为空。'
+                                        if commv_interface.strip() == "":
+                                            result["res"] = 'commvault接口未选择。'
                                         else:
-                                            try:
-                                                cur_host_manage = HostsManage.objects.get(id=host_id)
-                                            except HostsManage.DoesNotExist as e:
-                                                print(e)
-                                                result["res"] = '所选主机不存在。'
+                                            result = process_script_save(save_data, cur_host_manage=None)
+                                else:
+                                    try:
+                                        host_id = int(host_id)
+                                    except ValueError as e:
+                                        print("host_id:%s" % e)
+                                        result["res"] = '网络连接异常。'
+                                    else:
+                                        if not host_id:
+                                            result["res"] = '脚本存放的主机未选择。'
+                                        else:
+                                            if script_text.strip() == '':
+                                                result["res"] = '脚本内容不能为空。'
                                             else:
-                                                result = process_script_save(save_data, cur_host_manage=cur_host_manage)
+                                                try:
+                                                    cur_host_manage = HostsManage.objects.get(id=host_id)
+                                                except HostsManage.DoesNotExist as e:
+                                                    print(e)
+                                                    result["res"] = '所选主机不存在。'
+                                                else:
+                                                    result = process_script_save(save_data,
+                                                                                 cur_host_manage=cur_host_manage)
 
             return HttpResponse(json.dumps(result))
 
@@ -2592,6 +2625,8 @@ def get_script_data(request):
                     "interface_type": cur_script.interface_type,
                     "origin": cur_script.origin.id if cur_script.origin else "",
                     "commv_interface": cur_script.commv_interface,
+
+                    "script_sort": cur_script.sort
                 }
             return HttpResponse(json.dumps(script_data))
 
@@ -2625,12 +2660,21 @@ def setpsave(request):
         group = request.POST.get('group', '')
         rto_count_in = request.POST.get('rto_count_in', '')
         remark = request.POST.get('remark', '')
+        force_exec = request.POST.get('force_exec', '')
 
         process_id = request.POST.get('process_id', '')
+
+        data = ""
+
         try:
             id = int(id)
+            force_exec = int(force_exec)
         except:
-            raise Http404()
+            return JsonResponse({
+                "result": "网络异常。",
+                "data": data
+            })
+
         data = ""
         # 新增步骤
         if id == 0:
@@ -2671,6 +2715,7 @@ def setpsave(request):
             step.pnode_id = pid
             step.sort = my_sort
             step.remark = remark
+            step.force_exec = force_exec
             step.save()
             # last_id
             current_steps = Step.objects.filter(pnode_id=pid).exclude(state="9").order_by("sort").filter(
@@ -2695,6 +2740,7 @@ def setpsave(request):
                 step[0].group = group
                 step[0].rto_count_in = rto_count_in
                 step[0].remark = remark
+                step[0].force_exec = force_exec
                 step[0].save()
                 result = "保存成功。"
             else:
@@ -2729,7 +2775,7 @@ def get_step_tree(parent, selectid):
         node["id"] = child.id
         node["children"] = get_step_tree(child, selectid)
 
-        scripts = child.script_set.exclude(state="9")
+        scripts = child.script_set.exclude(state="9").order_by("sort")
         script_string = ""
         for script in scripts:
             id_code_plus = str(script.id) + "+" + str(script.name) + "&"
@@ -2759,7 +2805,7 @@ def get_step_tree(parent, selectid):
         node["data"] = {"time": child.time, "approval": child.approval, "skip": child.skip, "group_name": group_name,
                         "group": child.group, "scripts": script_string, "allgroups": group_string,
                         "rto_count_in": child.rto_count_in, "remark": child.remark,
-                        "verifyitems": verify_items_string}
+                        "verifyitems": verify_items_string, "force_exec": child.force_exec}
         try:
             if int(selectid) == child.id:
                 node["state"] = {"selected": True}
@@ -2826,7 +2872,7 @@ def custom_step_tree(request):
         if len(rootnodes) > 0:
             for rootnode in rootnodes:
                 root = {}
-                scripts = rootnode.script_set.exclude(state="9")
+                scripts = rootnode.script_set.exclude(state="9").order_by("sort")
                 script_string = ""
                 for script in scripts:
                     id_code_plus = str(script.id) + "+" + str(script.name) + "&"
@@ -2847,7 +2893,7 @@ def custom_step_tree(request):
                                 "allgroups": group_string, "group": rootnode.group, "group_name": group_name,
                                 "scripts": script_string, "errors": errors, "title": title,
                                 "rto_count_in": rootnode.rto_count_in, "remark": rootnode.remark,
-                                "verifyitems": verify_items_string}
+                                "verifyitems": verify_items_string, "force_exec": rootnode.force_exec}
                 root["children"] = get_step_tree(rootnode, selectid)
                 root["state"] = {"opened": True}
                 treedata.append(root)
@@ -3183,7 +3229,8 @@ def process_del(request):
 
 def oracle_restore(request, process_id):
     if request.user.is_authenticated():
-        all_wrapper_steps = Step.objects.exclude(state="9").filter(process_id=process_id, pnode_id=None)
+        all_wrapper_steps = Step.objects.exclude(state="9").filter(process_id=process_id, pnode_id=None).order_by(
+            "sort")
         wrapper_step_list = []
         num_to_char_choices = {
             "1": "一",
@@ -3213,7 +3260,7 @@ def oracle_restore(request, process_id):
             wrapper_step_dict["wrapper_step_group_name"] = wrapper_step_group_name
 
             wrapper_script_list = []
-            all_wrapper_scripts = wrapper_step.script_set.exclude(state="9")
+            all_wrapper_scripts = wrapper_step.script_set.exclude(state="9").order_by("sort")
             for wrapper_script in all_wrapper_scripts:
                 wrapper_script_dict = {
                     "wrapper_script_name": wrapper_script.name
@@ -3232,7 +3279,8 @@ def oracle_restore(request, process_id):
 
             pnode_id = wrapper_step.id
             inner_step_list = []
-            all_inner_steps = Step.objects.exclude(state="9").filter(process_id=process_id, pnode_id=pnode_id)
+            all_inner_steps = Step.objects.exclude(state="9").filter(process_id=process_id, pnode_id=pnode_id).order_by(
+                "sort")
             for inner_step in all_inner_steps:
                 inner_step_dict = {}
                 inner_step_dict["inner_step_name"] = inner_step.name
@@ -3250,7 +3298,7 @@ def oracle_restore(request, process_id):
                 inner_step_dict["inner_step_group_name"] = inner_step_group_name
 
                 inner_script_list = []
-                all_inner_scripts = inner_step.script_set.exclude(state="9")
+                all_inner_scripts = inner_step.script_set.exclude(state="9").order_by("sort")
                 for inner_script in all_inner_scripts:
                     inner_script_dict = {
                         "inner_script_name": inner_script.name
@@ -3422,7 +3470,7 @@ def cv_oracle_run(request):
                     # print("processid:{0}, run_reason:{1}, target:{2}, recovery_time:{3}".format(processid, run_reason,
                     #                                                                            target, recovery_time))
                     myprocessrun.save()
-                    mystep = process[0].step_set.exclude(state="9")
+                    mystep = process[0].step_set.exclude(state="9").order_by("sort")
                     if (len(mystep) <= 0):
                         result["res"] = '流程启动失败，没有找到可用步骤。'
                     else:
@@ -3433,7 +3481,7 @@ def cv_oracle_run(request):
                             mysteprun.state = "EDIT"
                             mysteprun.save()
 
-                            myscript = step.script_set.exclude(state="9")
+                            myscript = step.script_set.exclude(state="9").order_by("sort")
                             for script in myscript:
                                 myscriptrun = ScriptRun()
                                 myscriptrun.script = script
@@ -3627,7 +3675,7 @@ def cv_oracle(request, offset, funid):
 
 def getchildrensteps(processrun, curstep):
     childresult = []
-    steplist = Step.objects.exclude(state="9").filter(pnode=curstep)
+    steplist = Step.objects.exclude(state="9").filter(pnode=curstep).order_by("sort")
     for step in steplist:
         runid = 0
         starttime = ""
@@ -3685,7 +3733,7 @@ def getchildrensteps(processrun, curstep):
             except:
                 pass
         scripts = []
-        scriptlist = Script.objects.exclude(state="9").filter(step=step)
+        scriptlist = Script.objects.exclude(state="9").filter(step=step).order_by("sort")
         for script in scriptlist:
             runscriptid = 0
             scriptstarttime = ""
@@ -3802,7 +3850,8 @@ def getrunsetps(request):
                 processresult["process_note"] = process_note
                 processresult["process_rto"] = process_rto
 
-                steplist = Step.objects.exclude(state="9").filter(process=processruns[0].process, pnode=None)
+                steplist = Step.objects.exclude(state="9").filter(process=processruns[0].process, pnode=None).order_by(
+                    "sort")
                 for step in steplist:
                     runid = 0
                     starttime = ""
@@ -3865,7 +3914,7 @@ def getrunsetps(request):
                         except:
                             pass
                     scripts = []
-                    scriptlist = Script.objects.exclude(state="9").filter(step=step)
+                    scriptlist = Script.objects.exclude(state="9").filter(step=step).order_by("sort")
                     for script in scriptlist:
                         runscriptid = 0
                         scriptstarttime = ""
@@ -4021,6 +4070,11 @@ def revoke_current_task(request):
         task_url = "http://127.0.0.1:5555/api/tasks"
 
         try:
+            process_run_id = int(process_run_id)
+        except:
+            return JsonResponse({"data": "流程不存在。"})
+
+        try:
             task_json_info = requests.get(task_url).text
         except:
             return JsonResponse({"data": "终端未启动flower异步任务监控！"})
@@ -4029,7 +4083,12 @@ def revoke_current_task(request):
         task_id = ""
 
         for key, value in task_dict_info.items():
-            if value["state"] == "STARTED":
+            try:
+                task_process_id = int(value["args"][1:-1])
+            except:
+                task_process_id = ""
+            # 终止指定流程的异步任务
+            if value["state"] == "STARTED" and task_process_id == process_run_id:
                 task_id = key
 
         if abnormal == "1":
@@ -4336,10 +4395,10 @@ def stop_current_process(request):
         process_run_id = request.POST.get('process_run_id', '')
         process_note = request.POST.get('process_note', '')
 
-        if process_run_id:
+        try:
             process_run_id = int(process_run_id)
-        else:
-            raise Http404()
+        except ValueError as e:
+            return JsonResponse({"data": "当前选择终止的流程不存在。"})
 
         current_process_run = ProcessRun.objects.exclude(state="9").filter(id=process_run_id)
         if current_process_run:
@@ -4379,9 +4438,66 @@ def stop_current_process(request):
             myprocesstask.state = "1"
             myprocesstask.content = "流程被终止。"
             myprocesstask.save()
-            return JsonResponse({"data": "流程已经被终止"})
+
+            ######################
+            # 执行强制执行的脚本  #
+            ######################
+            force_exec_script.delay(process_run_id)
+
+            return JsonResponse({"data": "流程已经被终止，将强制执行部分脚本。"})
         else:
             return JsonResponse({"data": "终止流程异常，请联系客服"})
+
+
+def get_force_script_info(request):
+    if request.user.is_authenticated():
+        ####################################################################
+        # 获取所有包含强制执行步骤的脚本信息                                 #
+        #   {"finish": 1, "script_name_list": [], "script_status_list": []}#
+        ####################################################################
+        process_run_id = request.POST.get("process", "")
+
+        try:
+            process_run_id = int(process_run_id)
+        except ValueError as e:
+            print("网络异常, {0}".format(e))
+            return JsonResponse({
+                "ret": 0,
+                "data": "网络异常, {0}".format(e)
+            })
+
+        try:
+            cur_process_run = ProcessRun.objects.get(id=process_run_id)
+        except ProcessRun.DoesNotExist as e:
+            print("当前流程不存在, {0}".format(e))
+            return JsonResponse({
+                "ret": 0,
+                "data": "当前流程不存在, {0}".format(e)
+            })
+        else:
+            finish = 1
+            cur_process_id = cur_process_run.process.id
+            script_name_list = []
+            script_status_list = []
+            all_step_runs = cur_process_run.steprun_set.exclude(step__state="9").filter(step__force_exec=1)
+            for step_run in all_step_runs:
+                cur_step_scripts = step_run.scriptrun_set.all()
+                for cur_script in cur_step_scripts:
+                    script_name_list.append(cur_script.script.name)
+                    script_status_list.append(cur_script.state)
+                    if cur_script.state not in ["ERROR", "DONE"]:
+                        finish = 0
+            return JsonResponse({
+                "ret": 1,
+                "data": {
+                    "finish": finish,
+                    "script_name_list": script_name_list,
+                    "script_status_list": script_status_list,
+                    "switch_url": "/oracle_restore/{0}".format(cur_process_id)
+                }
+            })
+    else:
+        return HttpResponseRedirect("/login")
 
 
 def verify_items(request):
@@ -4835,7 +4951,7 @@ def custom_pdf_report(request):
                 "": "",
             }
 
-            current_scripts = Script.objects.exclude(state="9").filter(step_id=pstep.id)
+            current_scripts = Script.objects.exclude(state="9").filter(step_id=pstep.id).order_by("sort")
             script_list_wrapper = []
             if current_scripts:
                 for snum, current_script in enumerate(current_scripts):
@@ -4926,7 +5042,7 @@ def custom_pdf_report(request):
                             inner_second_el_dict["operator"] = ""
 
                         # 当前步骤下脚本
-                        current_scripts = Script.objects.exclude(state="9").filter(step_id=step.id)
+                        current_scripts = Script.objects.exclude(state="9").filter(step_id=step.id).order_by("sort")
 
                         script_list_inner = []
                         if current_scripts:
