@@ -4157,7 +4157,7 @@ def run(origin, target, instance, processrun_id):
     db_host, db_name, db_user, db_password = '', '', '', ''
 
     try:
-        db_config_file = os.path.join(os.path.join(os.path.dirname(os.getcwd()), "config"), "db_config.xml")
+        db_config_file = os.path.join(os.path.join(os.path.join(os.getcwd(), "faconstor"), "config"), "db_config.xml")
 
         with open(db_config_file, "r") as f:
             content = etree.XML(f.read())
