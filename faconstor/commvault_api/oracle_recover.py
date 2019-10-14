@@ -4177,9 +4177,10 @@ def run(origin, target, instance, processrun_id):
     credit_result = {}
     recovery_result = {}
 
-    credit_sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
-    recovery_sql = """SELECT recover_time, browse_job_id FROM js_tesudrm.faconstor_processrun
-                      WHERE state!='9' AND id={0};""".format(processrun_id)
+    credit_sql = "SELECT t.content FROM {db_name}.faconstor_vendor t;".format(**{db_name})
+    recovery_sql = """SELECT recover_time, browse_job_id FROM {db_name}.faconstor_processrun
+                      WHERE state!='9' AND id={processrun_id};""".format(
+        **{"processrun_id": processrun_id, "db_name": db_name})
 
     try:
         credit_result = db.fetchOne(credit_sql)
@@ -4268,6 +4269,7 @@ def run(origin, target, instance, processrun_id):
         #        2:Oracle恢复出现异常    #
         #        0:执行Oracle恢复成功    #
         #################################
+
 
 if len(sys.argv) == 5:
     run(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

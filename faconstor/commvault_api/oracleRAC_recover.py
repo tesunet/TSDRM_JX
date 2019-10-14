@@ -4177,9 +4177,10 @@ def run(origin, target, instance, processrun_id):
     credit_result = {}
     recovery_result = {}
 
-    credit_sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
-    recovery_sql = """SELECT recover_time, browse_job_id, data_path FROM js_tesudrm.faconstor_processrun
-                      WHERE state!='9' AND id={0};""".format(processrun_id)
+    credit_sql = "SELECT t.content FROM {db_name}.faconstor_vendor t;".format(**{"db_name": db_name})
+    recovery_sql = """SELECT recover_time, browse_job_id, data_path FROM {db_name}.faconstor_processrun
+                      WHERE state!='9' AND id={processrun_id};""".format(
+        **{"processrun_id": processrun_id, "db_name": db_name})
 
     try:
         credit_result = db.fetchOne(credit_sql)
@@ -4237,13 +4238,13 @@ def run(origin, target, instance, processrun_id):
         "last_login": 0
     }
 
-
     cvToken = CV_RestApi_Token()
     cvToken.login(info)
     cvAPI = CV_API(cvToken)
 
     jobId = cvAPI.restoreOracleRacBackupset(origin, target, instance,
-                                            {'browseJobId': browse_job_id, 'restoreTime': recover_time, 'data_path': data_path})
+                                            {'browseJobId': browse_job_id, 'restoreTime': recover_time,
+                                             'data_path': data_path})
     # jobId = 4553295
     if jobId == -1:
         print("oracleRac恢复接口调用失败。")
