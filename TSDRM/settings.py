@@ -34,7 +34,7 @@ result = {}
 try:
     with connection.cursor() as cursor:
         # Read a single record
-        sql = "SELECT t.content FROM js_tesudrm.faconstor_vendor t;"
+        sql = "SELECT t.content FROM {db_name}.faconstor_vendor t;".format(**{"db_name": db_name})
         cursor.execute(sql)
         result = cursor.fetchone()
 finally:
