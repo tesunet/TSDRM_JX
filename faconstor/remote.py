@@ -84,13 +84,14 @@ class ServerByPara(object):
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             self.client.connect(hostname=self.host, username=self.user, password=self.pwd, timeout=5)
-        except TimeoutError as e:
+        except socket.timeout as e:
             print("连接服务器失败")
             return {
                 "exec_tag": 1,
                 "data": "连接服务器失败 {0}".format(e),
                 "log": "连接服务器失败",
             }
+
         try:
             stdin, stdout, stderr = self.client.exec_command(self.cmd, get_pty=True, timeout=6 * 60)
             if stderr.readlines():
