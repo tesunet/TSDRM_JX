@@ -733,6 +733,138 @@ def index(request, funid):
         return HttpResponseRedirect("/login")
 
 
+def monitor(request,):
+    if request.user.is_authenticated():
+        global funlist
+        # 最新操作
+        alltask = []
+        cursor = connection.cursor()
+        cursor.execute("""
+        select t.starttime, t.content, t.type, t.state, t.logtype, p.name, p.color from faconstor_processtask as t left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where r.state!='9' order by t.starttime desc;
+        """)
+        rows = cursor.fetchall()
+
+        if len(rows) > 0:
+            for task in rows:
+                time = task[0]
+                content = task[1]
+                task_type = task[2]
+                task_state = task[3]
+                task_logtype = task[4]
+                process_name = task[5]
+                process_color = task[6]
+
+                # 图标与颜色
+                current_icon, current_color = custom_c_color(task_type, task_state, task_logtype)
+
+                time = custom_time(time)
+
+                alltask.append(
+                    {"content": content, "time": time, "process_name": process_name, "task_color": current_color,
+                     "task_icon": current_icon, "process_color": process_color})
+                if len(alltask) >= 50:
+                    break
+        # 成功率，恢复次数，平均RTO，最新切换
+        all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP"))
+        successful_processruns = ProcessRun.objects.filter(state="DONE")
+        processrun_times_obj = ProcessRun.objects.exclude(state__in=["RUN", "REJECT"]).exclude(state="9")
+
+        success_rate = "%.0f" % (len(successful_processruns) / len(
+            all_processrun_objs) * 100) if all_processrun_objs and successful_processruns else 0
+        last_processrun_time = successful_processruns.last().starttime if successful_processruns else ""
+        all_processruns = len(processrun_times_obj) if processrun_times_obj else 0
+
+        current_processruns = ProcessRun.objects.exclude(state__in=["DONE", "STOP", "REJECT"]).exclude(
+            state="9").select_related("process")
+        curren_processrun_info_list = []
+        state_dict = {
+            "DONE": "已完成",
+            "EDIT": "未执行",
+            "RUN": "执行中",
+            "ERROR": "执行失败",
+            "IGNORE": "忽略",
+            "STOP": "终止",
+            "PLAN": "计划",
+            "REJECT": "取消",
+            "SIGN": "签到",
+            "": "",
+        }
+
+        process_rate = "0"
+        if current_processruns:
+            for current_processrun in current_processruns:
+                current_processrun_dict = {}
+                start_time_strftime = ""
+                current_delta_time = ""
+                current_step_name = ""
+                current_process_name = ""
+                current_step_index = ""
+                all_steps = []
+                group_name = ""
+                users = ""
+                process_id = current_processrun.process_id
+                current_process_name = current_processrun.process.name
+                start_time = current_processrun.starttime.replace(tzinfo=None)
+                start_time_strftime = start_time.strftime('%Y-%m-%d %H:%M:%S')
+                current_time = datetime.datetime.now()
+                current_delta_time = (current_time - start_time).total_seconds()
+                m, s = divmod(current_delta_time, 60)
+                h, m = divmod(m, 60)
+                current_delta_time = "%d时%02d分%02d秒" % (h, m, s)
+
+                current_processrun_id = current_processrun.id
+
+                # 进程url
+                processrun_url = current_processrun.process.url + "/" + str(current_processrun_id)
+
+                # 当前系统任务
+                current_process_task_info = get_c_process_run_tasks(current_processrun.id)
+
+                current_processrun_dict["current_process_run_state"] = state_dict[
+                    "{0}".format(current_processrun.state)]
+                current_processrun_dict["current_process_task_info"] = current_process_task_info
+                current_processrun_dict["current_processrun_dict"] = current_processrun_dict
+                current_processrun_dict["start_time_strftime"] = start_time_strftime
+                current_processrun_dict["current_delta_time"] = current_delta_time
+                current_processrun_dict["current_process_name"] = current_process_name
+                current_processrun_dict["current_step_index"] = current_step_index
+                current_processrun_dict["all_steps"] = all_steps
+                current_processrun_dict["process_rate"] = process_rate
+                current_processrun_dict["current_step_name"] = current_step_name
+                current_processrun_dict["group_name"] = group_name
+                current_processrun_dict["users"] = users
+                current_processrun_dict["processrun_url"] = processrun_url
+                current_processrun_dict["processrun_id"] = current_processrun.id
+
+                curren_processrun_info_list.append(current_processrun_dict)
+
+        ##################################
+        # 今日演练：                      #
+        #   今天演练过的系统个数/总系统数  #
+        ##################################
+        today_process_run_length = 0
+        today_date = datetime.datetime.now().date()
+        pre_client = ""
+        for processrun_obj in all_processrun_objs:
+            if today_date == processrun_obj.starttime.date():
+                if pre_client == processrun_obj.origin:
+                    continue
+                today_process_run_length += 1
+
+                pre_client = processrun_obj.origin
+
+        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle")
+        # 右上角消息任务
+        return render(request, "monitor.html",
+                      {'username': request.user.userinfo.fullname, "alltask": alltask, "homepage": True,
+                        "success_rate": success_rate,
+                       "all_processruns": all_processruns, "last_processrun_time": last_processrun_time,
+                       "curren_processrun_info_list": curren_processrun_info_list,
+                       "today_process_run_length": today_process_run_length, "all_process": all_process})
+    else:
+        return HttpResponseRedirect("/login")
+
+
 def get_process_run_rto(processrun):
     ########################################################
     # 构造出正确顺序的父级步骤RTO，                         #
