@@ -33,7 +33,8 @@ textarea {
 html,body{ font-family: 微软雅黑, MicrosoftYahei, sans-serif; color:#fff; background:#00065b url(../img/bg.jpg);    background-size: 100% 100%;background-position:0 0; width: 100%; height: 100%; background-repeat: no-repeat;}
 .wpbox{
   width: 100%;
-  height: calc(100% - 10px)
+ height: 950px;
+ 
 }
   .bnt{ height:9%; width: 100%; display: inline-block; text-align: center}
 .left1{ width: 19%; height: calc(100% - 10%);float: left; padding-left:2.2%; text-align: center;}
