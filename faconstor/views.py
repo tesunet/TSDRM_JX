@@ -931,7 +931,6 @@ def get_monitor_data(request):
                 "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.endtime),
                 "percent": "100%"
             })
-
         return JsonResponse({
             "week_drill": week_drill,
             "avgRTO": avgRTO,
