@@ -352,13 +352,28 @@ $(document).ready(function () {
             $("#drill_monitor").empty();
             for (var i = 0; i < data.drill_monitor.length; i++) {
                 $("#drill_monitor").append('<tr>\n' +
-                    '    <td> '+ data.drill_monitor[i].process_name +'</td>\n' +
+                    '    <td> ' + data.drill_monitor[i].process_name + '</td>\n' +
                     '    <td><span class="label label-sm label-success"> 成功 </span></td>\n' +
                     '    <td> 8:00</td>\n' +
-                    '    <td> '+ data.drill_monitor[i].start_time +'</td>\n' +
-                    '    <td> '+ data.drill_monitor[i].end_time +'</td>\n' +
-                    '    <td> '+ data.drill_monitor[i].percent +'</td>\n' +
+                    '    <td> ' + data.drill_monitor[i].start_time + '</td>\n' +
+                    '    <td> ' + data.drill_monitor[i].end_time + '</td>\n' +
+                    '    <td> ' + data.drill_monitor[i].percent + '</td>\n' +
                     '</tr>');
+            }
+
+            // 演练日志
+            $("#drill_log").empty();
+            for (var i = 0; i < data.task_list.length; i++) {
+                var drill_log_class = "";
+                if (i % 2 == 0) {
+                    drill_log_class == ' class="bg"';
+                }
+                $("#drill_log").append('<li '+ drill_log_class +'>\n' +
+                    '    <p class="fl"><b>' + data.task_list[i].process_name + '</b><br>\n' +
+                    '        ' + data.task_list[i].content + '<br>\n' +
+                    '    </p>\n' +
+                    '    <p class="fr pt17">' + data.task_list[i].start_time + '</p>\n' +
+                    '</li>');
             }
         },
         // error: function (e) {

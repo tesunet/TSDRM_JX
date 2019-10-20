@@ -872,7 +872,7 @@ def get_monitor_data(request):
 
         # 最近7日演练次数
         drill_times = []
-
+        drill_rto = []
         for i in range(0, 7)[::-1]:
             today_datetime = datetime.datetime.now()
             if i == 0:
@@ -884,12 +884,31 @@ def get_monitor_data(request):
             drill_day.append("{0:%m-%d}".format(today_datetime.date()))
             drill_times.append(len(today_drills))
 
+            # 平均RTO趋势
+            cur_client_succeed_process = ProcessRun.objects.filter(state="DONE").filter(starttime__startswith=today_datetime.date())
+
+            if cur_client_succeed_process:
+                rto_sum_seconds = 0
+
+                for processrun in cur_client_succeed_process:
+                    ########################################################
+                    # 构造出正确顺序的父级步骤RTO，                         #
+                    # 最后一个步骤rto_count_in="0"，记录endtime为rtoendtime #
+                    ########################################################
+                    delta_time = get_process_run_rto(processrun)
+                    rto_sum_seconds += delta_time
+
+                rto = "%.2f"%(rto_sum_seconds / len(cur_client_succeed_process) / 60)
+
+                drill_rto.append(rto)
+            else:
+                drill_rto.append(0)
+
         week_drill = {
             "drill_day": drill_day,
             "drill_times": drill_times
         }
 
-        drill_rto = [5.1, 5.8, 6.89, 4.56, 4.78, 5.78, 6.9]
         avgRTO = {
             "drill_day": drill_day,
             "drill_rto": drill_rto
@@ -927,16 +946,36 @@ def get_monitor_data(request):
                 "process_name": drill_process_run.process.name,
                 "state": drill_process_run.state,
                 "schedule_time": "",
-                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.starttime),
-                "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.endtime),
+                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.starttime) if drill_process_run.starttime else "",
+                "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.endtime) if drill_process_run.endtime else "",
                 "percent": "100%"
             })
+
+        # 演练日志
+        task_list = []
+        all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"])
+        for num, process_task in enumerate(all_process_tasks):
+            if num == 9:
+                break
+            process_name = ""
+            try:
+                process_name = process_task.processrun.process.name
+            except:
+                pass
+
+            task_list.append({
+                "process_name": process_name,
+                "start_time": "{0: %Y-%m-%d %H:%M:%S}".format(process_task.starttime) if process_task.starttime else "",
+                "content": process_task.content
+            })
+
         return JsonResponse({
             "week_drill": week_drill,
             "avgRTO": avgRTO,
             "drill_top_time": drill_top_time,
             "drill_rate": drill_rate,
-            "drill_monitor": drill_monitor
+            "drill_monitor": drill_monitor,
+            "task_list": task_list
         })
     else:
         return HttpResponseRedirect("/login")
@@ -1014,33 +1053,6 @@ def get_process_run_facts(request):
                 rto_sum_seconds = 0
 
                 for processrun in cur_client_succeed_process:
-                    # all_step_runs = processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
-                    #     step__pnode=None)
-                    # step_rto = 0
-                    # if all_step_runs:
-                    #     for step_run in all_step_runs:
-                    #         rto = 0
-                    #         end_time = step_run.endtime
-                    #         start_time = step_run.starttime
-                    #         if end_time and start_time:
-                    #             delta_time = (end_time - start_time)
-                    #             rto = delta_time.total_seconds()
-                    #         step_rto += rto
-                    # rto_sum_seconds += step_rto
-                    # # 扣除子级步骤中可能的rto_count_in的时间
-                    # all_inner_step_runs = processrun.steprun_set.exclude(state="9").filter(
-                    #     step__rto_count_in="0").exclude(step__pnode=None)
-                    # inner_rto_not_count_in = 0
-                    # if all_inner_step_runs:
-                    #     for inner_step_run in all_inner_step_runs:
-                    #         end_time = inner_step_run.endtime
-                    #         start_time = inner_step_run.starttime
-                    #         if end_time and start_time:
-                    #             delta_time = (end_time - start_time)
-                    #             rto = delta_time.total_seconds()
-                    #             inner_rto_not_count_in += rto
-                    # rto_sum_seconds -= inner_rto_not_count_in
-
                     ########################################################
                     # 构造出正确顺序的父级步骤RTO，                         #
                     # 最后一个步骤rto_count_in="0"，记录endtime为rtoendtime #
