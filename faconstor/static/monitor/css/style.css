@@ -95,7 +95,7 @@ html,body{ font-family: 微软雅黑, MicrosoftYahei, sans-serif; color:#fff; ba
 .leftbox2_table{background:url(../img/leftbox2.png);background-repeat: no-repeat;background-position: -2px -2px; width:354px; height:680px;}
 .left2_table{ width: 91%; margin-left: 5%; font-size: 12px;height:90%; overflow: hidden;}
 .hdleft2_table{ width: 91%; margin-left: 5%; font-size: 12px;height:91.6%; overflow: hidden;}
-.left2_table li{background: rgba(1,202,217,.2) url(../img/icosjx.png) no-repeat  top left; position: relative;overflow: hidden; padding: 2% 6%; color:rgba(255,255,255,.7); line-height: 140%}
+.left2_table li{background: rgba(1,202,217,.2) url(../img/icosjx.png) no-repeat  top left; position: relative;overflow: hidden; padding: 2% 6%; color:rgba(255,255,255,.7); line-height: 145%}
 .left2_table li b{color:rgba(255,255,255,1); font-weight: normal;}
 .left2_table li p.fl{ width: 80%; overflow: hidden;}
 .left2_table li p.fr{ position: absolute; right: 5%; top: -20%;}
