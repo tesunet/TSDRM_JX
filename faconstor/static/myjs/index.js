@@ -246,4 +246,3 @@ $.ajax({
     }
 });
 
-// # /oracle_restore/17

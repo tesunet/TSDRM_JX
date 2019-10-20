@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^get_daily_processrun/$', get_daily_processrun),
     url(r'^get_process_index_data/$', get_process_index_data),
     url(r'^monitor/$', monitor),
+    url(r'^get_monitor_data/$', get_monitor_data),
 
     # 用户登录
     url(r'^login/$', login),

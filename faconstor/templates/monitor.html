@@ -2,77 +2,78 @@
 <meta charset="utf-8">
 <meta http-equiv="refresh" content="60">
 <title>嘉兴银行CommVault自动化恢复演练监控</title>
-<link href="/static/monitor/css/style.css"  rel="stylesheet" type="text/css" media="all" />
+<script src="/static/assets/global/plugins/jquery.min.js" type="text/javascript"></script>
+<link href="/static/monitor/css/style.css" rel="stylesheet" type="text/css" media="all"/>
 <script src="/static/monitor/js/echarts.min.js" charset="utf-8"></script>
-
-
+<script src="/static/myjs/monitor.js" charset="utf-8"></script>
 
 
 <body>
 <div class="wpbox">
-<div class="bnt">
-  <h1 class="tith1 fl">自动化恢复演练监控</h1>
-</div>
-<!-- bnt end -->
-<div class="left1">
-    <div class="aleftboxttop">
-        <h2 class="tith2">今日作业</h2>
-
-        <div class="lefttoday_tit"></div>
-        <div class="lefttoday_number">
-          <div class="widget-inline-box text-center fl">
-            <p>运行中</p>
-            <h3 class="ceeb1fd">1</h3>
-          </div>
-          <div class="widget-inline-box text-center fl">
-             <p>成功</p>
-            <h3 class="c24c9ff">7</h3>
-
-          </div>
-          <div class="widget-inline-box text-center fl">
-             <p>失败</p>
-            <h3 class="cffff00">1</h3>
-          </div>
-          <div class="widget-inline-box text-center fl">
-             <p>未启动</p>
-            <h3 class="c11e2dd">4</h3>
-          </div>
-        </div>
-        <!-- lefttoday_number end -->
+    {% csrf_token %}
+    <div class="bnt">
+        <h1 class="tith1 fl">自动化恢复演练监控</h1>
     </div>
-    <div class="aleftboxtmidd">
-      <h2 class="tith2">客户端状态</h2>
-      <div class="lefttoday_tit"></div>
-      <div class="lefttoday_number2">
-          <div class="widget-inline-box text-center fl">
-            <p>服务状态</p>
-            <h3 class="c24c9ff chinese-characters">正常</h3>
-          </div>
-          <div class="widget-inline-box text-center fl">
-             <p>网络状态</p>
-            <h3 class="c24c9ff chinese-characters">正常</h3>
-          </div>
-          <div class="widget-inline-box text-center fl">
-             <p>监控客户端</p>
-            <h3 class="c24c9ff">4</h3>
-          </div>
-          <div class="widget-inline-box text-center fl">
-             <p>报警客户端</p>
-            <h3 class="cffff00">4</h3>
-          </div>
+    <!-- bnt end -->
+    <div class="left1">
+        <div class="aleftboxttop">
+            <h2 class="tith2">今日作业</h2>
+
+            <div class="lefttoday_tit"></div>
+            <div class="lefttoday_number">
+                <div class="widget-inline-box text-center fl">
+                    <p>运行中</p>
+                    <h3 class="ceeb1fd">1</h3>
+                </div>
+                <div class="widget-inline-box text-center fl">
+                    <p>成功</p>
+                    <h3 class="c24c9ff">7</h3>
+
+                </div>
+                <div class="widget-inline-box text-center fl">
+                    <p>失败</p>
+                    <h3 class="cffff00">1</h3>
+                </div>
+                <div class="widget-inline-box text-center fl">
+                    <p>未启动</p>
+                    <h3 class="c11e2dd">4</h3>
+                </div>
+            </div>
+            <!-- lefttoday_number end -->
         </div>
-  </div>
-  <div class="aleftboxtbott">
-    <h2 class="tith2">演练成功率</h2>
-        <div class="lefttoday_tit height"></div>
-    <div id="lpeftbot" class="lpeftbotcont" ></div>
-</div>
-</div>
-<!--  left1 end -->
-<div class="mrbox">
-      <div class="mrbox_topmidd" style="width: 69%;">
-          <div class="amiddboxttop">
-              <h2 class="tith2 pt1">演练监控</h2>
+        <div class="aleftboxtmidd">
+            <h2 class="tith2">客户端状态</h2>
+            <div class="lefttoday_tit"></div>
+            <div class="lefttoday_number2">
+                <div class="widget-inline-box text-center fl">
+                    <p>服务状态</p>
+                    <h3 class="c24c9ff chinese-characters">正常</h3>
+                </div>
+                <div class="widget-inline-box text-center fl">
+                    <p>网络状态</p>
+                    <h3 class="c24c9ff chinese-characters">正常</h3>
+                </div>
+                <div class="widget-inline-box text-center fl">
+                    <p>监控客户端</p>
+                    <h3 class="c24c9ff">4</h3>
+                </div>
+                <div class="widget-inline-box text-center fl">
+                    <p>报警客户端</p>
+                    <h3 class="cffff00">4</h3>
+                </div>
+            </div>
+        </div>
+        <div class="aleftboxtbott">
+            <h2 class="tith2">演练成功率</h2>
+            <div class="lefttoday_tit height"></div>
+            <div id="lpeftbot" class="lpeftbotcont"></div>
+        </div>
+    </div>
+    <!--  left1 end -->
+    <div class="mrbox">
+        <div class="mrbox_topmidd" style="width: 69%;">
+            <div class="amiddboxttop">
+                <h2 class="tith2 pt1">演练监控</h2>
                 <table class="table table-hover" style="width: 100%">
                     <thead>
                     <tr>
@@ -84,554 +85,577 @@
                         <th width="12%"> 进度</th>
                     </tr>
                     </thead>
-                    <tbody id="process_run_facts">
-                        <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                    <tbody id="drill_monitor">
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     <tr>
-                            <td> 资金系统 </td>
-                            <td> <span class="label label-sm label-success"> 成功 </span> </td>
-                            <td> 8:00 </td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 2019-10-19 08:00:00</td>
-                            <td> 100% </td>
-                        </tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
+                    <tr>
+                        <td> 资金系统</td>
+                        <td><span class="label label-sm label-success"> 成功 </span></td>
+                        <td> 8:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 2019-10-19 08:00:00</td>
+                        <td> 100%</td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
             <!--  amiddboxttop end-->
-                <div class="amidd_bott">
-                  <div class="amiddboxtbott1 fl" >
+            <div class="amidd_bott">
+                <div class="amiddboxtbott1 fl">
                     <h2 class="tith2 pt1">系统演练次数TOP5</h2>
-                    <div class="pvr fl liwp lpeftb2otcont1" style="height:86%;" >
-                      <ul>
-                        <li class="hot1">1</li>
-                        <li class="hot2">2</li>
-                        <li class="hot3">3</li>
-                        <li class="hot4">4</li>
-                        <li class="hot5">5</li>
-                      </ul>
-                      <div id="pleftbox2bott_cont"class="lpeftb2otcont"  style="height:100%;"></div>
+                    <div class="pvr fl liwp lpeftb2otcont1" style="height:86%;">
+                        <ul>
+                            <li class="hot1">1</li>
+                            <li class="hot2">2</li>
+                            <li class="hot3">3</li>
+                            <li class="hot4">4</li>
+                            <li class="hot5">5</li>
+                        </ul>
+                        <div id="pleftbox2bott_cont" class="lpeftb2otcont" style="height:100%;"></div>
                     </div>
-                  </div>
+                </div>
 
                 <div class="amiddboxtbott2 fl"><h2 class="tith2 pt1">平均RTO趋势</h2>
                     <div id="amiddboxtbott2" class="amiddboxtbott2content"></div>
                 </div>
             </div>
             <!-- amidd_bott end -->
-          </div>
+        </div>
         <!-- mrbox_top end -->
         <div class="mrbox_top_right">
-          <div class="arightboxtop"><h2 class="tith2">演练日志</h2>
-            <div class="lefttoday_tit"></div>
-            <div class="left2_table">
-               <ul>
-                    <li>
-                    <p class="fl"><b>票据系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li class="bg">
-                    <p class="fl"><b>财务系统</b><br>
-                        ***脚本出错。<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li>
-                    <p class="fl"><b>资金系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li class="bg">
-                    <p class="fl"><b>资金系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li>
-                    <p class="fl"><b>资金系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li class="bg">
-                    <p class="fl"><b>资金系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li>
-                    <p class="fl"><b>资金系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li class="bg">
-                    <p class="fl"><b>资金系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-                    <li>
-                    <p class="fl"><b>资金系统</b><br>
-                      演练完成<br>
-                    </p>
-                    <p class="fr pt17">2018-06-22 08:12:59</p>
-                    </li>
-               </ul>
-            </div>
+            <div class="arightboxtop"><h2 class="tith2">演练日志</h2>
+                <div class="lefttoday_tit"></div>
+                <div class="left2_table">
+                    <ul id="drill_log">
+                        <li>
+                            <p class="fl"><b>票据系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li class="bg">
+                            <p class="fl"><b>财务系统</b><br>
+                                ***脚本出错。<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li>
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li class="bg">
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li>
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li class="bg">
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li>
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li class="bg">
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li>
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li class="bg">
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li>
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li class="bg">
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                        <li>
+                            <p class="fl"><b>资金系统</b><br>
+                                演练完成<br>
+                            </p>
+                            <p class="fr pt17">2018-06-22 08:12:59</p>
+                        </li>
+                    </ul>
+                </div>
 
-          </div>
+            </div>
             <div class="arightboxbott"><h2 class="tith2 ">最近7日演练次数</h2>
-              <div class="lefttoday_tit"><p class="fl">状态：已调节</p><p class="fr">时间：2018-06-14</p></div>
-              <div id="arightboxbott" class="arightboxbottcont" style=""></div>
+                <div class="lefttoday_tit"><p class="fl">状态：已调节</p>
+                    <p class="fr">时间：2018-06-14</p></div>
+                <div id="arightboxbott" class="arightboxbottcont" style=""></div>
             </div>
         </div>
         <!-- mrbox_top_right end -->
-      </div>
-
     </div>
+
 </div>
+</div>
+<!--
 
-                <script type="text/javascript">
-                        var myChart = echarts.init(document.getElementById('aleftboxtmidd'));
-                        option = {
-                          color:['#76c4bf','#e5ffc7','#508097','#4d72d9'],
-                            backgroundColor: 'rgba(1,202,217,.2)',
-                            grid: {
-                											left:10,
-                											right:40,
-                											top:20,
-                											bottom:0,
-                                      containLabel: true
-                										},
-                                      // legend: {
-                                      //     x : 'center',
-                                      //     y : '70%',
-                                      //     textStyle:{
-                                      //       fontSize: 10,
-                                      //       color:'rgba(255,255,255,.7)'
-                                      //     },
-                                      //     data:['康定市','丹巴县','甘孜县','理塘县']
-                                      // },
-                                      calculable : true,
-                                      series : [
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('aleftboxtmidd'));
+    option = {
+        color: ['#76c4bf', '#e5ffc7', '#508097', '#4d72d9'],
+        backgroundColor: 'rgba(1,202,217,.2)',
+        grid: {
+            left: 10,
+            right: 40,
+            top: 20,
+            bottom: 0,
+            containLabel: true
+        },
+        // legend: {
+        //     x : 'center',
+        //     y : '70%',
+        //     textStyle:{
+        //       fontSize: 10,
+        //       color:'rgba(255,255,255,.7)'
+        //     },
+        //     data:['康定市','丹巴县','甘孜县','理塘县']
+        // },
+        calculable: true,
+        series: [
 
-                                          {
-                                              name:'面积模式',
-                                              type:'pie',
-                                              radius : [5, 60],
-                                              center : ['50%', '55%'],
-                                              roseType : 'area',
-                                              data:[
-                                                  {value:10, name:'康定市'},
-                                                  {value:5, name:'丹巴县'},
-                                                  {value:15, name:'甘孜县'},
-                                                  {value:25, name:'理塘县'}
-                                              ]
-                                          }
-                                      ]
-                                  };
-                        myChart.setOption(option);
-                    </script>
-                        <script type="text/javascript">
-                                var myChart = echarts.init(document.getElementById('lpeftbot'));
-                                option = {
-                                  color:['#00b7ee','#d2d17c', '#5578cf', '#5ebbeb', '#d16ad8','#f8e19a',  '#00b7ee', '#81dabe','#5fc5ce'],
-                                    backgroundColor: 'rgba(1,202,217,.2)',
-                                    grid: {
-                                                                    left:20,
-                                                                    right:20,
-                                                                    top:0,
-                                                                    bottom:20
-                                                                },
-                                            legend: {
-                                              top:10,
-                                              textStyle:{
-                                                fontSize: 10,
-                                                color:'rgba(255,255,255,.7)'
-                                              },
-                                                data:['成功','失败']
-                                            },
-                                            series : [
-                                     {
-                                         name: '访问来源',
-                                         type: 'pie',
-                                         radius : '55%',
-                                         center: ['50%', '55%'],
-                                         data:[
-                                             {value:335, name:'成功'},
-                                             {value:10, name:'失败'}
+            {
+                name: '面积模式',
+                type: 'pie',
+                radius: [5, 60],
+                center: ['50%', '55%'],
+                roseType: 'area',
+                data: [
+                    {value: 10, name: '康定市'},
+                    {value: 5, name: '丹巴县'},
+                    {value: 15, name: '甘孜县'},
+                    {value: 25, name: '理塘县'}
+                ]
+            }
+        ]
+    };
+    myChart.setOption(option);
+</script>
 
-                                         ],
-                                         itemStyle: {
-                                             emphasis: {
-                                                 shadowBlur: 10,
-                                                 shadowOffsetX: 0,
-                                                 shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                             }
-                                         }
-                                     }
-                                 ]
-                                };
-                                myChart.setOption(option);
-                            </script>
-                        <script type="text/javascript">
-                                                    var myChart = echarts.init(document.getElementById('pleftbox2bott_cont'));
-                                                    option = {
-                                                      color:['#7ecef4'],
-                                                        backgroundColor: 'rgba(1,202,217,.2)',
-                                                        grid: {
-                                                                                        left:40,
-                                                                                        right:20,
-                                                                                        top:30,
-                                                                                        bottom:0,
-                                                                  containLabel: true
-                                                                                    },
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('lpeftbot'));
+    option = {
+        color: ['#00b7ee', '#d2d17c', '#5578cf', '#5ebbeb', '#d16ad8', '#f8e19a', '#00b7ee', '#81dabe', '#5fc5ce'],
+        backgroundColor: 'rgba(1,202,217,.2)',
+        grid: {
+            left: 20,
+            right: 20,
+            top: 0,
+            bottom: 20
+        },
+        legend: {
+            top: 10,
+            textStyle: {
+                fontSize: 10,
+                color: 'rgba(255,255,255,.7)'
+            },
+            data: ['成功', '失败']
+        },
+        series: [
+            {
+                name: '访问来源',
+                type: 'pie',
+                radius: '55%',
+                center: ['50%', '55%'],
+                data: [
+                    {value: 335, name: '成功'},
+                    {value: 10, name: '失败'}
 
-                                                              xAxis: {
-                                                                  type: 'value',
-                                                                  axisLine:{
-                                                                   lineStyle:{
-                                                                     color:'rgba(255,255,255,0)'
-                                                                   }
-                                                                 },
-                                                                 splitLine:{
-                                                                   lineStyle:{
-                                                                     color:'rgba(255,255,255,0)'
-                                                                   }
-                                                                 },
-                                                                 axisLabel:{
-                                                                     color:"rgba(255,255,255,0)"
-                                                                 },
-                                                                  boundaryGap: [0, 0.01]
-                                                              },
-                                                              yAxis: {
-                                                                  type: 'category',
-                                                                  axisLine:{
-                                                                   lineStyle:{
-                                                                     color:'rgba(255,255,255,.5)'
-                                                                   }
-                                                                 },
-                                                                 splitLine:{
-                                                                   lineStyle:{
-                                                                     color:'rgba(255,255,255,.1)'
-                                                                   }
-                                                                 },
-                                                                 axisLabel:{
-                                                                     color:"rgba(255,255,255,.5)"
-                                                                 },
-                                                                  data: ['票据系统','资金系统','财务系统','**系统','**系统']
-                                                              },
-                                                              series: [
-                                                                  {
-                                                                      name: '2011年',
-                                                                      type: 'bar',
-                                                                      barWidth :20,
-                                                                      itemStyle: {
-                                                                          normal: {
-                                                                              color: new echarts.graphic.LinearGradient(
-                                                                                  1, 0, 0, 1,
-                                                                                  [
-                                                                                      {offset: 0, color: 'rgba(230,253,139,.7)'},
-                                                                                      {offset: 1, color: 'rgba(41,220,205,.7)'}
-                                                                                  ]
-                                                                              )
-                                                                          }
-                                                                      },
-                                                                      data: [18203, 23489, 29034, 104970, 131744]
-                                                                  }
-                                                              ]
-                                                          };
-                                                    myChart.setOption(option);
-                                                </script>
+                ],
+                itemStyle: {
+                    emphasis: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }
+        ]
+    };
+    myChart.setOption(option);
+</script>
 
-                        <script type="text/javascript">
-                                var myChart = echarts.init(document.getElementById('amiddboxtbott2'));
-                                option = {
-                                    backgroundColor: 'rgba(1,202,217,.2)',
-                                    grid: {
-                        											left:60,
-                        											right:60,
-                        											top:50,
-                        											bottom:40
-                        										},
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('pleftbox2bott_cont'));
+    option = {
+        color: ['#7ecef4'],
+        backgroundColor: 'rgba(1,202,217,.2)',
+        grid: {
+            left: 40,
+            right: 20,
+            top: 30,
+            bottom: 0,
+            containLabel: true
+        },
 
-                              toolbox: {
-                                  feature: {
-                                      dataView: {show: true, readOnly: false},
-                                      magicType: {show: true, type: ['line', 'bar']},
-                                      restore: {show: true},
-                                      saveAsImage: {show: true}
-                                  }
-                              },
-                              legend: {
-                                top:10,
-                                textStyle:{
-                                  fontSize: 10,
-                                  color:'rgba(255,255,255,.7)'
-                                },
-                                  data:['平均RTO']
-                              },
-                              xAxis: [
-                                  {
-                                      type: 'category',
-                                      axisLine:{
-                												lineStyle:{
-                													color:'rgba(255,255,255,.2)'
-                												}
-                											},
-                											splitLine:{
-                												lineStyle:{
-                													color:'rgba(255,255,255,.1)'
-                												}
-                											},
-                											axisLabel:{
-                													color:"rgba(255,255,255,.7)"
-                											},
+        xAxis: {
+            type: 'value',
+            axisLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,0)'
+                }
+            },
+            splitLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,0)'
+                }
+            },
+            axisLabel: {
+                color: "rgba(255,255,255,0)"
+            },
+            boundaryGap: [0, 0.01]
+        },
+        yAxis: {
+            type: 'category',
+            axisLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,.5)'
+                }
+            },
+            splitLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,.1)'
+                }
+            },
+            axisLabel: {
+                color: "rgba(255,255,255,.5)"
+            },
+            data: ['票据系统', '资金系统', '财务系统', '**系统', '**系统']
+        },
+        series: [
+            {
+                name: '2011年',
+                type: 'bar',
+                barWidth: 20,
+                itemStyle: {
+                    normal: {
+                        color: new echarts.graphic.LinearGradient(
+                            1, 0, 0, 1,
+                            [
+                                {offset: 0, color: 'rgba(230,253,139,.7)'},
+                                {offset: 1, color: 'rgba(41,220,205,.7)'}
+                            ]
+                        )
+                    }
+                },
+                data: [18203, 23489, 29034, 104970, 131744]
+            }
+        ]
+    };
+    myChart.setOption(option);
+</script>
 
-                                      data: ['10-1','10-2','10-3','10-4','10-5','10-6','10-7','10-8','10-9','10-10','10-11','10-12'],
-                                      axisPointer: {
-                                          type: 'shadow'
-                                      }
-                                  }
-                              ],
-                              yAxis: [
-                                  {
-                                      type: 'value',
-                                      name: '',
-                                      min: 0,
-                                      max: 30,
-                                      interval: 5,
-                                      axisLine:{
-                												lineStyle:{
-                													color:'rgba(255,255,255,.3)'
-                												}
-                											},
-                											splitLine:{
-                												lineStyle:{
-                													color:'rgba(255,255,255,.1)'
-                												}
-                											},
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('amiddboxtbott2'));
+    option = {
+        backgroundColor: 'rgba(1,202,217,.2)',
+        grid: {
+            left: 60,
+            right: 60,
+            top: 50,
+            bottom: 40
+        },
 
-                                      axisLabel: {
-                                          formatter: '{value} min'
-                                      }
-                                  },
+        toolbox: {
+            feature: {
+                dataView: {show: true, readOnly: false},
+                magicType: {show: true, type: ['line', 'bar']},
+                restore: {show: true},
+                saveAsImage: {show: true}
+            }
+        },
+        legend: {
+            top: 10,
+            textStyle: {
+                fontSize: 10,
+                color: 'rgba(255,255,255,.7)'
+            },
+            data: ['平均RTO']
+        },
+        xAxis: [
+            {
+                type: 'category',
+                axisLine: {
+                    lineStyle: {
+                        color: 'rgba(255,255,255,.2)'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: 'rgba(255,255,255,.1)'
+                    }
+                },
+                axisLabel: {
+                    color: "rgba(255,255,255,.7)"
+                },
 
-                              ],
-                              series: [
+                data: ['10-1', '10-2', '10-3', '10-4', '10-5', '10-6', '10-7', '10-8', '10-9', '10-10', '10-11', '10-12'],
+                axisPointer: {
+                    type: 'shadow'
+                }
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                name: '',
+                min: 0,
+                max: 30,
+                interval: 5,
+                axisLine: {
+                    lineStyle: {
+                        color: 'rgba(255,255,255,.3)'
+                    }
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: 'rgba(255,255,255,.1)'
+                    }
+                },
 
+                axisLabel: {
+                    formatter: '{value} min'
+                }
+            },
 
-                                  {
-                                      name:'平均RTO',
-                                      type:'line',
-                                      itemStyle: {
-                                                      normal: {
-                                                          color: new echarts.graphic.LinearGradient(
-                                                              0, 0, 0, 1,
-                                                              [
-                                                                  {offset: 0, color: '#fffb34'},
-                                                                  {offset: 1, color: '#fffb34'}
-                                                              ]
-                                                          )
-                                                      }
-                                                  },
-                                      yAxisIndex: 0,
-                                      data:[2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2]
-                                  }
-                              ]
-                          };
-                                myChart.setOption(option);
-                            </script>
-                            <script type="text/javascript">
-                                    var myChart = echarts.init(document.getElementById('arightboxbott'));
-                                    option = {
-                                      color:['#7de494','#7fd7b1', '#5578cf', '#5ebbeb', '#d16ad8','#f8e19a',  '#00b7ee', '#81dabe','#5fc5ce'],
-                                        backgroundColor: 'rgba(1,202,217,.2)',
+        ],
+        series: [
+            {
+                name: '平均RTO',
+                type: 'line',
+                itemStyle: {
+                    normal: {
+                        color: new echarts.graphic.LinearGradient(
+                            0, 0, 0, 1,
+                            [
+                                {offset: 0, color: '#fffb34'},
+                                {offset: 1, color: '#fffb34'}
+                            ]
+                        )
+                    }
+                },
+                yAxisIndex: 0,
+                data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2]
+            }
+        ]
+    };
+    myChart.setOption(option);
+</script>
+<script type="text/javascript">
+    var myChart = echarts.init(document.getElementById('arightboxbott'));
+    option = {
+        color: ['#7de494', '#7fd7b1', '#5578cf', '#5ebbeb', '#d16ad8', '#f8e19a', '#00b7ee', '#81dabe', '#5fc5ce'],
+        backgroundColor: 'rgba(1,202,217,.2)',
 
-                                        grid: {
-                                            left: '5%',
-                                            right: '8%',
-                                            bottom: '7%',
-                                            top:'8%',
-                                            containLabel: true
-                                        },
-                                        toolbox: {
-                                            feature: {
-                                                saveAsImage: {}
-                                            }
-                                        },
-                                        xAxis: {
-                                            type: 'category',
-                                            boundaryGap: false,
-                                            axisLine:{
-                                              lineStyle:{
-                                                color:'rgba(255,255,255,.2)'
-                                              }
-                                            },
-                                            splitLine:{
-                                              lineStyle:{
-                                                color:'rgba(255,255,255,.1)'
-                                              }
-                                            },
-                                            axisLabel:{
-                                                color:"rgba(255,255,255,.7)"
-                                            },
-                                            data: ['6-08','6-09','6-10','6-11','6-12','6-13','6-14']
-                                        },
-                                        yAxis: {
-                                            type: 'value',
-                                            axisLine:{
-                                              lineStyle:{
-                                                color:'rgba(255,255,255,.2)'
-                                              }
-                                            },
-                                            splitLine:{
-                                              lineStyle:{
-                                                color:'rgba(255,255,255,.1)'
-                                              }
-                                            },
-                                            axisLabel:{
-                                                color:"rgba(255,255,255,.7)"
-                                            },
-                                        },
-                                        series: [
-                                            {
-                                                name:'2014年',
-                                                type:'line',
-                                                stack: '总量',
-                                                  areaStyle: {normal: {}},
-                                                data:[120, 132, 101, 134, 90, 230, 210]
-                                            }
+        grid: {
+            left: '5%',
+            right: '8%',
+            bottom: '7%',
+            top: '8%',
+            containLabel: true
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {}
+            }
+        },
+        xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            axisLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,.2)'
+                }
+            },
+            splitLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,.1)'
+                }
+            },
+            axisLabel: {
+                color: "rgba(255,255,255,.7)"
+            },
+            data: ['6-08', '6-09', '6-10', '6-11', '6-12', '6-13', '6-14']
+        },
+        yAxis: {
+            type: 'value',
+            axisLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,.2)'
+                }
+            },
+            splitLine: {
+                lineStyle: {
+                    color: 'rgba(255,255,255,.1)'
+                }
+            },
+            axisLabel: {
+                color: "rgba(255,255,255,.7)"
+            },
+        },
+        series: [
+            {
+                name: '2014年',
+                type: 'line',
+                stack: '总量',
+                areaStyle: {normal: {}},
+                data: [4, 12, 45, 34, 3, 5, 21]
+            }
 
-                                        ]
-                                        };
-                                    myChart.setOption(option);
-                                </script>
-
-
-
-
+        ]
+    };
+    myChart.setOption(option);
+</script>
+-->
 </body>
 </html>
