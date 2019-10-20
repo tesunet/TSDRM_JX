@@ -733,7 +733,7 @@ def index(request, funid):
         return HttpResponseRedirect("/login")
 
 
-def monitor(request,):
+def monitor(request, ):
     if request.user.is_authenticated():
         global funlist
         # 最新操作
@@ -771,6 +771,7 @@ def monitor(request,):
 
         success_rate = "%.0f" % (len(successful_processruns) / len(
             all_processrun_objs) * 100) if all_processrun_objs and successful_processruns else 0
+
         last_processrun_time = successful_processruns.last().starttime if successful_processruns else ""
         all_processruns = len(processrun_times_obj) if processrun_times_obj else 0
 
@@ -857,10 +858,87 @@ def monitor(request,):
         # 右上角消息任务
         return render(request, "monitor.html",
                       {'username': request.user.userinfo.fullname, "alltask": alltask, "homepage": True,
-                        "success_rate": success_rate,
+                       "success_rate": success_rate,
                        "all_processruns": all_processruns, "last_processrun_time": last_processrun_time,
                        "curren_processrun_info_list": curren_processrun_info_list,
                        "today_process_run_length": today_process_run_length, "all_process": all_process})
+    else:
+        return HttpResponseRedirect("/login")
+
+
+def get_monitor_data(request):
+    if request.user.is_authenticated():
+        drill_day = []
+
+        # 最近7日演练次数
+        drill_times = []
+
+        for i in range(0, 7)[::-1]:
+            today_datetime = datetime.datetime.now()
+            if i == 0:
+                pass
+            else:
+                today_datetime = today_datetime - datetime.timedelta(days=i)
+            today_drills = ProcessRun.objects.exclude(state__in=["RUN", "REJECT", "9"]).filter(
+                starttime__startswith=today_datetime.date())
+            drill_day.append("{0:%m-%d}".format(today_datetime.date()))
+            drill_times.append(len(today_drills))
+
+        week_drill = {
+            "drill_day": drill_day,
+            "drill_times": drill_times
+        }
+
+        drill_rto = [5.1, 5.8, 6.89, 4.56, 4.78, 5.78, 6.9]
+        avgRTO = {
+            "drill_day": drill_day,
+            "drill_rto": drill_rto
+        }
+
+        # 系统演练次数TOP5
+        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle")
+        drill_name = []
+        drill_time = []
+        for process in all_process:
+            process_runs = process.processrun_set.exclude(state__in=["RUN", "REJECT", "9"])
+            cur_drill_time = len(process_runs)
+            drill_name.append(process.name)
+            drill_time.append(cur_drill_time)
+
+        drill_top_time = {
+            "drill_name": drill_name[:5] if len(drill_name) > 5 else drill_name,
+            "drill_time": drill_time[:5] if len(drill_time) > 5 else drill_time
+        }
+        # 演练成功率
+        all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP"))
+        successful_processruns = ProcessRun.objects.filter(state="DONE")
+
+        success_rate = "%.0f" % (len(successful_processruns) / len(
+            all_processrun_objs) * 100) if all_processrun_objs and successful_processruns else 0
+        drill_rate = [success_rate, 100 - int(success_rate)]
+
+        # 演练监控
+        drill_monitor = []
+        all_drill_process_runs = ProcessRun.objects.exclude(state="9").order_by("-starttime")
+        for num, drill_process_run in enumerate(all_drill_process_runs):
+            if num == 14:
+                break
+            drill_monitor.append({
+                "process_name": drill_process_run.process.name,
+                "state": drill_process_run.state,
+                "schedule_time": "",
+                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.starttime),
+                "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.endtime),
+                "percent": "100%"
+            })
+
+        return JsonResponse({
+            "week_drill": week_drill,
+            "avgRTO": avgRTO,
+            "drill_top_time": drill_top_time,
+            "drill_rate": drill_rate,
+            "drill_monitor": drill_monitor
+        })
     else:
         return HttpResponseRedirect("/login")
 
@@ -921,7 +999,8 @@ def get_process_run_facts(request):
             # 演练一次成功就算成功
             today_date = datetime.datetime.now().date()
 
-            all_process_run = cur_process.processrun_set.filter(state__in=["DONE", "STOP", "ERROR"]).filter(starttime__startswith=today_date)
+            all_process_run = cur_process.processrun_set.filter(state__in=["DONE", "STOP", "ERROR"]).filter(
+                starttime__startswith=today_date)
             process_run_today = 2
             for cur_process_run in all_process_run:
                 if cur_process_run.state == "DONE":
