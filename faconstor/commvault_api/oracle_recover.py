@@ -4177,7 +4177,7 @@ def run(origin, target, instance, processrun_id):
     credit_result = {}
     recovery_result = {}
 
-    credit_sql = "SELECT t.content FROM {db_name}.faconstor_vendor t;".format(**{db_name})
+    credit_sql = "SELECT t.content FROM {db_name}.faconstor_vendor t;".format(**{"db_name": db_name})
     recovery_sql = """SELECT recover_time, browse_job_id FROM {db_name}.faconstor_processrun
                       WHERE state!='9' AND id={processrun_id};""".format(
         **{"processrun_id": processrun_id, "db_name": db_name})
