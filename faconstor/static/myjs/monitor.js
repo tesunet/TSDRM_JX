@@ -401,6 +401,9 @@ $(document).ready(function () {
                 } else if (data.drill_monitor[i].state == "REJECT") {
                     status_label = "label-warning";
                     status_name = "已取消";
+                } else {
+                    status_label = "label-primary";
+                    status_name = "未演练";
                 }
 
                 $("#drill_monitor").append('<tr>\n' +
