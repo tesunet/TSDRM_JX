@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^get_process_index_data/$', get_process_index_data),
     url(r'^monitor/$', monitor),
     url(r'^get_monitor_data/$', get_monitor_data),
+    url(r'^get_clients_status/$', get_clients_status),
 
     # 用户登录
     url(r'^login/$', login),

@@ -351,9 +351,28 @@ $(document).ready(function () {
             // 演练监控
             $("#drill_monitor").empty();
             for (var i = 0; i < data.drill_monitor.length; i++) {
+                var status_label = "",
+                    status_name = "";
+                if (data.drill_monitor[i].state == "DONE") {
+                    status_label = "label-success";
+                    status_name = "成功";
+                } else if (data.drill_monitor[i].state == "STOP") {
+                    status_label = "label-warning";
+                    status_name = "终止";
+                } else if (data.drill_monitor[i].state == "ERROR") {
+                    status_label = "label-danger";
+                    status_name = "错误";
+                } else if (data.drill_monitor[i].state == "RUN") {
+                    status_label = "label-info";
+                    status_name = "运行中";
+                } else if (data.drill_monitor[i].state == "REJECT") {
+                    status_label = "label-warning";
+                    status_name = "已取消";
+                }
+
                 $("#drill_monitor").append('<tr>\n' +
                     '    <td> ' + data.drill_monitor[i].process_name + '</td>\n' +
-                    '    <td><span class="label label-sm label-success"> 成功 </span></td>\n' +
+                    '    <td><span class="label label-sm ' + status_label + '"> ' + status_name + ' </span></td>\n' +
                     '    <td> 8:00</td>\n' +
                     '    <td> ' + data.drill_monitor[i].start_time + '</td>\n' +
                     '    <td> ' + data.drill_monitor[i].end_time + '</td>\n' +
@@ -368,19 +387,60 @@ $(document).ready(function () {
                 if (i % 2 == 0) {
                     drill_log_class == ' class="bg"';
                 }
-                $("#drill_log").append('<li '+ drill_log_class +'>\n' +
+                $("#drill_log").append('<li ' + drill_log_class + '>\n' +
                     '    <p class="fl"><b>' + data.task_list[i].process_name + '</b><br>\n' +
                     '        ' + data.task_list[i].content + '<br>\n' +
                     '    </p>\n' +
                     '    <p class="fr pt17">' + data.task_list[i].start_time + '</p>\n' +
                     '</li>');
             }
-        },
-        // error: function (e) {
-        //     alert("加载失败，请于管理员联系。");
-        // }
-    });
 
+            // 今日作业
+            $("#running_job").text(data.today_job.running_job);
+            $("#success_job").text(data.today_job.success_job);
+            $("#error_job").text(data.today_job.error_job);
+            $("#not_running").text(data.today_job.not_running);
+
+            // 客户端状态
+            $("#service_status").text(data.clients_status.service_status);
+            $("#net_status").text(data.clients_status.net_status);
+            $("#all_clients").text(data.clients_status.all_clients);
+            $("#error_clients").text(data.clients_status.error_clients);
+        },
+    });
+    $.ajax({
+        type: "POST",
+        url: "../get_clients_status/",
+        data: {
+            "csrfmiddlewaretoken": csrfToken
+        },
+        success: function (data) {
+            // 客户端状态
+            $("#service_status").text(data.clients_status.service_status);
+            $("#net_status").text(data.clients_status.net_status);
+            $("#all_clients").text(data.clients_status.all_clients);
+            $("#error_clients").text(data.clients_status.error_clients);
+
+            // 报警客户端
+            var warning_client_num = 0;
+            var whole_list = data.data;
+
+            for (var i = 0; i < whole_list.length; i++) {
+                // 报警客户端
+                for (var j = 0; j < agent_job_list.length; j++) {
+                    if (agent_job_list[j].job_backup_status.indexOf("失败") != -1) {
+                        warning_client_num += 1;
+                        break
+                    }
+                }
+            }
+
+            $("#warning_client_num").text(warning_client_num);
+            if (warning_client_num > 0) {
+                $("#warning_client_num").css("color", "red");
+            }
+        },
+    });
 });
 
 

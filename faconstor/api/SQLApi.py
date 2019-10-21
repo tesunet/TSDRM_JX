@@ -1,25 +1,25 @@
 import pymssql
 import datetime
 import copy
-from TSDRM import settings
+# from TSDRM import settings
 # from faconstor.CVApi_bak import *
 import re
 
 
 class DataMonitor(object):
     def __init__(self, credit):
+        self.msg = ""
         self.host = credit["host"]
         self.user = credit["user"]
         self.password = credit["password"]
         self.database = credit["database"]
         self._conn = self._connection
-        self.msg = ""
 
     @property
     def _connection(self):
         try:
             connection = pymssql.connect(host=self.host, user=self.user, password=self.password, database=self.database)
-        except pymssql.OperationalError as e:
+        except Exception as e:
             self.msg = "链接数据库失败。"
             return None
         else:
@@ -1262,7 +1262,6 @@ if __name__ == '__main__':
     # ret = dm.get_all_install_clients()
     ret = dm.get_oracle_backup_job_list("oracle_rac")
     # ret = dm.get_job_controller()
-    print(len(ret), "\n", ret)
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients_for_info()
     # ret = dm.custom_all_backup_content()

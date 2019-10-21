@@ -885,7 +885,8 @@ def get_monitor_data(request):
             drill_times.append(len(today_drills))
 
             # 平均RTO趋势
-            cur_client_succeed_process = ProcessRun.objects.filter(state="DONE").filter(starttime__startswith=today_datetime.date())
+            cur_client_succeed_process = ProcessRun.objects.filter(state="DONE").filter(
+                starttime__startswith=today_datetime.date())
 
             if cur_client_succeed_process:
                 rto_sum_seconds = 0
@@ -898,7 +899,7 @@ def get_monitor_data(request):
                     delta_time = get_process_run_rto(processrun)
                     rto_sum_seconds += delta_time
 
-                rto = "%.2f"%(rto_sum_seconds / len(cur_client_succeed_process) / 60)
+                rto = "%.2f" % (rto_sum_seconds / len(cur_client_succeed_process) / 60)
 
                 drill_rto.append(rto)
             else:
@@ -942,20 +943,32 @@ def get_monitor_data(request):
         for num, drill_process_run in enumerate(all_drill_process_runs):
             if num == 14:
                 break
+
+            done_step_run = drill_process_run.steprun_set.filter(state="DONE")
+            if done_step_run.exists():
+                done_num = len(done_step_run)
+            else:
+                done_num = 0
+
+            # 构造展示步骤
+            process_rate = "%02d" % (done_num / len(drill_process_run.steprun_set.all()) * 100)
+
             drill_monitor.append({
                 "process_name": drill_process_run.process.name,
                 "state": drill_process_run.state,
                 "schedule_time": "",
-                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.starttime) if drill_process_run.starttime else "",
-                "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(drill_process_run.endtime) if drill_process_run.endtime else "",
-                "percent": "100%"
+                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(
+                    drill_process_run.starttime) if drill_process_run.starttime else "",
+                "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(
+                    drill_process_run.endtime) if drill_process_run.endtime else "",
+                "percent": "{0}%".format(process_rate)
             })
 
         # 演练日志
         task_list = []
         all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"])
         for num, process_task in enumerate(all_process_tasks):
-            if num == 9:
+            if num == 15:
                 break
             process_name = ""
             try:
@@ -969,16 +982,78 @@ def get_monitor_data(request):
                 "content": process_task.content
             })
 
+        # 今日作业
+        today_process_jobs = ProcessRun.objects.exclude(state="9").filter(
+            starttime__startswith=datetime.datetime.now().date())
+        running_job, success_job, error_job = 0, 0, 0
+        for job in today_process_jobs:
+            if job.state == "RUN":
+                running_job += 1
+            if job.state == "ERROR":
+                error_job += 1
+            if job.state == "DONE":
+                success_job += 1
+        # 未启动流程
+        all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle")
+        running_process = 0
+        for process in all_processes:
+            process_run = process.processrun_set.exclude(state="9").filter(starttime__startswith=datetime.datetime.now().date())
+            if process_run.exists():
+                running_process += 1
+        not_running = 0
+        try:
+            not_running = len(all_processes) - running_process
+        except:
+            pass
+
         return JsonResponse({
             "week_drill": week_drill,
             "avgRTO": avgRTO,
             "drill_top_time": drill_top_time,
             "drill_rate": drill_rate,
             "drill_monitor": drill_monitor,
-            "task_list": task_list
+            "task_list": task_list,
+            "today_job": {
+                "running_job": running_job,
+                "success_job": success_job,
+                "error_job": error_job,
+                "not_running": not_running
+            },
         })
     else:
         return HttpResponseRedirect("/login")
+
+
+def get_clients_status(request):
+    if request.user.is_authenticated():
+        # 客户端状态
+        dm = SQLApi.CustomFilter(settings.sql_credit)
+
+        if dm.msg == "链接数据库失败。":
+            service_status = "中断"
+            net_status = "中断"
+        else:
+            service_status = "正常"
+            net_status = "正常"
+
+        # 客户端列表
+        client_list = Origin.objects.exclude(state=9).values_list("client_name")
+        client_name_list = [client_name[0] for client_name in client_list]
+        print(client_name_list)
+        # 报警客户端
+        whole_backup_list = dm.custom_concrete_job_list(client_name_list)
+
+        return JsonResponse({
+            "clients_status": {
+                "service_status": service_status,
+                "net_status": net_status,
+                "all_clients": len(client_list),
+                "whole_backup_list": whole_backup_list
+            }
+        })
+    else:
+        return HttpResponseRedirect("/login")
+
 
 
 def get_process_run_rto(processrun):
