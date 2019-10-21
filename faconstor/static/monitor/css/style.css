@@ -344,6 +344,9 @@ i.redr{background-image:url(../img/ricon1.png);}
 .label-danger {
     background-color: #d9534f;
 }
+.label-primary {
+    background-color: #337ab7;
+}
 caption, th {
     text-align: center;
 }

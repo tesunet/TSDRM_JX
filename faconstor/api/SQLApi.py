@@ -43,6 +43,13 @@ class DataMonitor(object):
                 # self._conn.close()
         return result
 
+    def execute(self, temp_sql):
+        result = []
+        if self._conn:
+            with self._conn.cursor() as cursor:
+                cursor.execute(temp_sql)
+                self._conn.commit()
+
 
 class CVApi(DataMonitor):
     def get_all_install_clients(self):
@@ -823,6 +830,16 @@ class CVApi(DataMonitor):
                 "delayReason": i[12]
             })
         return job_controller_list
+
+    def updateCVUTC(self):
+        utc_sql = """SELECT [timeZone] 
+                                FROM [CommServ].[dbo].[APP_CommCell] where [id]=2;"""
+        content = self.fetch_all(utc_sql)
+        job_controller_list = []
+        if len(content)>0 and content[0][0] != "0:-480:(UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐":
+            update_sql = """update [CommServ].[dbo].[APP_CommCell] set [timeZone] =N'0:-480:(UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐'
+                                         where [id]=2;"""
+            self.execute(update_sql)
 
 
 class CustomFilter(CVApi):
