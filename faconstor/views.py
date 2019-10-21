@@ -953,10 +953,22 @@ def get_monitor_data(request):
             # 构造展示步骤
             process_rate = "%02d" % (done_num / len(drill_process_run.steprun_set.all()) * 100)
 
+            # 策略时间
+            cur_schedule = ""
+            try:
+                process = drill_process_run.process
+                process_schedule = ProcessSchedule.objects.filter(process=process).exclude(state="9")
+                if process_schedule.exists():
+                    cur_schedule_hour = process_schedule[0].dj_periodictask.crontab.hour
+                    cur_schedule_minute = process_schedule[0].dj_periodictask.crontab.minute
+                    cur_schedule = "{0}:{1}".format(cur_schedule_hour, cur_schedule_minute)
+            except:
+                pass
+
             drill_monitor.append({
                 "process_name": drill_process_run.process.name,
                 "state": drill_process_run.state,
-                "schedule_time": "",
+                "schedule_time": cur_schedule,
                 "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(
                     drill_process_run.starttime) if drill_process_run.starttime else "",
                 "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(
@@ -989,7 +1001,7 @@ def get_monitor_data(request):
         for job in today_process_jobs:
             if job.state == "RUN":
                 running_job += 1
-            if job.state == "ERROR":
+            if job.state in ["ERROR", "STOP"]:
                 error_job += 1
             if job.state == "DONE":
                 success_job += 1
