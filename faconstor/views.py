@@ -612,6 +612,9 @@ def index(request, funid):
         """)
         rows = cursor.fetchall()
 
+        cvsql = SQLApi.CVApi(settings.sql_credit)
+        cvsql.updateCVUTC()
+
         if len(rows) > 0:
             for task in rows:
                 time = task[0]
