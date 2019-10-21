@@ -966,7 +966,7 @@ def get_monitor_data(request):
 
         # 演练日志
         task_list = []
-        all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"])
+        all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"]).order_by("-starttime")
         for num, process_task in enumerate(all_process_tasks):
             if num == 15:
                 break
@@ -1039,7 +1039,6 @@ def get_clients_status(request):
         # 客户端列表
         client_list = Origin.objects.exclude(state=9).values_list("client_name")
         client_name_list = [client_name[0] for client_name in client_list]
-        print(client_name_list)
         # 报警客户端
         whole_backup_list = dm.custom_concrete_job_list(client_name_list)
 
