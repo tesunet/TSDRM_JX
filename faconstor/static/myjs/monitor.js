@@ -406,7 +406,7 @@ $(document).ready(function () {
                 $("#drill_monitor").append('<tr>\n' +
                     '    <td> ' + data.drill_monitor[i].process_name + '</td>\n' +
                     '    <td><span class="label label-sm ' + status_label + '"> ' + status_name + ' </span></td>\n' +
-                    '    <td> 8:00</td>\n' +
+                    '    <td> ' + data.drill_monitor[i].schedule_time + '</td>\n' +
                     '    <td> ' + data.drill_monitor[i].start_time + '</td>\n' +
                     '    <td> ' + data.drill_monitor[i].end_time + '</td>\n' +
                     '    <td> ' + data.drill_monitor[i].percent + '</td>\n' +
