@@ -38,7 +38,7 @@ $(document).ready(function () {
             axisLabel: {
                 color: "rgba(255,255,255,.7)"
             },
-            data: ['6-08', '6-09', '6-10', '6-11', '6-12', '6-13', '6-14']
+            data: []
         },
         yAxis: {
             type: 'value',
@@ -62,7 +62,7 @@ $(document).ready(function () {
                 type: 'line',
                 stack: '次数',
                 areaStyle: {normal: {}},
-                data: [0, 0, 0, 0, 0, 0, 0],
+                data: [],
                 label: {
                     normal: {
                         show: true,
@@ -120,7 +120,7 @@ $(document).ready(function () {
                     color: "rgba(255,255,255,.7)"
                 },
 
-                data: ['10-1', '10-2', '10-3', '10-4', '10-5', '10-6', '10-7', '10-8', '10-9', '10-10', '10-11', '10-12'],
+                data: [],
                 axisPointer: {
                     type: 'shadow'
                 }
@@ -166,7 +166,7 @@ $(document).ready(function () {
                     }
                 },
                 yAxisIndex: 0,
-                data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2],
+                data: [],
                 label: {
                     normal: {
                         show: true,
@@ -226,7 +226,7 @@ $(document).ready(function () {
             axisLabel: {
                 color: "rgba(255,255,255,.5)"
             },
-            data: ['', '', '', '', '']
+            data: []
         },
         series: [
             {
@@ -244,7 +244,7 @@ $(document).ready(function () {
                         )
                     }
                 },
-                data: [18203, 23489, 29034, 104970, 131744],
+                data: [],
                 label: {
                     normal: {
                         show: true,
@@ -285,8 +285,8 @@ $(document).ready(function () {
                 radius: '55%',
                 center: ['50%', '55%'],
                 data: [
-                    {value: 90, name: '成功'},
-                    {value: 10, name: '失败'}
+                    {value: 50, name: '成功'},
+                    {value: 50, name: '失败'}
 
                 ],
                 itemStyle: {
