@@ -62,9 +62,17 @@ $(document).ready(function () {
                 type: 'line',
                 stack: '次数',
                 areaStyle: {normal: {}},
-                data: [0, 0, 0, 0, 0, 0, 0]
+                data: [0, 0, 0, 0, 0, 0, 0],
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'top',
+                        textStyle: {
+                            color: 'white'
+                        }
+                    }
+                },
             }
-
         ]
     };
     weekDrillChart.setOption(weekDrillOption);
@@ -158,7 +166,16 @@ $(document).ready(function () {
                     }
                 },
                 yAxisIndex: 0,
-                data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2]
+                data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2],
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'top',
+                        textStyle: {
+                            color: 'white'
+                        }
+                    }
+                },
             }
         ]
     };
@@ -227,7 +244,16 @@ $(document).ready(function () {
                         )
                     }
                 },
-                data: [18203, 23489, 29034, 104970, 131744]
+                data: [18203, 23489, 29034, 104970, 131744],
+                label: {
+                    normal: {
+                        show: true,
+                        position: 'right',
+                        textStyle: {
+                            color: 'white'
+                        }
+                    }
+                },
             }
         ]
     };
@@ -268,8 +294,15 @@ $(document).ready(function () {
                         shadowBlur: 10,
                         shadowOffsetX: 0,
                         shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    },
+                    normal: {
+                        label: {
+                            show: true,
+                            formatter: '{b}:{d}%'
+                        },
+                        labelLine: {show: true}
                     }
-                }
+                },
             }
         ]
     };
