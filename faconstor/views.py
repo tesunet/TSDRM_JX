@@ -937,45 +937,6 @@ def get_monitor_data(request):
             all_processrun_objs) * 100) if all_processrun_objs and successful_processruns else 0
         drill_rate = [success_rate, 100 - int(success_rate)]
 
-        # 演练监控
-        drill_monitor = []
-        all_drill_process_runs = ProcessRun.objects.exclude(state="9").order_by("-starttime")
-        for num, drill_process_run in enumerate(all_drill_process_runs):
-            if num == 14:
-                break
-
-            done_step_run = drill_process_run.steprun_set.filter(state="DONE")
-            if done_step_run.exists():
-                done_num = len(done_step_run)
-            else:
-                done_num = 0
-
-            # 构造展示步骤
-            process_rate = "%02d" % (done_num / len(drill_process_run.steprun_set.all()) * 100)
-
-            # 策略时间
-            cur_schedule = ""
-            try:
-                process = drill_process_run.process
-                process_schedule = ProcessSchedule.objects.filter(process=process).exclude(state="9")
-                if process_schedule.exists():
-                    cur_schedule_hour = process_schedule[0].dj_periodictask.crontab.hour
-                    cur_schedule_minute = process_schedule[0].dj_periodictask.crontab.minute
-                    cur_schedule = "{0}:{1}".format(cur_schedule_hour, cur_schedule_minute)
-            except:
-                pass
-
-            drill_monitor.append({
-                "process_name": drill_process_run.process.name,
-                "state": drill_process_run.state,
-                "schedule_time": cur_schedule,
-                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(
-                    drill_process_run.starttime) if drill_process_run.starttime else "",
-                "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(
-                    drill_process_run.endtime) if drill_process_run.endtime else "",
-                "percent": "{0}%".format(process_rate)
-            })
-
         # 演练日志
         task_list = []
         all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"]).order_by("-starttime")
@@ -995,28 +956,90 @@ def get_monitor_data(request):
             })
 
         # 今日作业
-        today_process_jobs = ProcessRun.objects.exclude(state="9").filter(
-            starttime__startswith=datetime.datetime.now().date())
         running_job, success_job, error_job = 0, 0, 0
-        for job in today_process_jobs:
-            if job.state == "RUN":
-                running_job += 1
-            if job.state in ["ERROR", "STOP"]:
-                error_job += 1
-            if job.state == "DONE":
-                success_job += 1
-        # 未启动流程
         all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle")
-        running_process = 0
+        has_run_process = 0
         for process in all_processes:
-            process_run = process.processrun_set.exclude(state="9").filter(starttime__startswith=datetime.datetime.now().date())
+            process_run = process.processrun_set.exclude(state__in=["9", "REJECT"]).filter(starttime__startswith=datetime.datetime.now().date())
             if process_run.exists():
-                running_process += 1
+                has_run_process += 1
+
+                # 运行中
+                if process_run.last().state == "RUN":
+                    running_job += 1
+
+            for p_run in process_run:
+                # 成功：一次成功就算成功
+                if p_run.state == 'DONE':
+                    success_job += 1
+                    break
+
         not_running = 0
         try:
-            not_running = len(all_processes) - running_process
+            # 未启动
+            not_running = len(all_processes) - has_run_process
+
+            # 失败：总的-成功-运行中-未启动
+            error_job = len(all_processes) - success_job - running_job - not_running
         except:
             pass
+
+        # 演练监控
+        drill_monitor = []
+
+        for process in all_processes:
+            today_process_run = process.processrun_set.exclude(state__in=["9", "REJECT"]).filter(starttime__startswith=datetime.datetime.now().date()).last()
+
+            if today_process_run:
+                done_step_run = today_process_run.steprun_set.filter(state="DONE")
+                if done_step_run.exists():
+                    done_num = len(done_step_run)
+                else:
+                    done_num = 0
+
+                # 构造展示步骤
+                process_rate = "%02d" % (done_num / len(today_process_run.steprun_set.all()) * 100)
+
+                # 策略时间
+                cur_schedule = ""
+                try:
+                    process_schedule = ProcessSchedule.objects.filter(process=process).exclude(state="9")
+                    if process_schedule.exists():
+                        cur_schedule_hour = process_schedule[0].dj_periodictask.crontab.hour
+                        cur_schedule_minute = process_schedule[0].dj_periodictask.crontab.minute
+                        cur_schedule = "{0}:{1}".format(cur_schedule_hour, cur_schedule_minute)
+                except:
+                    pass
+
+                drill_monitor.append({
+                    "process_name": process.name,
+                    "state": today_process_run.state,
+                    "schedule_time": cur_schedule,
+                    "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(
+                        today_process_run.starttime) if today_process_run.starttime else "",
+                    "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(
+                        today_process_run.endtime) if today_process_run.endtime else "",
+                    "percent": "{0}%".format((int(process_rate)))
+                })
+            else:
+                # 策略时间
+                cur_schedule = ""
+                try:
+                    process_schedule = ProcessSchedule.objects.filter(process=process).exclude(state="9")
+                    if process_schedule.exists():
+                        cur_schedule_hour = process_schedule[0].dj_periodictask.crontab.hour
+                        cur_schedule_minute = process_schedule[0].dj_periodictask.crontab.minute
+                        cur_schedule = "{0}:{1}".format(cur_schedule_hour, cur_schedule_minute)
+                except:
+                    pass
+                drill_monitor.append({
+                    "process_name": process.name,
+                    "state": "未演练",
+                    "schedule_time": cur_schedule,
+                    "start_time": "",
+                    "end_time": "",
+                    "percent": "0%"
+                })
 
         return JsonResponse({
             "week_drill": week_drill,
@@ -1172,7 +1195,7 @@ def get_process_run_facts(request):
                         break
 
             cv_oracle_process_list.append({
-                "client_name": client_name,
+                "process_name": cur_process.name,
                 "process_run_today": process_run_today,
                 "average_rto": average_rto,
                 "cur_client_process_times": cur_client_process_times,
