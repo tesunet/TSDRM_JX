@@ -132,13 +132,8 @@ def exec_script(steprunid, username, fullname):
         ip = cur_host_manage.host_ip
         username = cur_host_manage.username
         password = cur_host_manage.password
-        script_type = cur_host_manage.type
+        system_tag = cur_host_manage.os
 
-        system_tag = ""
-        if script_type == "SSH":
-            system_tag = "Linux"
-        if script_type == "BAT":
-            system_tag = "Windows"
         rm_obj = remote.ServerByPara(cmd, ip, username, password, system_tag)  # 服务器系统从视图中传入
         result = rm_obj.run(script.script.succeedtext)
 
@@ -217,7 +212,11 @@ def force_exec_script(processrunid):
                     password = cur_host_manage.password
                     system_tag = cur_host_manage.os
 
-                    if system_tag == "Linux":
+                    if system_tag in ["Linux", "AIX"]:
+                        if system_tag == "Linux":
+                            port = "22"
+                        if system_tag == "AIX":
+                            port = "21"
                         ###########################
                         # 创建linux下目录:         #
                         #   mkdir path -p 覆盖路径 #
@@ -262,7 +261,7 @@ def force_exec_script(processrunid):
                         else:
                             # 上传Linux服务器
                             try:
-                                ssh = paramiko.Transport((ip, 22))
+                                ssh = paramiko.Transport((ip, port))
                                 ssh.connect(username=username, password=password)
                                 sftp = paramiko.SFTPClient.from_transport(ssh)
                             except paramiko.ssh_exception.SSHException as e:
@@ -473,7 +472,11 @@ def runstep(steprun, if_repeat=False):
                     script_type = cur_host_manage.type
                     system_tag = cur_host_manage.os
 
-                    if system_tag == "Linux":
+                    if system_tag in ["Linux", "AIX"]:
+                        if system_tag == "Linux":
+                            port = "22"
+                        if system_tag == "AIX":
+                            port = "21"
                         ###########################
                         # 创建linux下目录:         #
                         #   mkdir path -p 覆盖路径 #
@@ -521,7 +524,7 @@ def runstep(steprun, if_repeat=False):
 
                         # 上传Linux服务器
                         try:
-                            ssh = paramiko.Transport((ip, 22))
+                            ssh = paramiko.Transport((ip, port))
                             ssh.connect(username=username, password=password)
                             sftp = paramiko.SFTPClient.from_transport(ssh)
                         except paramiko.ssh_exception.SSHException as e:

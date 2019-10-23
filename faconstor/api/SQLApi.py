@@ -228,7 +228,7 @@ class CVApi(DataMonitor):
     def get_all_storage(self):
         storage_sql = """SELECT [storagepolicy],[defaultcopy],[hardwarecompress],[maxstreams],[drivepool],[library],[appid],[clientname],[idataagent],[instance],[backupset],[subclient]
                           FROM [commserv].[dbo].[CommCellStoragePolicy]
-                          WHERE [hardwarecompress]!='Unknown'"""
+                          WHERE [hardwarecompress]!='Unknown' AND [idataagent] LIKE '%Oracle%'"""
 
         storages = []
         content = self.fetch_all(storage_sql)
@@ -482,9 +482,13 @@ class CVApi(DataMonitor):
         return vm_backup_content_list
 
     def get_instance_from_oracle(self):
+        # instance_sql = """SELECT DISTINCT [clientname],[idataagent],[instance], [clientid]
+        #                   FROM [commserv].[dbo].[CommCellSubClientConfig]
+        #                   WHERE [idataagentstatus] = 'installed' AND [instance] IS NOT NULL AND [instance] != ''
+        #                   AND [idataagent] LIKE 'Oracle%';"""
         instance_sql = """SELECT DISTINCT [clientname],[idataagent],[instance], [clientid]
                           FROM [commserv].[dbo].[CommCellSubClientConfig]
-                          WHERE [idataagentstatus] = 'installed' AND [instance] IS NOT NULL AND [instance] != ''
+                          WHERE [instance] IS NOT NULL AND [instance] != ''
                           AND [idataagent] LIKE 'Oracle%';"""
         oracle_instance = self.fetch_all(instance_sql)
         instance_list = []
@@ -1185,7 +1189,7 @@ class CustomFilter(CVApi):
             pre_agent_list = []
 
             for job in job_list:
-                if job["idataagent"] not in pre_agent_list and job["clientname"] == client["client_name"]:
+                if job["idataagent"] not in pre_agent_list and job["clientname"] == client["client_name"] and "Oracle" in job["idataagent"]:
                     pre_agent_list.append(job["idataagent"])
 
                     job_status = job["jobstatus"]

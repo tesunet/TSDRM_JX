@@ -4476,16 +4476,16 @@ def get_script_log(request):
             remote_ip = cur_host_manage.host_ip
             remote_user = cur_host_manage.username
             remote_password = cur_host_manage.password
-            script_type = cur_host_manage.type
+            script_os = cur_host_manage.os
 
-            if script_type == "SSH":
-                remote_platform = "Linux"
+            if script_os == "Linux":
+                remote_cmd = "cat {0}".format(log_address)
+            elif script_os == "AIX":
                 remote_cmd = "cat {0}".format(log_address)
             else:
-                remote_platform = "Windows"
                 remote_cmd = "type {0}".format(log_address)
             server_obj = ServerByPara(r"{0}".format(remote_cmd), remote_ip, remote_user, remote_password,
-                                      remote_platform)
+                                      script_os)
             result = server_obj.run("")
             base_data = result["data"]
 
@@ -5464,6 +5464,8 @@ def custom_pdf_report(request):
 
 def restore_search(request, funid):
     if request.user.is_authenticated():
+        runstate = request.GET.get("runstate", "")
+
         nowtime = datetime.datetime.now()
         endtime = nowtime.strftime("%Y-%m-%d")
         starttime = (nowtime - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
@@ -5484,7 +5486,7 @@ def restore_search(request, funid):
         }
         return render(request, "restore_search.html",
                       {'username': request.user.userinfo.fullname, "starttime": starttime, "endtime": endtime,
-                       "processname_list": processname_list, "state_dict": state_dict,
+                       "processname_list": processname_list, "state_dict": state_dict, "runstate": runstate,
                        "pagefuns": getpagefuns(funid, request=request)})
     else:
         return HttpResponseRedirect("/login")
@@ -6866,6 +6868,7 @@ def get_backup_status(request):
         dm = SQLApi.CustomFilter(settings.sql_credit)
 
         whole_list = dm.custom_concrete_job_list(tmp_client_manage)
+        print(whole_list)
     except Exception as e:
         return JsonResponse({
             "ret": 0,
