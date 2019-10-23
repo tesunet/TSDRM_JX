@@ -3944,9 +3944,6 @@ class CV_API(object):
         if sourceBackupset.getIsNewBackupset() == True:
             self.msg = "there is not this oracle sid " + source
             return False
-        if destBackupset.getIsNewBackupset() == True:
-            self.msg = "there is not this oracle sid " + dest
-            return False
         jobId = sourceBackupset.restoreOracleBackupset(source, dest, operator)
         self.msg = sourceBackupset.msg
         return jobId

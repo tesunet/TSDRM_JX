@@ -432,16 +432,44 @@ $(document).ready(function () {
             }
 
             // 今日作业
-            $("#running_job").text(data.today_job.running_job);
-            $("#success_job").text(data.today_job.success_job);
-            $("#error_job").text(data.today_job.error_job);
-            $("#not_running").text(data.today_job.not_running);
+            // var myDate = new Date();
+            //
+            // var year = myDate.getFullYear();        //获取当前年
+            // var month = myDate.getMonth() + 1;   //获取当前月
+            // var date = myDate.getDate();            //获取当前日
+            // var curTime = year + "-" + month + "-" + date;
+            var aSuccessHref = '/restore_search?runstate=DONE';
+            var aRunningHref = '/restore_search?runstate=RUN';
+            var aErrorHref = '/restore_search?runstate=ERROR';
+            var aEditHref = '/restore_search?runstate=EDIT';
 
-            // 客户端状态
-            $("#service_status").text(data.clients_status.service_status);
-            $("#net_status").text(data.clients_status.net_status);
-            $("#all_clients").text(data.clients_status.all_clients);
-            $("#error_clients").text(data.clients_status.error_clients);
+            if (data.today_job.running_job > 0) {
+                $("#running_job").html('<a href="'+ aRunningHref +'" target="_blank">' + data.today_job.running_job + '</a>');
+                $("#running_job").find("a").css("color", "#44ee44");
+            } else {
+                $("#running_job").html(data.today_job.running_job);
+            }
+            if (data.today_job.success_job > 0) {
+                $("#success_job").html('<a href="'+ aSuccessHref +'" target="_blank">' + data.today_job.success_job + '</a>');
+                $("#success_job").find("a").css("color", "#24c9ff");
+            } else {
+                $("#success_job").html(data.today_job.running_job);
+            }
+            if (data.today_job.error_job > 0) {
+                $("#error_job").html('<a href="'+ aErrorHref +'" target="_blank">' + data.today_job.error_job + '</a>');
+                $("#error_job").find("a").css("color", "#e02222");
+
+            } else {
+                $("#error_job").html(data.today_job.running_job);
+            }
+            if (data.today_job.not_running > 0) {
+                $("#not_running").html('<a href="'+ aEditHref +'" target="_blank">' + data.today_job.not_running + '</a>');
+                $("#not_running").find("a").css("color", "#ffff00");
+            } else {
+                $("#not_running").html(data.today_job.running_job);
+            }
+            // var table = $('#sample_1').DataTable();
+            // table.ajax.url("../restore_search_data?runstate=" + $('#runstate').val() + "&startdate=" + $('#startdate').val() + "&enddate=" + $('#enddate').val() + "&processname=" + $('#processname').val() + "&runperson=" + $('#runperson').val()).load();
         },
     });
     $.ajax({
@@ -454,14 +482,14 @@ $(document).ready(function () {
             // 客户端状态
             $("#service_status").text(data.clients_status.service_status);
             $("#net_status").text(data.clients_status.net_status);
-            $("#all_clients").text(data.clients_status.all_clients);
-            $("#error_clients").text(data.clients_status.error_clients);
-
+            $("#all_clients").html('<a href="/backup_status/" target="_blank">' + data.clients_status.all_clients + '</a>');
+            $("#all_clients").find("a").css("color", "#24c9ff");
             // 报警客户端
             var warning_client_num = 0;
-            var whole_list = data.data;
+            var whole_list = data.clients_status.whole_backup_list;
 
             for (var i = 0; i < whole_list.length; i++) {
+                var agent_job_list = whole_list[i].agent_job_list;
                 // 报警客户端
                 for (var j = 0; j < agent_job_list.length; j++) {
                     if (agent_job_list[j].job_backup_status.indexOf("失败") != -1) {
@@ -470,10 +498,10 @@ $(document).ready(function () {
                     }
                 }
             }
-
-            $("#warning_client_num").text(warning_client_num);
+            //'<a href="/backup_status/" target="_blank">' + data.clients_status.all_clients + '</a>'
+            $("#error_clients").html('<a href="/backup_status/" target="_blank">' + warning_client_num + '</a>');
             if (warning_client_num > 0) {
-                $("#warning_client_num").css("color", "red");
+                $("#error_clients").find("a").css("color", "red");
             }
         },
     });

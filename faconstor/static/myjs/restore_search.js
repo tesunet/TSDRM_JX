@@ -1,9 +1,21 @@
 $(document).ready(function () {
+    var default_url = "../restore_search_data?runstate=" + $('#runstate').val() + "&startdate=" + $('#startdate').val() + "&enddate=" + $('#enddate').val() + "&processname=" + $('#processname').val() + "&runperson=" + $('#runperson').val()
+    if (window.document.referrer.indexOf("monitor") != -1) {
+        var myDate = new Date();
+
+        var year = myDate.getFullYear();        //获取当前年
+        var month = myDate.getMonth() + 1;   //获取当前月
+        var date = myDate.getDate();            //获取当前日
+        var curTime = year + "-" + month + "-" + date;
+
+        default_url = "../restore_search_data?runstate=" + $('#referer_runstate').val() + "&startdate=" + curTime + "&enddate=" + curTime;
+    }
+
     $('#sample_1').dataTable({
         "bAutoWidth": true,
         "bSort": false,
         "bProcessing": true,
-        "ajax": "../restore_search_data?runstate=" + $('#runstate').val() + "&startdate=" + $('#startdate').val() + "&enddate=" + $('#enddate').val() + "&processname=" + $('#processname').val() + "&runperson=" + $('#runperson').val(),
+        "ajax": default_url,
         "columns": [
             {"data": "processrun_id"},
             {"data": "process_name"},
@@ -54,31 +66,30 @@ $(document).ready(function () {
         }
     });
     $('#sample_1 tbody').on('click', 'button#delrow', function () {
-            if (confirm("确定要删除该条数据？")) {
-                var table = $('#sample_1').DataTable();
-                var data = table.row($(this).parents('tr')).data();
-                $.ajax({
-                    type: "POST",
-                    url: "../../delete_current_process_run/",
-                    data:
-                        {
-                            processrun_id: data.processrun_id
-                        },
-                    success: function (data) {
-                        if (data == 1) {
-                            table.ajax.reload();
-                            alert("删除成功！");
-                        }
-                        else
-                            alert("删除失败，请于管理员联系。");
+        if (confirm("确定要删除该条数据？")) {
+            var table = $('#sample_1').DataTable();
+            var data = table.row($(this).parents('tr')).data();
+            $.ajax({
+                type: "POST",
+                url: "../../delete_current_process_run/",
+                data:
+                    {
+                        processrun_id: data.processrun_id
                     },
-                    error: function (e) {
+                success: function (data) {
+                    if (data == 1) {
+                        table.ajax.reload();
+                        alert("删除成功！");
+                    } else
                         alert("删除失败，请于管理员联系。");
-                    }
-                });
+                },
+                error: function (e) {
+                    alert("删除失败，请于管理员联系。");
+                }
+            });
 
-            }
-        });
+        }
+    });
 
     $('#startdate').datetimepicker({
         autoclose: true,
