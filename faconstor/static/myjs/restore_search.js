@@ -8,7 +8,7 @@ $(document).ready(function () {
         var date = myDate.getDate();            //获取当前日
         var curTime = year + "-" + month + "-" + date;
 
-        default_url = "../restore_search_data?runstate=" + $('#referer_runstate').val() + "&startdate=" + curTime + "&enddate=" + curTime;
+        default_url = "../restore_search_data?referer=monitor&runstate=" + $('#referer_runstate').val() + "&startdate=" + curTime + "&enddate=" + curTime;
     }
 
     $('#sample_1').dataTable({

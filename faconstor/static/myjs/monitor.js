@@ -449,24 +449,25 @@ $(document).ready(function () {
             } else {
                 $("#running_job").html(data.today_job.running_job);
             }
+            console.log(data.today_job.success_job)
             if (data.today_job.success_job > 0) {
                 $("#success_job").html('<a href="'+ aSuccessHref +'" target="_blank">' + data.today_job.success_job + '</a>');
                 $("#success_job").find("a").css("color", "#24c9ff");
             } else {
-                $("#success_job").html(data.today_job.running_job);
+                $("#success_job").html(data.today_job.success_job);
             }
             if (data.today_job.error_job > 0) {
                 $("#error_job").html('<a href="'+ aErrorHref +'" target="_blank">' + data.today_job.error_job + '</a>');
                 $("#error_job").find("a").css("color", "#e02222");
 
             } else {
-                $("#error_job").html(data.today_job.running_job);
+                $("#error_job").html(data.today_job.error_job);
             }
             if (data.today_job.not_running > 0) {
                 $("#not_running").html('<a href="'+ aEditHref +'" target="_blank">' + data.today_job.not_running + '</a>');
                 $("#not_running").find("a").css("color", "#ffff00");
             } else {
-                $("#not_running").html(data.today_job.running_job);
+                $("#not_running").html(data.today_job.not_running);
             }
             // var table = $('#sample_1').DataTable();
             // table.ajax.url("../restore_search_data?runstate=" + $('#runstate').val() + "&startdate=" + $('#startdate').val() + "&enddate=" + $('#enddate').val() + "&processname=" + $('#processname').val() + "&runperson=" + $('#runperson').val()).load();
