@@ -48,8 +48,8 @@ var FormWizard = function () {
 
 if (App.isAngularJsApp() === false) {
     jQuery(document).ready(function () {
-        var t1 = window.setTimeout(getstep, 1000);  // 访问页面之后10秒执行函数
-        var t2 = window.setInterval(timefun, 1000);  // 设置无限定时器
+        var t1 = window.setTimeout(getstep, 3000);  // 访问页面之后10秒执行函数
+        var t2 = window.setInterval(timefun, 3000);  // 设置无限定时器
         var num = 0;
         var isinit = true;
         var currentRunState = $("#current_run_state").val();
@@ -674,7 +674,7 @@ if (App.isAngularJsApp() === false) {
                                             alert("该步骤已确认，继续流程！");
                                             getstep();
                                             window.clearInterval(t2);
-                                            t2 = window.setInterval(timefun, 1000);
+                                            t2 = window.setInterval(timefun, 3000);
                                             getTaskInfo();
                                         } else {
                                             alert("步骤确认异常，请联系客服！")
@@ -695,7 +695,7 @@ if (App.isAngularJsApp() === false) {
                                         alert("该步骤已确认，继续流程！");
                                         getstep();
                                         window.clearInterval(t2);
-                                        t2 = window.setInterval(timefun, 1000);
+                                        t2 = window.setInterval(timefun, 3000);
                                         getTaskInfo();
                                     } else {
                                         alert("步骤确认异常，请联系客服！")
@@ -739,7 +739,7 @@ if (App.isAngularJsApp() === false) {
                         $('#static').modal('hide');
                         // 重启定时器
                         window.clearInterval(t2);
-                        t2 = window.setInterval(timefun, 1000);
+                        t2 = window.setInterval(timefun, 3000);
                     } else
                         alert(data["res"]);
                 },
@@ -761,7 +761,7 @@ if (App.isAngularJsApp() === false) {
                     alert(data.data);
                     $('#static').modal('hide');
                     // 重启定时器
-                    t2 = window.setInterval(timefun, 1000);
+                    t2 = window.setInterval(timefun, 3000);
                 }
             });
         });

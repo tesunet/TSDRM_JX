@@ -214,9 +214,9 @@ def force_exec_script(processrunid):
 
                     if system_tag in ["Linux", "AIX"]:
                         if system_tag == "Linux":
-                            port = "22"
+                            port = 22
                         if system_tag == "AIX":
-                            port = "21"
+                            port = 21
                         ###########################
                         # 创建linux下目录:         #
                         #   mkdir path -p 覆盖路径 #
@@ -474,9 +474,9 @@ def runstep(steprun, if_repeat=False):
 
                     if system_tag in ["Linux", "AIX"]:
                         if system_tag == "Linux":
-                            port = "22"
+                            port = 22
                         if system_tag == "AIX":
-                            port = "21"
+                            port = 21
                         ###########################
                         # 创建linux下目录:         #
                         #   mkdir path -p 覆盖路径 #

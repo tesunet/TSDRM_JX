@@ -6956,11 +6956,7 @@ def get_storage_policy(request):
             # storage_dict["subclientName"] = storage["subclient"]
             storage_dict["storagePolicy"] = storage["storagepolicy"]
             whole_list.append(storage_dict)
-        with open(r"C:\Users\29727\Desktop\1.json", "w") as f:
-            f.write(json.dumps({
-                "whole_list": whole_list,
-                "row_dict": row_dict,
-            }))
+
     except Exception as e:
         print(e)
         return JsonResponse({
