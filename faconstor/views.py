@@ -5500,7 +5500,6 @@ def restore_search_data(request):
     if request.user.is_authenticated():
         result = []
         referer = request.GET.get('referer', '')
-        print(referer)
         processname = request.GET.get('processname', '')
         runperson = request.GET.get('runperson', '')
         runstate = request.GET.get('runstate', '')
@@ -5556,9 +5555,7 @@ def restore_search_data(request):
                 """.format(processname, runstate, start_time, end_time)
 
             if processname == "" and runstate != "":
-                print(1)
                 if referer == "monitor" and runstate == "ERROR":
-                    print(2)
                     exec_sql = """
                         select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
                         left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and r.state='ERROR' or r.state='STOP' and r.starttime between '{0}' and '{1}'  order by r.starttime desc;
@@ -6465,7 +6462,6 @@ def origin(request, funid):
 
         # 所有关联终端
         all_target = Target.objects.exclude(state="9")
-
         return render(request, 'origin.html',
                       {'username': request.user.userinfo.fullname,
                        "oracle_data": json.dumps(oracle_data_list),
@@ -6878,7 +6874,6 @@ def get_backup_status(request):
         dm = SQLApi.CustomFilter(settings.sql_credit)
 
         whole_list = dm.custom_concrete_job_list(tmp_client_manage)
-        print(whole_list)
     except Exception as e:
         return JsonResponse({
             "ret": 0,
