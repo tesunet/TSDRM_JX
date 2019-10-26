@@ -1,9 +1,9 @@
-import pymssql
 import datetime
 import copy
 # from TSDRM import settings
 # from faconstor.CVApi_bak import *
 import re
+import pyodbc
 
 
 class DataMonitor(object):
@@ -18,7 +18,10 @@ class DataMonitor(object):
     @property
     def _connection(self):
         try:
-            connection = pymssql.connect(host=self.host, user=self.user, password=self.password, database=self.database)
+            connection = pyodbc.connect('DRIVER={SQL Server};SERVER=%s;DATABASE=%s;UID=%s;PWD=%s' % (
+                self.host, self.database, self.user, self.password))
+
+            # connection = pymssql.connect(host=self.host, user=self.user, password=self.password, database=self.database)
         except Exception as e:
             self.msg = "链接数据库失败。"
             return None
@@ -1277,10 +1280,32 @@ if __name__ == '__main__':
     # data = [{'name': "mic", 'age': 2, 'sex': 'male'}, {'name': 'm', 'age': 2, 'sex': 'male'}, {'name': 'mic', 'age': 2, 'sex': 'female'}]
     # a = remove_duplicate_for_info(data, dup_model=['name', 'age'])
     # print(a)
+    # from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    # # 报警客户端
+    # warning_client_num = 0
+
+    # whole_list = []
+
+    # pool = ThreadPoolExecutor(max_workers=5)
+
+    # def get_info():
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
     ret = dm.get_oracle_backup_job_list("oracle_rac")
+    #     return ret
+    print(ret)
+    # # 并发
+    # all_tasks = [pool.submit(get_info) for i in range(100)]
+
+    # for future in as_completed(all_tasks):
+    #     if future.result():
+    #         print(future.result())
+
+
+
+
     # ret = dm.get_job_controller()
     # ret = dm.get_single_installed_client(2)
     # ret = dm.get_installed_sub_clients_for_info()
