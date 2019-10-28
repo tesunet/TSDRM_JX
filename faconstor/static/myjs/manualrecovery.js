@@ -14,7 +14,7 @@ $(document).ready(function () {
         "columnDefs": [{
             "targets": 0,
             "mRender": function (data, type, full) {
-                return "<a id='edit' data-toggle='modal' data-target='#static1'>" + data + "</a><input type='text' value='" + full.data_path + "' hidden>"
+                return "<a id='edit' data-toggle='modal' data-target='#static1'>" + data + "</a><input type='text' value='" + full.data_path + "' hidden>" + "<input type='text' value='" + full.copy_priority + "' hidden>" + "<input type='text' value='" + full.target_client + "' hidden>"
             }
         }],
         "oLanguage": {
@@ -40,9 +40,13 @@ $(document).ready(function () {
         var jQuery_el = $(el);
         var agent = jQuery_el.parent().next().html();
         var data_path = jQuery_el.next().val();
+        var copy_priority = jQuery_el.next().next().val();
+        var target_client = jQuery_el.next().next().next().val();
+
         $("#agent").val(agent);
         $("#data_path").val(data_path);
-
+        $("#copy_priority").val(copy_priority);
+        $("#destClient").val(target_client);
         $("#sourceClient").val(el.innerText);
         var datatable = $("#backup_point").dataTable();
         datatable.fnClearTable(); //清空数据
@@ -125,7 +129,8 @@ $(document).ready(function () {
                         browseJobId: $("#browseJobId").val(),
                         // 判断是oracle还是oracle rac
                         agent: $("#agent").val(),
-                        data_path: $("#data_path").val()
+                        data_path: $("#data_path").val(),
+                        copy_priority: $("#copy_priority").val()
                     },
                     success: function (data) {
                         alert(data);

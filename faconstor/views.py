@@ -3682,19 +3682,21 @@ def oracle_restore(request, process_id):
         target_id = ""
         origin = ""
         data_path = ""
+        copy_priority = ""
         for cur_step in all_steps:
             all_scripts = Script.objects.filter(step_id=cur_step.id).exclude(state="9")
             for cur_script in all_scripts:
                 if cur_script.origin:
                     origin = cur_script.origin
                     target_id = cur_script.origin.target.id
-                    data_path = cur_script.origin.target.data_path
+                    data_path = cur_script.origin.data_path
+                    copy_priority = cur_script.origin.copy_priority
                     break
         return render(request, 'oracle_restore.html',
                       {'username': request.user.userinfo.fullname, "pagefuns": getpagefuns(funid, request=request),
                        "wrapper_step_list": wrapper_step_list, "process_id": process_id, "data_path": data_path,
                        "plan_process_run_id": plan_process_run_id, "all_targets": all_targets, "origin": origin,
-                       "target_id": target_id})
+                       "target_id": target_id, "copy_priority": copy_priority})
     else:
         return HttpResponseRedirect("/login")
 
@@ -3758,8 +3760,14 @@ def cv_oracle_run(request):
         recovery_time = request.POST.get('recovery_time', '')
         browseJobId = request.POST.get('browseJobId', '')
         data_path = request.POST.get('data_path', '')
+        copy_priority = request.POST.get('copy_priority', '')
 
         origin = request.POST.get('origin', '')
+
+        try:
+            copy_priority = int(copy_priority)
+        except ValueError as e:
+            copy_priority = 1
 
         try:
             processid = int(processid)
@@ -3798,11 +3806,11 @@ def cv_oracle_run(request):
                     myprocessrun.target_id = target
                     myprocessrun.browse_job_id = browseJobId
                     myprocessrun.data_path = data_path
+                    myprocessrun.copy_priority = copy_priority
                     myprocessrun.origin = origin
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
-                    # print("processid:{0}, run_reason:{1}, target:{2}, recovery_time:{3}".format(processid, run_reason,
-                    #                                                                            target, recovery_time))
+
                     myprocessrun.save()
                     mystep = process[0].step_set.exclude(state="9").order_by("sort")
                     if (len(mystep) <= 0):
@@ -4425,7 +4433,7 @@ def revoke_current_task(request):
             if value["state"] == "STARTED" and task_process_id == process_run_id:
                 task_id = key
 
-        if abnormal == "1":
+        if abnormal in ["1", "2"]:
             stop_url = "http://127.0.0.1:5555/api/task/revoke/{0}?terminate=true".format(task_id)
             response = requests.post(stop_url)
             print(response.text)
@@ -4433,9 +4441,10 @@ def revoke_current_task(request):
 
             # 终止任务
             if task_id:
-                # 修改当前步骤/脚本/流程的状态为ERROR
-                set_error_state(request, process_run_id, task_content)
-
+                # "1"修改状态  "2"表示强制终止流程时终止异步任务，不改变STOP状态为ERROR
+                if abnormal == "1":
+                    # 修改当前步骤/脚本/流程的状态为ERROR
+                    set_error_state(request, process_run_id, task_content)
                 return JsonResponse({"data": task_content})
 
             else:
@@ -4819,6 +4828,7 @@ def get_force_script_info(request):
                 for cur_script in cur_step_scripts:
                     script_name_list.append(cur_script.script.name)
                     script_status_list.append(cur_script.state)
+                    # 执行中
                     if cur_script.state not in ["ERROR", "DONE"]:
                         finish = 0
             return JsonResponse({
@@ -6300,7 +6310,6 @@ def target_data(request):
                 "client_id": target.client_id,
                 "client_name": target.client_name,
                 "os": target.os,
-                "data_path": target.data_path,
                 "agent": target_info["agent"],
                 "instance": target_info["instance"]
             })
@@ -6317,7 +6326,6 @@ def target_save(request):
         agent = request.POST.get("agent", "").strip()
         instance = request.POST.get("instance", "").strip()
         os = request.POST.get("os", "").strip()
-        data_path = request.POST.get("data_path", "").strip()
         ret = 0
         info = ""
         try:
@@ -6348,7 +6356,6 @@ def target_save(request):
                             cur_target.client_id = client_id
                             cur_target.client_name = client_name
                             cur_target.os = os
-                            cur_target.data_path = data_path
                             cur_target.info = json.dumps({
                                 "agent": agent,
                                 "instance": instance
@@ -6377,7 +6384,6 @@ def target_save(request):
                                 cur_target.client_id = client_id
                                 cur_target.client_name = client_name
                                 cur_target.os = os
-                                cur_target.data_path = data_path
                                 cur_target.info = json.dumps({
                                     "agent": agent,
                                     "instance": instance
@@ -6485,7 +6491,9 @@ def origin_data(request):
                 "agent": origin_info["agent"],
                 "instance": origin_info["instance"],
                 "target_client": origin.target.id,
-                "target_client_name": origin.target.client_name
+                "target_client_name": origin.target.client_name,
+                "copy_priority": origin.copy_priority,
+                "data_path": origin.data_path,
             })
 
         return JsonResponse({"data": all_origin_list})
@@ -6502,9 +6510,13 @@ def origin_save(request):
         instance = request.POST.get("instance", "").strip()
         client_os = request.POST.get("os", "")
         target_client = request.POST.get("target_client", "")
+
+        copy_priority = request.POST.get("copy_priority", "")
+        data_path = request.POST.get("data_path", "")
         ret = 0
         info = ""
         try:
+            copy_priority = int(copy_priority)
             origin_id = int(origin_id)
         except:
             ret = 0
@@ -6540,6 +6552,8 @@ def origin_save(request):
                                     "instance": instance
                                 })
                                 cur_origin.target_id = target_id
+                                cur_origin.copy_priority = copy_priority
+                                cur_origin.data_path = data_path
                                 cur_origin.save()
                             except Exception as e:
                                 print(e)
@@ -6563,6 +6577,8 @@ def origin_save(request):
                                         "agent": agent,
                                         "instance": instance
                                     })
+                                    cur_origin.copy_priority = copy_priority
+                                    cur_origin.data_path = data_path
                                     cur_origin.target_id = target_id
                                     cur_origin.save()
                                 except:
@@ -7053,7 +7069,9 @@ def manualrecoverydata(request):
                 "client_id": origin.client_id,
                 "client_os": origin.os,
                 "model": json.loads(origin.info)["agent"],
-                "data_path": origin.target.data_path
+                "data_path": origin.data_path if origin.data_path else "",
+                "copy_priority": origin.copy_priority,
+                "target_client": origin.target.client_name
             })
         return JsonResponse({"data": result})
     else:
@@ -7069,6 +7087,7 @@ def dooraclerecovery(request):
             browseJobId = request.POST.get('browseJobId', '')
             agent = request.POST.get('agent', '')
             data_path = request.POST.get('data_path', '')
+            copy_priority = request.POST.get('copy_priority', '')
 
             #################################
             # sourceClient>> instance_name  #
@@ -7088,8 +7107,9 @@ def dooraclerecovery(request):
                         pass
             if not instance:
                 return HttpResponse("恢复任务启动失败, 数据库实例不存在。")
+            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
+            print("111111", oraRestoreOperator)
 
-            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path}
             cvToken = CV_RestApi_Token()
             cvToken.login(settings.CVApi_credit)
             cvAPI = CV_API(cvToken)

@@ -1,6 +1,7 @@
 $(document).ready(function () {
     $("#target").val("");
-
+    var copy_priority_hidden = $("#copy_priority_hidden").val();
+    $("#copy_priority").val(copy_priority_hidden);
     function customProcessDataTable() {
         $('#sample_1').dataTable({
             "bAutoWidth": true,
@@ -112,7 +113,8 @@ $(document).ready(function () {
                     browseJobId: $("#browseJobId").val(),
                     data_path: $("#data_path").val(),
 
-                    origin: $("#origin").val()
+                    origin: $("#origin").val(),
+                    copy_priority: $("#copy_priority").val(),
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {

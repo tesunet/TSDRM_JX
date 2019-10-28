@@ -70,7 +70,6 @@ $(document).ready(function() {
         $("#agent").val(data.agent);
         $("#instance").val(data.instance);
         $("#os").val(data.os);
-        $("#data_path").val(data.data_path);
     });
 
     // 加载oracle_data
@@ -104,7 +103,6 @@ $(document).ready(function() {
         $("#agent").val("");
         $("#instance").val("");
         $("#os").val("");
-        $("#data_path").val("");
     });
 
     $('#save').click(function() {
@@ -120,7 +118,6 @@ $(document).ready(function() {
                 agent: $("#agent").val(),
                 instance: $("#instance").val(),
                 os: $("#os").val(),
-                data_path: $("#data_path").val()
             },
             success: function(data) {
                 if (data.ret == 1) {
