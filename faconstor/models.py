@@ -81,7 +81,6 @@ class Target(models.Model):
     info = models.TextField("客户端相关信息", blank=True, null=True)
     state = models.CharField("状态", blank=True, null=True, max_length=20)
     os = models.CharField("系统", blank=True, null=True, max_length=50)
-    data_path = models.CharField("数据文件重定向路径", blank=True, null=True, max_length=512)
 
 
 class Origin(models.Model):
@@ -91,6 +90,13 @@ class Origin(models.Model):
     info = models.TextField("客户端相关信息", blank=True, null=True)
     state = models.CharField("状态", blank=True, null=True, max_length=20)
     os = models.CharField("系统", blank=True, null=True, max_length=50)
+    copy_priority_choices = (
+        (1, "主拷贝"),
+        (2, "辅助拷贝")
+    )
+    copy_priority = models.IntegerField(
+        "拷贝优先级：1：主拷贝；2：辅助拷贝", blank=True, null=True, default=1, choices=copy_priority_choices)
+    data_path = models.CharField("数据文件重定向路径", blank=True, default="", max_length=512)
 
 
 class HostsManage(models.Model):
@@ -118,7 +124,7 @@ class Script(models.Model):
     # commvault接口
     interface_type = models.CharField("日志地址", blank=True, null=True, max_length=32)
     origin = models.ForeignKey(Origin, blank=True, null=True, verbose_name='源端客户端')
-    commv_interface = models.CharField("commvaul接口脚本", blank=True, null=True, max_length=64)
+    commv_interface = models.CharField("commvault接口脚本", blank=True, null=True, max_length=64)
 
 
 class ProcessRun(models.Model):
@@ -133,6 +139,7 @@ class ProcessRun(models.Model):
     recover_time = models.DateTimeField("指定恢复时间点", blank=True, null=True)
     browse_job_id = models.CharField("指点时间点的备份任务ID", blank=True, null=True, max_length=50)
     data_path = models.CharField("数据重定向路径", blank=True, null=True, max_length=512)
+    copy_priority = models.IntegerField("优先拷贝顺序", blank=True, default=1)
     origin = models.CharField("源客户端", blank=True, null=True, max_length=256)
 
 

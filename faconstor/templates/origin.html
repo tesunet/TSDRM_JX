@@ -10,9 +10,9 @@
         <div class="col-md-6">
             <div>
                 <button id="new" type="button" data-toggle="modal" data-target="#static" class="btn  green">
-                        新增
-                        <i class="fa fa-plus"></i>
-                    </button>
+                    新增
+                    <i class="fa fa-plus"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -34,7 +34,7 @@
     </tbody>
 </table>
 <div id="static" class="modal fade" tabindex="-1" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
@@ -49,21 +49,23 @@
                             <div class="col-md-10">
                                 <select name="origin" id="origin" class="form-control">
 
-                                    </select>
+                                </select>
                                 <div class="form-control-focus"></div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-md-2 control-label"><span style="color:red; "></span>应用</label>
                             <div class="col-md-10">
-                                <input id="agent" type="text" name="agent" class="form-control " placeholder="" value="Oracle" readonly>
+                                <input id="agent" type="text" name="agent" class="form-control " placeholder=""
+                                    value="Oracle" readonly>
                                 <div class="form-control-focus"></div>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-md-2 control-label"><span style="color:red; "></span>实例</label>
                             <div class="col-md-10">
-                                <input id="instance" type="text" name="instance" class="form-control " placeholder="" readonly>
+                                <input id="instance" type="text" name="instance" class="form-control " placeholder=""
+                                    readonly>
                                 <div class="form-control-focus"></div>
                             </div>
                         </div>
@@ -79,38 +81,60 @@
                                 <label class="col-md-2 control-label"><span style="color:red; ">*</span>恢复资源</label>
                                 <div class="col-md-10">
                                     <select name="target" id="target" class="form-control">
-                                            {% for target in all_target %}
-                                            <option value="{{ target.id }}">{{ target.client_name }}</option>
-                                            {% endfor %}
-                                        </select>
+                                        {% for target in all_target %}
+                                        <option value="{{ target.id }}">{{ target.client_name }}</option>
+                                        {% endfor %}
+                                    </select>
                                     <div class="form-control-focus"></div>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="form-body">
+                            <div class="form-group">
+                                <label class="col-md-2 control-label"><span style="color:red; "></span>选择拷贝优先级</label>
+                                <div class="col-md-10">
+                                    <select name="copy_priority" id="copy_priority" class="form-control">
+                                        <option value="1">主拷贝</option>
+                                        <option value="2">辅助拷贝</option>
+                                    </select>
+                                    <div class="form-control-focus"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label"><span style="color:red; "></span>数据重定向路径</label>
+                            <div class="col-md-10">
+                                <input id="data_path" type="text" name="data_path" class="form-control " placeholder="">
+                                <div class="form-control-focus"></div>
                             </div>
                         </div>
                         <div class="form-actions ">
                             <div class="modal-footer">
                                 <button type="button" data-dismiss="modal" class="btn dark btn-outline">关闭
-                                    </button>
+                                </button>
                                 <button type="button" id="save" name="save" class="btn green">保存</button>
                             </div>
                         </div>
                 </form>
-                </div>
             </div>
         </div>
     </div>
-    {% endblock %} {% block script %}
-    <script>
-        $.ajaxSetup({
-            data: {
-                csrfmiddlewaretoken: '{{ csrf_token }}'
-            },
-        });
-    </script>
-    <link href="/static/assets/global/plugins/bootstrap-fileinput/bootstrap-fileinput.css" rel="stylesheet" type="text/css" />
-    <link href="/static/assets/global/plugins/datatables/datatables.min.css" rel="stylesheet" type="text/css" />
-    <link href="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.css" rel="stylesheet" type="text/css" />
-    <script src="/static/assets/global/plugins/bootstrap-fileinput/bootstrap-fileinput.js" type="text/javascript"></script>
-    <script src="/static/assets/global/plugins/datatables/datatables.min.js" type="text/javascript"></script>
-    <script src="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.js" type="text/javascript"></script>
-    {% endblock %}
+</div>
+{% endblock %} {% block script %}
+<script>
+    $.ajaxSetup({
+        data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+    });
+</script>
+<link href="/static/assets/global/plugins/bootstrap-fileinput/bootstrap-fileinput.css" rel="stylesheet"
+    type="text/css" />
+<link href="/static/assets/global/plugins/datatables/datatables.min.css" rel="stylesheet" type="text/css" />
+<link href="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.css" rel="stylesheet"
+    type="text/css" />
+<script src="/static/assets/global/plugins/bootstrap-fileinput/bootstrap-fileinput.js" type="text/javascript"></script>
+<script src="/static/assets/global/plugins/datatables/datatables.min.js" type="text/javascript"></script>
+<script src="/static/assets/global/plugins/datatables/plugins/bootstrap/datatables.bootstrap.js"
+    type="text/javascript"></script>
+{% endblock %}

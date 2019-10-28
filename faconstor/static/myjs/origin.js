@@ -72,6 +72,9 @@ $(document).ready(function() {
         $("#instance").val(data.instance);
         $("#target").val(data.target_client);
         $("#os").val(data.os);
+
+        $("#copy_priority").val(data.copy_priority);
+        $("#data_path").val(data.data_path);  
     });
 
     var oracle_data = JSON.parse($("#oracle_data").val());
@@ -103,6 +106,9 @@ $(document).ready(function() {
 
         $("#target").val("");
         $("#os").val("");
+
+        $("#copy_priority").val(1);
+        $("#data_path").val("");      
     });
 
     $('#save').click(function() {
@@ -120,7 +126,12 @@ $(document).ready(function() {
                 instance: $("#instance").val(),
 
                 target_client: $("#target").val(),
-                os: $("#os").val()
+                os: $("#os").val(),
+
+                // 拷贝优先级/数据重定向路径
+                copy_priority: $("#copy_priority").val(),
+                data_path: $("#data_path").val()    
+
             },
             success: function(data) {
                 if (data.ret == 1) {

@@ -2705,21 +2705,67 @@ class CV_Backupset(CV_Client):
             if "browseJobId" not in keys:
                 self.msg = "operator - no browseJobId"
                 return jobId
+            if "data_path" not in keys:
+                self.msg = "operator - no data_path"
+                return jobId
+            if "copy_priority" not in keys:
+                self.msg = "operator - no copy_priority"
+                return jobId
         else:
             self.msg = "param not set"
             return jobId
 
+        sourceClient = source
+        destClient = dest
+        restoreTime = operator["restoreTime"]
+        data_path = operator["data_path"]
+        copy_priority = operator["copy_priority"]
+
+        try:
+            copy_priority = int(copy_priority)
+        except ValueError as e:
+            copy_priority = 1
+
+        copyPrecedence_xml = '''                                        
+        <copyPrecedence>
+            <copyPrecedenceApplicable>false</copyPrecedenceApplicable>
+            <synchronousCopyPrecedence>1</synchronousCopyPrecedence>
+            <copyPrecedence>0</copyPrecedence>
+        </copyPrecedence>
+        '''
+        # 2:表示选择辅助拷贝优先
+        if copy_priority == 2:
+            copyPrecedence_xml = '''                                        
+            <copyPrecedence>
+                <copyPrecedenceApplicable>true</copyPrecedenceApplicable>
+                <synchronousCopyPrecedence>2</synchronousCopyPrecedence>
+                <copyPrecedence>2</copyPrecedence>
+            </copyPrecedence>
+            '''
+        data_path_xml = '''
+        <redirectItemsPresent>false</redirectItemsPresent>
+        <validate>false</validate>
+        <renamePathForAllTablespaces></renamePathForAllTablespaces>
+        <redirectAllItemsSelected>false</redirectAllItemsSelected>
+        '''
+        if data_path:
+            data_path_xml = '''
+            <redirectItemsPresent>true</redirectItemsPresent>
+            <validate>false</validate>
+            <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
+            <redirectAllItemsSelected>true</redirectAllItemsSelected>
+            '''.format(data_path=data_path)
+
         restoreoracleXML = '''
             <TMMsg_CreateTaskReq>
-
               <taskInfo>
                 <associations>
                   <appName>Oracle</appName>
                   <backupsetName>default</backupsetName>
-                  <clientName></clientName>
+                  <clientName>{sourceClient}</clientName>
                   <clientSidePackage>true</clientSidePackage>
                   <consumeLicense>true</consumeLicense>
-                  <instanceName></instanceName>
+                  <instanceName>{instance}</instanceName>
                   <subclientName></subclientName>
                   <type>GALAXY</type>
                 </associations>
@@ -2767,16 +2813,12 @@ class CV_Backupset(CV_Client):
                       <browseOption>
                         <backupset>
                           <backupsetName>default</backupsetName>
-                          <clientName>TEST2.hzx</clientName>
+                          <clientName>{sourceClient}</clientName>
                         </backupset>
                         <commCellId>2</commCellId>
                         <listMedia>false</listMedia>
                         <mediaOption>
-                          <copyPrecedence>
-                            <copyPrecedence>0</copyPrecedence>
-                            <copyPrecedenceApplicable>false</copyPrecedenceApplicable>
-                            <synchronousCopyPrecedence>0</synchronousCopyPrecedence>
-                          </copyPrecedence>
+                          {copyPrecedence_xml}
                           <drive/>
                           <drivePool/>
                           <library/>
@@ -2810,9 +2852,13 @@ class CV_Backupset(CV_Client):
                       </commonOptions>
                       <destination>
                         <destClient>
-                          <clientName></clientName>
+                          <clientName>{destClient}</clientName>
                         </destClient>
-                        <destinationInstance/>
+                        <destinationInstance>
+                            <instanceName>{instance}</instanceName>
+                            <appName>Oracle</appName>
+                            <clientName>{destClient}</clientName>
+                        </destinationInstance>
                       </destination>
                       <fileOption>
                         <sourceItem/>
@@ -2820,7 +2866,7 @@ class CV_Backupset(CV_Client):
                       <oracleOpt>
                         <SPFilePath></SPFilePath>
                         <SPFileTime>
-                          <timeValue>2016-12-26 13:55:13</timeValue>
+                          <timeValue>{restoreTime}</timeValue>
                         </SPFileTime>
                         <archiveLog>false</archiveLog>
                         <archiveLogBy>DEFAULT</archiveLogBy>
@@ -2835,7 +2881,7 @@ class CV_Backupset(CV_Client):
                         <cloneEnv>false</cloneEnv>
                         <controlFilePath></controlFilePath>
                         <controlFileTime>
-                          <timeValue>2016-12-26 13:55:13</timeValue>
+                          <timeValue>{restoreTime}</timeValue>
                         </controlFileTime>
                         <controleFileScript></controleFileScript>
                         <ctrlBackupPiece></ctrlBackupPiece>
@@ -2864,7 +2910,7 @@ class CV_Backupset(CV_Client):
                         <isDeviceTypeSelected>false</isDeviceTypeSelected>
                         <logTarget></logTarget>
                         <logTime>
-                          <toTimeValue></toTimeValue>
+                          <toTimeValue>{restoreTime}</toTimeValue>
                         </logTime>
                         <maxOpenFiles>0</maxOpenFiles>
                         <mountDatabase>false</mountDatabase>
@@ -2876,11 +2922,9 @@ class CV_Backupset(CV_Client):
                         <recoverFrom>4</recoverFrom>
                         <recoverSCN></recoverSCN>
                         <recoverTime>
-                          <timeValue>2016-12-26 13:55:13</timeValue>
+                          <timeValue>{restoreTime}</timeValue>
                         </recoverTime>
-                        <redirectAllItemsSelected>false</redirectAllItemsSelected>
-                        <redirectItemsPresent>false</redirectItemsPresent>
-                        <renamePathForAllTablespaces></renamePathForAllTablespaces>
+                        {data_path_xml}
                         <resetDatabase>false</resetDatabase>
                         <resetLogs>1</resetLogs>
                         <restoreByTag>false</restoreByTag>
@@ -2915,7 +2959,6 @@ class CV_Backupset(CV_Client):
                         <useEndLog>false</useEndLog>
                         <useStartLSN>false</useStartLSN>
                         <useStartLog>true</useStartLog>
-                        <validate>false</validate>
                       </oracleOpt>
                       <virtualServerRstOption>
                         <isBlockLevelReplication>false</isBlockLevelReplication>
@@ -2937,45 +2980,244 @@ class CV_Backupset(CV_Client):
                   <taskType>IMMEDIATE</taskType>
                 </task>
               </taskInfo>
+            </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
+                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()),
+                                             data_path=data_path, copyPrecedence_xml=copyPrecedence_xml,
+                                             data_path_xml=data_path_xml)
 
-            </TMMsg_CreateTaskReq>'''
+        if "Last" not in restoreTime or not restoreTime:
+            restoreoracleXML = '''
+                <TMMsg_CreateTaskReq>
+                <taskInfo>
+                    <associations>
+                    <appName>Oracle</appName>
+                    <backupsetName>default</backupsetName>
+                    <clientName>{sourceClient}</clientName>
+                    <clientSidePackage>true</clientSidePackage>
+                    <consumeLicense>true</consumeLicense>
+                    <instanceName>{instance}</instanceName>
+                    <subclientName></subclientName>
+                    <type>GALAXY</type>
+                    </associations>
+                    <subTasks>
+                    <options>
+                        <adminOpts>
+                        <contentIndexingOption>
+                            <subClientBasedAnalytics>false</subClientBasedAnalytics>
+                        </contentIndexingOption>
+                        </adminOpts>
+                        <backupOpts>
+                        <backupLevel>INCREMENTAL</backupLevel>
+                        <vsaBackupOptions/>
+                        </backupOpts>
+                        <commonOpts>
+                        <!--User Description for the job-->
+                        <!--User Description for the job-->
+                        <jobDescription></jobDescription>
+                        <perfJobOpts>
+                            <rstPerfJobOpts>
+                            <mediaReadSpeed>false</mediaReadSpeed>
+                            <pipelineTransmittingSpeed>false</pipelineTransmittingSpeed>
+                            </rstPerfJobOpts>
+                        </perfJobOpts>
+                        <prePostOpts>
+                            <impersonation>
+                            <!--PrePost Command Impersonation Level-->
+                            <!--PrePost Command Impersonation Level-->
+                            <level>NO_SELECTION</level>
+                            <user>
+                                <userName></userName>
+                            </user>
+                            </impersonation>
+                            <postRecoveryCommand></postRecoveryCommand>
+                            <preRecoveryCommand></preRecoveryCommand>
+                            <runPostWhenFail>false</runPostWhenFail>
+                        </prePostOpts>
+                        <startUpOpts>
+                            <priority>166</priority>
+                            <startInSuspendedState>false</startInSuspendedState>
+                            <useDefaultPriority>true</useDefaultPriority>
+                        </startUpOpts>
+                        </commonOpts>
+                        <restoreOptions>
+                        <browseOption>
+                            <backupset>
+                            <backupsetName>default</backupsetName>
+                            <clientName>{sourceClient}</clientName>
+                            </backupset>
+                            <commCellId>2</commCellId>
+                            <listMedia>false</listMedia>
+                            <mediaOption>
+                            {copyPrecedence_xml}
+                            <drive/>
+                            <drivePool/>
+                            <library/>
+                            <mediaAgent/>
+                            <proxyForSnapClients>
+                                <clientName></clientName>
+                            </proxyForSnapClients>
+                            </mediaOption>
+                            <noImage>false</noImage>
+                            <timeRange/>
+                            <timeZone>
+                            <TimeZoneName>(GMT+08:00) &#x5317;&#x4eAC;&#xFF0C;&#x91CD;&#x5e86;&#xFF0C;&#x9999;&#x6e2F;&#x7279;&#x522B;&#x884C;&#x653F;&#x533A;&#xFF0C;&#x4e4C;&#x9C81;&#x6728;&#x9F50;</TimeZoneName>
+                            </timeZone>
+                            <useExactIndex>false</useExactIndex>
+                        </browseOption>
+                        <commonOptions>
+                            <clusterDBBackedup>false</clusterDBBackedup>
+                            <detectRegularExpression>true</detectRegularExpression>
+                            <ignoreNamespaceRequirements>false</ignoreNamespaceRequirements>
+                            <isDBArchiveRestore>false</isDBArchiveRestore>
+                            <isFromBrowseBackup>false</isFromBrowseBackup>
+                            <onePassRestore>false</onePassRestore>
+                            <recoverAllProtectedMails>false</recoverAllProtectedMails>
+                            <restoreDeviceFilesAsRegularFiles>false</restoreDeviceFilesAsRegularFiles>
+                            <restoreSpaceRestrictions>false</restoreSpaceRestrictions>
+                            <restoreToDisk>false</restoreToDisk>
+                            <revert>false</revert>
+                            <skipErrorsAndContinue>false</skipErrorsAndContinue>
+                            <syncRestore>false</syncRestore>
+                            <useRmanRestore>true</useRmanRestore>
+                        </commonOptions>
+                        <destination>
+                            <destClient>
+                            <clientName>{destClient}</clientName>
+                            </destClient>
+                            <destinationInstance>
+                                <instanceName>{instance}</instanceName>
+                                <appName>Oracle</appName>
+                                <clientName>{destClient}</clientName>
+                            </destinationInstance>
+                        </destination>
+                        <fileOption>
+                            <sourceItem/>
+                        </fileOption>
+                        <oracleOpt>
+                            <SPFilePath></SPFilePath>
+                            <SPFileTime>
+                            <timeValue>{restoreTime}</timeValue>
+                            </SPFileTime>
+                            <archiveLog>false</archiveLog>
+                            <archiveLogBy>DEFAULT</archiveLogBy>
+                            <autoDetectDevice>true</autoDetectDevice>
+                            <backupValidationOnly>false</backupValidationOnly>
+                            <catalogConnect1></catalogConnect1>
+                            <catalogConnect2>
+                            <password/>
+                            </catalogConnect2>
+                            <catalogConnect3></catalogConnect3>
+                            <checkReadOnly>false</checkReadOnly>
+                            <cloneEnv>false</cloneEnv>
+                            <controlFilePath></controlFilePath>
+                            <controlFileTime>
+                            <timeValue>{restoreTime}</timeValue>
+                            </controlFileTime>
+                            <controleFileScript></controleFileScript>
+                            <ctrlBackupPiece></ctrlBackupPiece>
+                            <ctrlFileBackupType>AUTO_BACKUP</ctrlFileBackupType>
+                            <ctrlRestoreFrom>true</ctrlRestoreFrom>
+                            <customizeScript>false</customizeScript>
+                            <databaseCopy>false</databaseCopy>
+                            <databaseScript></databaseScript>
+                            <dbIncarnation>0</dbIncarnation>
+                            <deviceType>UTIL_FILE</deviceType>
+                            <doNotRecoverRedoLogs>false</doNotRecoverRedoLogs>
+                            <duplicate>false</duplicate>
+                            <duplicateActiveDatabase>false</duplicateActiveDatabase>
+                            <duplicateNoFileNamecheck>false</duplicateNoFileNamecheck>
+                            <duplicateStandby>false</duplicateStandby>
+                            <duplicateStandbyDoRecover>false</duplicateStandbyDoRecover>
+                            <duplicateStandbySID></duplicateStandbySID>
+                            <duplicateTo>false</duplicateTo>
+                            <duplicateToLogFile>false</duplicateToLogFile>
+                            <duplicateToName></duplicateToName>
+                            <duplicateToOpenRestricted>false</duplicateToOpenRestricted>
+                            <duplicateToPFile></duplicateToPFile>
+                            <duplicateToSkipReadOnly>false</duplicateToSkipReadOnly>
+                            <duplicateToSkipTablespace>false</duplicateToSkipTablespace>
+                            <endLSNNum>1</endLSNNum>
+                            <isDeviceTypeSelected>false</isDeviceTypeSelected>
+                            <logTarget></logTarget>
+                            <logTime>
+                            <toTimeValue>{restoreTime}</toTimeValue>
+                            </logTime>
+                            <maxOpenFiles>0</maxOpenFiles>
+                            <mountDatabase>false</mountDatabase>
+                            <noCatalog>true</noCatalog>
+                            <openDatabase>true</openDatabase>
+                            <osID>1</osID>
+                            <partialRestore>false</partialRestore>
+                            <recover>true</recover>
+                            <recoverFrom>4</recoverFrom>
+                            <recoverSCN></recoverSCN>
+                            <recoverTime>
+                            <timeValue>{restoreTime}</timeValue>
+                            </recoverTime>
+                            {data_path_xml}
+                            <resetDatabase>false</resetDatabase>
+                            <resetLogs>1</resetLogs>
+                            <restoreByTag>false</restoreByTag>
+                            <restoreControlFile>true</restoreControlFile>
+                            <restoreData>true</restoreData>
+                            <restoreDataTag>false</restoreDataTag>
+                            <restoreFailover>true</restoreFailover>
+                            <restoreFrom>0</restoreFrom>
+                            <restoreSPFile>false</restoreSPFile>
+                            <restoreStream>1</restoreStream>
+                            <restoreTablespace>false</restoreTablespace>
+                            <restoreTag></restoreTag>
+                            <restoreTime/>
+                            <sapRestoreInitOraFromSrc>false</sapRestoreInitOraFromSrc>
+                            <setDBId>true</setDBId>
+                            <skipTargetConnection>false</skipTargetConnection>
+                            <spFileBackupPiece></spFileBackupPiece>
+                            <spFileBackupType>AUTO_BACKUP</spFileBackupType>
+                            <spFileRestoreFrom>false</spFileRestoreFrom>
+                            <specifyControlFile>false</specifyControlFile>
+                            <specifyControlFileTime>false</specifyControlFileTime>
+                            <specifySPFile>false</specifySPFile>
+                            <specifySPFileTime>false</specifySPFileTime>
+                            <startLSNNum>1</startLSNNum>
+                            <switchDatabaseMode>true</switchDatabaseMode>
+                            <tableViewRestore>false</tableViewRestore>
+                            <tag></tag>
+                            <timeZone>
+                            <TimeZoneName>(GMT+08:00) &#x5317;&#x4eAC;&#xFF0C;&#x91CD;&#x5e86;&#xFF0C;&#x9999;&#x6e2F;&#x7279;&#x522B;&#x884C;&#x653F;&#x533A;&#xFF0C;&#x4e4C;&#x9C81;&#x6728;&#x9F50;</TimeZoneName>
+                            </timeZone>
+                            <useEndLSN>false</useEndLSN>
+                            <useEndLog>false</useEndLog>
+                            <useStartLSN>false</useStartLSN>
+                            <useStartLog>true</useStartLog>
+                        </oracleOpt>
+                        <virtualServerRstOption>
+                            <isBlockLevelReplication>false</isBlockLevelReplication>
+                        </virtualServerRstOption>
+                        <volumeRstOption>
+                            <volumeLeveRestore>false</volumeLeveRestore>
+                        </volumeRstOption>
+                        </restoreOptions>
+                    </options>
+                    <subTask>
+                        <operationType>RESTORE</operationType>
+                        <subTaskType>RESTORE</subTaskType>
+                    </subTask>
+                    </subTasks>
+                    <task>
+                    <initiatedFrom>COMMANDLINE</initiatedFrom>
+                    <isEditing>true</isEditing>
+                    <policyType>DATA_PROTECTION</policyType>
+                    <taskType>IMMEDIATE</taskType>
+                    </task>
+                </taskInfo>
+                </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
+                                                 restoreTime=restoreTime, data_path=data_path,
+                                                 copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml)
 
         try:
             root = ET.fromstring(restoreoracleXML)
         except:
             self.msg = "Error:parse xml: " + restoreoracleXML
-            return jobId
-
-        sourceClient = source
-        destClient = dest
-        # instance = operator["instanceName"]
-        restoreTime = operator["restoreTime"]
-        # data_path = operator["data_path"]
-        try:
-            sourceclients = root.findall(".//associations/clientName")
-            for node in sourceclients:
-                node.text = sourceClient
-                break
-            destclients = root.findall(".//destClient/clientName")
-            for node in destclients:
-                node.text = destClient
-                break
-            sourceclients = root.findall(".//backupset/clientName")
-            for node in sourceclients:
-                node.text = sourceClient
-                break
-            instanceNames = root.findall(".//associations/instanceName")
-            for node in instanceNames:
-                node.text = instance
-                break
-            if "Last" not in restoreTime and restoreTime != None and restoreTime != "":
-                timeRange = root.findall(".//timeRange")
-                for node in timeRange:
-                    toTimeValue = ET.Element('toTimeValue')
-                    toTimeValue.text = restoreTime
-                    node.append(toTimeValue)
-        except:
-            self.msg = "the file format is wrong"
             return jobId
 
         xmlString = ""
@@ -3013,6 +3255,9 @@ class CV_Backupset(CV_Client):
             if "data_path" not in keys:
                 self.msg = "operator - no data_path"
                 return jobId
+            if "copy_priority" not in keys:
+                self.msg = "operator - no copy_priority"
+                return jobId
         else:
             self.msg = "param not set"
             return jobId
@@ -3022,6 +3267,42 @@ class CV_Backupset(CV_Client):
         restoreTime = operator["restoreTime"]
         browseJobId = operator["browseJobId"]
         data_path = operator["data_path"]
+        copy_priority = operator["copy_priority"]
+
+        try:
+            copy_priority = int(copy_priority)
+        except ValueError as e:
+            copy_priority = 1
+
+        copyPrecedence_xml = '''                                        
+        <copyPrecedence>
+            <copyPrecedenceApplicable>false</copyPrecedenceApplicable>
+            <synchronousCopyPrecedence>1</synchronousCopyPrecedence>
+            <copyPrecedence>0</copyPrecedence>
+        </copyPrecedence>
+        '''
+        # 2:表示选择辅助拷贝优先
+        if copy_priority == 2:
+            copyPrecedence_xml = '''                                        
+            <copyPrecedence>
+                <copyPrecedenceApplicable>true</copyPrecedenceApplicable>
+                <synchronousCopyPrecedence>2</synchronousCopyPrecedence>
+                <copyPrecedence>2</copyPrecedence>
+            </copyPrecedence>
+            '''
+        data_path_xml = '''
+        <redirectItemsPresent>false</redirectItemsPresent>
+        <validate>false</validate>
+        <renamePathForAllTablespaces></renamePathForAllTablespaces>
+        <redirectAllItemsSelected>false</redirectAllItemsSelected>
+        '''
+        if data_path:
+            data_path_xml = '''
+            <redirectItemsPresent>true</redirectItemsPresent>
+            <validate>false</validate>
+            <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
+            <redirectAllItemsSelected>true</redirectAllItemsSelected>
+            '''.format(data_path=data_path)
 
         restoreoracleRacXML = '''
             <TMMsg_CreateTaskReq>
@@ -3072,11 +3353,7 @@ class CV_Backupset(CV_Client):
                                         <mediaAgent/>
                                         <drivePool/>
                                         <drive/>
-                                        <copyPrecedence>
-                                            <copyPrecedenceApplicable>false</copyPrecedenceApplicable>
-                                            <synchronousCopyPrecedence>1</synchronousCopyPrecedence>
-                                            <copyPrecedence>0</copyPrecedence>
-                                        </copyPrecedence>
+                                        {copyPrecedence_xml}
                                         <proxyForSnapClients>
                                             <clientName></clientName>
                                         </proxyForSnapClients>
@@ -3154,10 +3431,7 @@ class CV_Backupset(CV_Client):
                                     <doNotRecoverRedoLogs>false</doNotRecoverRedoLogs>
                                     <openDatabase>false</openDatabase>
                                     <resetLogs>0</resetLogs>
-                                    <redirectItemsPresent>true</redirectItemsPresent>
-                                    <validate>false</validate>
-                                    <renamePathForAllTablespaces>{data_path}
-                                    </renamePathForAllTablespaces>
+                                    {data_path_xml}
                                     <databaseCopy>false</databaseCopy>
                                     <duplicate>false</duplicate>
                                     <duplicateNoFileNamecheck>false</duplicateNoFileNamecheck>
@@ -3176,7 +3450,6 @@ class CV_Backupset(CV_Client):
                                     <timeZone>
                                         <TimeZoneName>(UTC+08:00)&#x5317;&#x4eAC;&#xFF0C;&#x91CD;&#x5e86;&#xFF0C;&#x9999;&#x6e2F;&#x7279;&#x522B;&#x884C;&#x653F;&#x533A;&#xFF0C;&#x4e4C;&#x9C81;&#x6728;&#x9F50;</TimeZoneName>
                                     </timeZone>
-                                    <redirectAllItemsSelected>true</redirectAllItemsSelected>
                                     <fileName></fileName>
                                     <stagingPath></stagingPath>
                                     <tableViewRestore>false</tableViewRestore>
@@ -3276,7 +3549,8 @@ class CV_Backupset(CV_Client):
 
             </TMMsg_CreateTaskReq>
         '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), data_path=data_path)
+                   restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()), data_path=data_path,
+                   copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml)
         if "Last" not in restoreTime or not restoreTime:
             restoreoracleRacXML = """
                 <TMMsg_CreateTaskReq>
@@ -3330,11 +3604,7 @@ class CV_Backupset(CV_Client):
                               <mediaAgent/>
                               <drivePool/>
                               <drive/>
-                              <copyPrecedence>
-                                <copyPrecedenceApplicable>false</copyPrecedenceApplicable>
-                                <synchronousCopyPrecedence>1</synchronousCopyPrecedence>
-                                <copyPrecedence>0</copyPrecedence>
-                              </copyPrecedence>
+                              {copyPrecedence_xml}
                               <proxyForSnapClients>
                                 <clientName></clientName>
                               </proxyForSnapClients>
@@ -3411,9 +3681,7 @@ class CV_Backupset(CV_Client):
                             <doNotRecoverRedoLogs>false</doNotRecoverRedoLogs>
                             <openDatabase>false</openDatabase>
                             <resetLogs>0</resetLogs>
-                            <redirectItemsPresent>true</redirectItemsPresent>
-                            <validate>false</validate>
-                            <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
+                            {data_path_xml}
                             <databaseCopy>false</databaseCopy>
                             <duplicate>false</duplicate>
                             <duplicateNoFileNamecheck>false</duplicateNoFileNamecheck>
@@ -3532,7 +3800,8 @@ class CV_Backupset(CV_Client):
 
                 </TMMsg_CreateTaskReq>
             """.format(sourceClient=sourceClient, destClient=destClient, instance=instance, restoreTime=restoreTime,
-                       browseJobId=browseJobId, data_path=data_path)
+                       browseJobId=browseJobId, data_path=data_path, copyPrecedence_xml=copyPrecedence_xml,
+                       data_path_xml=data_path_xml)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
@@ -4175,7 +4444,7 @@ def run(origin, target, instance, processrun_id):
     recovery_result = {}
 
     credit_sql = "SELECT t.content FROM {db_name}.faconstor_vendor t;".format(**{"db_name": db_name})
-    recovery_sql = """SELECT recover_time, browse_job_id FROM {db_name}.faconstor_processrun
+    recovery_sql = """SELECT recover_time, browse_job_id, data_path, copy_priority FROM {db_name}.faconstor_processrun
                       WHERE state!='9' AND id={processrun_id};""".format(
         **{"processrun_id": processrun_id, "db_name": db_name})
 
@@ -4187,6 +4456,8 @@ def run(origin, target, instance, processrun_id):
 
     recover_time = ""
     browse_job_id = ""
+    data_path = ""
+    copy_priority = ""
 
     if recovery_result:
         try:
@@ -4200,6 +4471,8 @@ def run(origin, target, instance, processrun_id):
             recover_time = ""
 
         browse_job_id = recovery_result["browse_job_id"]
+        data_path = recovery_result["data_path"]
+        copy_priority = recovery_result["copy_priority"]
 
     webaddr = ""
     port = ""
@@ -4238,7 +4511,8 @@ def run(origin, target, instance, processrun_id):
     cvAPI = CV_API(cvToken)
 
     jobId = cvAPI.restoreOracleBackupset(origin, target, instance,
-                                         {'browseJobId': browse_job_id, 'restoreTime': recover_time})
+                                         {'browseJobId': browse_job_id, 'restoreTime': recover_time,
+                                          'data_path': data_path, "copy_priority": copy_priority})
     # jobId = 4553295
     if jobId == -1:
         print("oracle恢复接口调用失败，{0}。".format(cvAPI.msg))

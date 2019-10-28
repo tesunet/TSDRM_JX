@@ -681,16 +681,9 @@ def runstep(steprun, if_repeat=False):
                         instance = oracle_info["instance"]
 
                     oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
-
-                    # # 测试定时任务
-                    print("oracle_param", oracle_param)
-                    # result["exec_tag"] = 0
-                    # result["data"] = "调用commvault接口成功。"
-                    # result["log"] = "调用commvault接口成功。"
                     try:
                         ret = subprocess.getstatusoutput(commvault_api_path + " %s" % oracle_param)
                         exec_status, recover_job_id = ret
-                        print(ret)
                     except Exception as e:
                         result["exec_tag"] = 1
                         result["data"] = "执行commvault接口出现异常{0}。".format(e)

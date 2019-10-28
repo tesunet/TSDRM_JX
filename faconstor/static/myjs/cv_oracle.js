@@ -48,29 +48,21 @@ var FormWizard = function () {
 
 if (App.isAngularJsApp() === false) {
     jQuery(document).ready(function () {
-        var t1 = window.setTimeout(getstep, 3000);  // 访问页面之后10秒执行函数
-        var t2 = window.setInterval(timefun, 3000);  // 设置无限定时器
-        var num = 0;
-        var isinit = true;
-        var currentRunState = $("#current_run_state").val();
+        var global_end = false;
 
-        $(document).on('click', function () {
-            num = 0;
-        });
-
-        function timefun() {
-            var strUrl = window.location.href;
-            if (strUrl.indexOf("cv_oracle") > -1) {
-                num++;
-                if (num >= 15) {
-                    $('#form_wizard_1').removeData('bootstrapWizard');
+        function customOurInterval(argument) {
+            setTimeout(function () {
+                if (!global_end) {
+                    // 处理时对end标志进行修改，end=True表示停止（取消定时器）。
                     getstep();
-                    num = 0;
+                    // 循环(arguments.callee获取当前执行函数的引用)
+                    setTimeout(arguments.callee, 5000);
+                } else {
+                    global_end = false;
                 }
-            } else {
-                window.clearInterval(t2);
-            }
-        }
+            }, 5000);
+        };
+        customOurInterval();
 
         function showResult() {
             var process_run_id = $("#process_run_id").val();
@@ -230,6 +222,7 @@ if (App.isAngularJsApp() === false) {
 
 
         function getstep() {
+            console.log('loading...');
             $.ajax({
                 type: "POST",
                 url: "../../getrunsetps/",
@@ -270,7 +263,11 @@ if (App.isAngularJsApp() === false) {
 
                         $("#process_state").val("完成");
                         $("#stopbtn").hide();
-                        window.clearInterval(t2);
+
+                        // 完成的状态下关闭定时器
+                        global_end = true;
+                        // window.clearInterval(t2);
+
                         $("#show_result").show();
 
                         if (confirm("是否查看流程报告？")) {
@@ -279,24 +276,20 @@ if (App.isAngularJsApp() === false) {
 
                             showResult();
                         }
-
-                        // if (currentRunState != "DONE" && currentRunState != "STOP") {
-                        //     if (confirm("是否查看流程报告？")) {
-                        //         // 自动触发模态框
-                        //         $("#process_result").modal({backdrop: "static"});
-                        //
-                        //         showResult();
-                        //     }
-                        // }
                     }
 
-                    if (data["process_state"] == "RUN")
+                    if (data["process_state"] == "RUN") {
                         $("#process_state").val("运行");
-                    if (data["process_state"] == "PLAN")
+                    }
+
+                    if (data["process_state"] == "PLAN") {
                         $("#process_state").val("计划");
+                    }
                     if (data["process_state"] == "ERROR") {
                         $("#process_state").val("错误");
-                        window.clearInterval(t2);
+                        // 错误的状态下，关闭定时器
+                        global_end = true;
+                        // window.clearInterval(t2);
                     }
                     if (data["process_state"] == "STOP") {
                         $("#process_state").val("停止");
@@ -304,19 +297,17 @@ if (App.isAngularJsApp() === false) {
                         $("#process_name").html(data["process_name"]);
 
                         $("#stopbtn").hide();
-                        window.clearInterval(t2);
+
+                        // 停止的状态下， 关闭定时器
+                        global_end = true;
+                        // window.clearInterval(t2);
+
+
                         $("#show_result").show();
 
                         $("#show_force_script").show();
-                        // if (currentRunState != "DONE" && currentRunState != "STOP") {
-                        //     if (confirm("是否查看流程报告？")) {
-                        //         // 自动触发模态框
-                        //         $("#process_result").modal({backdrop: "static"});
-                        //
-                        //         showResult();
-                        //     }
-                        // }
                     }
+
                     var processallsteps = 0;
                     var processdonesteps = 0;
                     var showButtonId = "";
@@ -382,6 +373,9 @@ if (App.isAngularJsApp() === false) {
                         }
 
                         if (step1_state == "CONFIRM") {
+                            global_end = true;
+
+
                             step1_state = "待确认";
                             expand = "collapse";
                             style = "";
@@ -482,6 +476,8 @@ if (App.isAngularJsApp() === false) {
                                 stepdonesteps = stepdonesteps + 1;
                             }
                             if (step2_state == "CONFIRM") {
+                                global_end = true;
+
                                 step2_state = "待确认";
                                 step2btn = "<div class=\"form-actions noborder\" style=\"text-align:center\" hidden>\n" + "<input name='step_id' id='step_id' value='" + step2_run_id + "' hidden>" +
                                     "                                                <button id=\"confirmbtn\" type=\"button\" class=\"btn green\"> 确认 </button>\n" +
@@ -673,8 +669,8 @@ if (App.isAngularJsApp() === false) {
                                         if (data.data == "0") {
                                             alert("该步骤已确认，继续流程！");
                                             getstep();
-                                            window.clearInterval(t2);
-                                            t2 = window.setInterval(timefun, 3000);
+                                            global_end = false;
+                                            customOurInterval();
                                             getTaskInfo();
                                         } else {
                                             alert("步骤确认异常，请联系客服！")
@@ -694,8 +690,9 @@ if (App.isAngularJsApp() === false) {
                                     if (data.data == "0") {
                                         alert("该步骤已确认，继续流程！");
                                         getstep();
-                                        window.clearInterval(t2);
-                                        t2 = window.setInterval(timefun, 3000);
+                                        // 确认流程之后再次开启定时器
+                                        global_end = false;
+                                        customOurInterval();
                                         getTaskInfo();
                                     } else {
                                         alert("步骤确认异常，请联系客服！")
@@ -738,8 +735,10 @@ if (App.isAngularJsApp() === false) {
                         $("#ignore").hide();
                         $('#static').modal('hide');
                         // 重启定时器
-                        window.clearInterval(t2);
-                        t2 = window.setInterval(timefun, 3000);
+                        global_end = false;
+                        customOurInterval();
+                        // window.clearInterval(t2);
+                        // t2 = window.setInterval(timefun, 3000);
                     } else
                         alert(data["res"]);
                 },
@@ -761,7 +760,9 @@ if (App.isAngularJsApp() === false) {
                     alert(data.data);
                     $('#static').modal('hide');
                     // 重启定时器
-                    t2 = window.setInterval(timefun, 3000);
+                    global_end = false;
+                    customOurInterval();
+                    // t2 = window.setInterval(timefun, 3000);
                 }
             });
         });
@@ -788,8 +789,6 @@ if (App.isAngularJsApp() === false) {
             });
         });
 
-        // 终止定时器的判断
-        var end = false;
 
         function get_force_script_info() {
             // [script_name], [script_status]
@@ -827,7 +826,7 @@ if (App.isAngularJsApp() === false) {
                             // 强制执行脚本完成,关闭定时器
                             $('#static_force_script').modal("hide");
                             alert("强制执行脚本完成。");
-                            end = true;
+                            force_end = true;
                             // 跳转启动页面
                             //  window.location.href = data.data.switch_url;
                         }
@@ -847,6 +846,8 @@ if (App.isAngularJsApp() === false) {
             $('#static_force_script').modal("show");
         });
 
+
+        var force_end = false;
         // 启动模态框时先查询状态，再开启定时器
         $('#static_force_script').on('show.bs.modal', function () {
             // 有脚本分组：修改状态
@@ -855,15 +856,14 @@ if (App.isAngularJsApp() === false) {
 
             // 3.定时任务
             setTimeout(function () {
-                if (!end) {
-                    // do something 定时任务
+                if (!force_end) {
                     // 处理时对end标志进行修改，end=True表示停止（取消定时器）。
                     get_force_script_info();
-
+                    console.log("检测强制执行脚本情况...");
                     // 循环(arguments.callee获取当前执行函数的引用)
                     setTimeout(arguments.callee, 4000);
                 } else {
-                    end = false;
+                    force_end = false;
                 }
             }, 4000);
         });
@@ -873,7 +873,6 @@ if (App.isAngularJsApp() === false) {
             getstep();
         });
 
-
         // 终止流程
         $("#stopbtn").click(function () {
             $("#confirmbtn").parent().empty();
@@ -882,7 +881,6 @@ if (App.isAngularJsApp() === false) {
             else {
                 if (confirm("即将终止本次演练，注意，此操作不可逆！是否继续？")) {
                     var process_run_id = $("#process_run_id").val();
-
                     /*
                         弹出模态框：
                             弹出所有包含强制执行的步骤下的脚本，script_run_id，script_run_name~~ 仅在弹出模态框时展示.
@@ -902,24 +900,27 @@ if (App.isAngularJsApp() === false) {
                             "process_note": $("#process_note").val(),
                         },
                         success: function (data) {
+                            // 停止定时器
+                            global_end = true;
+
                             alert(data.data);
                             // 1.模态框
                             $("#static_force_script").modal("show");
-                        }
-                    });
-                    // 3.终止当前流程的异步任务
-                    var process_run_id = $("#process_run_id").val();
-                    var abnormal = "1";
-                    $.ajax({
-                        url: "../../revoke_current_task/",
-                        type: "post",
-                        data: {
-                            "process_run_id": process_run_id,
-                            "abnormal": abnormal,
-                        },
-                        success: function (data) {
-                            // 不做处理
-                            console.log("终止当前流程异步任务。")
+                            // 3.终止当前流程的异步任务
+                            var process_run_id = $("#process_run_id").val();
+                            var abnormal = "2";
+                            $.ajax({
+                                url: "../../revoke_current_task/",
+                                type: "post",
+                                data: {
+                                    "process_run_id": process_run_id,
+                                    "abnormal": abnormal,
+                                },
+                                success: function (data) {
+                                    // 不做处理
+                                    console.log("终止当前流程异步任务。")
+                                }
+                            });
                         }
                     });
                 }
