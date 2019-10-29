@@ -215,7 +215,7 @@ if __name__ == '__main__':
     # server_obj = ServerByPara(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     # server_obj = ServerByPara(r"C:\Users\Administrator\Desktop\test_python.bat", "192.168.100.151", "administrator","tesunet@2017", "Windows")
     # server_obj = ServerByPara(r"/root/Desktop/test06.sh hello", "47.95.195.90", "root","!zxcvbn123", "Linux")
-    server_obj = ServerByPara(r"echo '你好'&echo '你好'&echo '你好'", "192.168.100.149", "administrator","tesu@2019", "Windows")
+    server_obj = ServerByPara(r"echo 'echo test'>/home/test.sh", "192.168.184.66", "root","password", "Linux")
     # server_obj = ServerByPara(r"echo '你好你好你好你好你好你好你好';echo '你好你好你好你好你好你好你好';echo '你好你好你好你好你好你好你好'", "192.168.184.66", "root","password", "Linux")
 
     server_obj.run("")

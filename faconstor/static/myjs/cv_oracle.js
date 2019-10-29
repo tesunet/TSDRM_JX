@@ -49,19 +49,22 @@ var FormWizard = function () {
 if (App.isAngularJsApp() === false) {
     jQuery(document).ready(function () {
         var global_end = false;
-
+        var curHref = window.href;
         function customOurInterval(argument) {
             setTimeout(function () {
                 if (!global_end) {
                     // 处理时对end标志进行修改，end=True表示停止（取消定时器）。
-                    getstep();
+                    if (curHref.indexOf("cv_oracle") != -1) {
+                        getstep();
+                    };
+
                     // 循环(arguments.callee获取当前执行函数的引用)
-                    setTimeout(arguments.callee, 5000);
+                    setTimeout(arguments.callee, 3000);
                 } else {
                     global_end = false;
                 }
-            }, 5000);
-        };
+            }, 3000);
+        }
         customOurInterval();
 
         function showResult() {
@@ -170,10 +173,10 @@ if (App.isAngularJsApp() === false) {
                 "bProcessing": true,
                 "ajax": "../../get_celery_tasks_info/",
                 "columns": [
-                    {"data": "uuid"},
-                    {"data": "state"},
-                    {"data": "args"},
-                    {"data": "received"},
+                    { "data": "uuid" },
+                    { "data": "state" },
+                    { "data": "args" },
+                    { "data": "received" },
                 ],
                 "columnDefs": [{
                     targets: 0,
@@ -227,9 +230,9 @@ if (App.isAngularJsApp() === false) {
                 type: "POST",
                 url: "../../getrunsetps/",
                 data:
-                    {
-                        process: $("#process").val()
-                    },
+                {
+                    process: $("#process").val()
+                },
                 dataType: "json",
                 success: function (data) {
                     $("#show_force_script").hide();
@@ -272,7 +275,7 @@ if (App.isAngularJsApp() === false) {
 
                         if (confirm("是否查看流程报告？")) {
                             // 自动触发模态框
-                            $("#process_result").modal({backdrop: "static"});
+                            $("#process_result").modal({ backdrop: "static" });
 
                             showResult();
                         }
@@ -583,7 +586,7 @@ if (App.isAngularJsApp() === false) {
                                 $("#exec").hide();
                                 $("#ignore").hide();
 
-                                $("#static").modal({backdrop: "static"});
+                                $("#static").modal({ backdrop: "static" });
                                 $("#script_button").val($(this).find('option:selected').val());
                                 // 获取当前步骤脚本信息
                                 var steprunid = "0";
@@ -591,7 +594,7 @@ if (App.isAngularJsApp() === false) {
                                 $.ajax({
                                     url: "/get_current_scriptinfo/",
                                     type: "post",
-                                    data: {"steprunid": steprunid, "scriptid": scriptid},
+                                    data: { "steprunid": steprunid, "scriptid": scriptid },
                                     success: function (data) {
                                         if (data.data.interface_type == "commvault") {
                                             $("#script_ip_div").hide();
@@ -705,13 +708,13 @@ if (App.isAngularJsApp() === false) {
 
                     // 展示结果
                     $("#show_result").click(function () {
-                        $("#process_result").modal({backdrop: "static"});
+                        $("#process_result").modal({ backdrop: "static" });
 
                         showResult();
                     });
                     // 展示任务信息
                     $("#show_tasks").click(function () {
-                        $("#static_tasks").modal({backdrop: "static"});
+                        $("#static_tasks").modal({ backdrop: "static" });
                         customTasksTable();
                     })
                 }
@@ -726,9 +729,9 @@ if (App.isAngularJsApp() === false) {
                 dataType: 'json',
                 url: "../../cv_oracle_continue/",
                 data:
-                    {
-                        process: $('#process').val(),
-                    },
+                {
+                    process: $('#process').val(),
+                },
                 success: function (data) {
                     if (data["res"] == "执行成功。") {
                         $("#exec").hide();
@@ -755,7 +758,7 @@ if (App.isAngularJsApp() === false) {
             $.ajax({
                 url: "../../ignore_current_script/",
                 type: "post",
-                data: {"scriptid": scriptid},
+                data: { "scriptid": scriptid },
                 success: function (data) {
                     alert(data.data);
                     $('#static').modal('hide');
@@ -770,7 +773,7 @@ if (App.isAngularJsApp() === false) {
 
         // 展示错误日志
         $("#show_log").click(function () {
-            $("#static_log").modal({backdrop: "static"});
+            $("#static_log").modal({ backdrop: "static" });
             $("#log_info").val("");
             var scriptRunId = $("#script_button").val();
             $.ajax({
@@ -940,6 +943,17 @@ if (App.isAngularJsApp() === false) {
         $("#tasks_fresh").click(function () {
             customTasksTable();
         });
+
+        // 说明字段的聚焦于取消聚焦
+        $("#process_note").focus(function () {
+            global_end = true;
+        });
+
+        $("#process_note").blur(function () {
+            global_end = false;
+            customOurInterval();
+        });
+
 
     });
 }
