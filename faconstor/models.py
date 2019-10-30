@@ -97,6 +97,12 @@ class Origin(models.Model):
     copy_priority = models.IntegerField(
         "拷贝优先级：1：主拷贝；2：辅助拷贝", blank=True, null=True, default=1, choices=copy_priority_choices)
     data_path = models.CharField("数据文件重定向路径", blank=True, default="", max_length=512)
+    db_open_choices = (
+        (1, "是"),
+        (2, "否")
+    )
+    db_open = models.IntegerField(
+        "是否恢复完成后打开数据库：1：默认打开数据库；2：不打开数据库", null=True, default=1, choices=db_open_choices)
 
 
 class HostsManage(models.Model):
@@ -139,8 +145,10 @@ class ProcessRun(models.Model):
     recover_time = models.DateTimeField("指定恢复时间点", blank=True, null=True)
     browse_job_id = models.CharField("指点时间点的备份任务ID", blank=True, null=True, max_length=50)
     data_path = models.CharField("数据重定向路径", blank=True, null=True, max_length=512)
-    copy_priority = models.IntegerField("优先拷贝顺序", blank=True, default=1)
+    copy_priority = models.IntegerField("优先拷贝顺序", blank=True, default=1, null=True)
     origin = models.CharField("源客户端", blank=True, null=True, max_length=256)
+    curSCN = models.IntegerField("当前备份nextSCN-1", blank=True, null=True)
+    db_open = models.IntegerField("是否打开数据库", default=1, null=True)
 
 
 class StepRun(models.Model):

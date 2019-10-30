@@ -8,7 +8,7 @@ import winrm
 import socket
 import requests
 import datetime
-from winrm.exceptions import WinRMTransportError, WinRMOperationTimeoutError
+from winrm.exceptions import WinRMTransportError, WinRMOperationTimeoutError, WinRMError
 from requests.exceptions import ConnectionError
 
 
@@ -84,7 +84,7 @@ class ServerByPara(object):
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             self.client.connect(hostname=self.host, username=self.user, password=self.pwd, timeout=5, port=port)
-        except socket.timeout as e:
+        except (socket.timeout, paramiko.ssh_exception.SSHException) as e:
             print("连接服务器失败")
             return {
                 "exec_tag": 1,
@@ -147,7 +147,7 @@ class ServerByPara(object):
         try:
             s = Session(self.host, auth=(self.user, self.pwd))
             ret = s.run_cmd(self.cmd)
-        except (ConnectionError, WinRMOperationTimeoutError, WinRMTransportError) as e:
+        except (ConnectionError, WinRMOperationTimeoutError, WinRMTransportError, WinRMError) as e:
             if type(e) == WinRMOperationTimeoutError:
                 print("脚本执行超时")
                 exec_tag = 1
@@ -205,7 +205,7 @@ class ServerByPara(object):
         if self.system_choice == "Linux":
             result = self.exec_linux_cmd(succeedtext)
         elif self.system_choice == "AIX":
-            result = self.exec_linux_cmd(succeedtext)
+            result = self.exec_linux_cmd(succeedtext, port=22)
         else:
             result = self.exec_win_cmd(succeedtext)
         print(result)
@@ -215,7 +215,11 @@ if __name__ == '__main__':
     # server_obj = ServerByPara(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     # server_obj = ServerByPara(r"C:\Users\Administrator\Desktop\test_python.bat", "192.168.100.151", "administrator","tesunet@2017", "Windows")
     # server_obj = ServerByPara(r"/root/Desktop/test06.sh hello", "47.95.195.90", "root","!zxcvbn123", "Linux")
-    server_obj = ServerByPara(r"echo 'echo test'>/home/test.sh", "192.168.184.66", "root","password", "Linux")
+    linux_temp_script_file = r"/tmp/drm/954/tmp_script_6486.sh&&/tmp/drm/954/tmp_script_6486.sh"
+    cmd = r"sed -i 's/\r$//' {0}&&{0}".format(linux_temp_script_file)
+    # print(cmd)  # sed -i 's/\r$//' /tmp/drm/954/tmp_script_6486.sh&&/tmp/drm/954/tmp_script_6486.sh
+    server_obj = ServerByPara("mkdir -p /tmp/drm/957", "10.64.7.43", "root","qtdl2003", "Linux")
     # server_obj = ServerByPara(r"echo '你好你好你好你好你好你好你好';echo '你好你好你好你好你好你好你好';echo '你好你好你好你好你好你好你好'", "192.168.184.66", "root","password", "Linux")
 
     server_obj.run("")
+    print(11111111111111)

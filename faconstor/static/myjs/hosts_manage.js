@@ -118,7 +118,9 @@ $(document).ready(function () {
     });
 
     $("#os").change(function () {
-        if ($(this).val() == 'Linux' || $(this).val() == 'AIX') {
+        if ($(this).val() == 'Linux') {
+            $("#type").val("SSH");
+        } else if ($(this).val() == 'AIX') {
             $("#type").val("SSH");
         } else if ($(this).val() == 'Windows') {
             $("#type").val("BAT");
@@ -129,6 +131,8 @@ $(document).ready(function () {
     // $("#type").change(function () {
     //     if ($(this).val() == 'SSH') {
     //         $("#os").val("Linux");
+    //     } else if ($(this).val() == 'BAT'){
+    //
     //     } else if ($(this).val() == 'BAT') {
     //         $("#os").val("Windows");
     //     } else {
