@@ -583,7 +583,6 @@ def runstep(steprun, if_repeat=False):
                         instance = oracle_info["instance"]
 
                     oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
-
                     # # 测试定时任务
                     # result["exec_tag"] = 0
                     # result["data"] = "调用commvault接口成功。"
@@ -691,28 +690,6 @@ def runstep(steprun, if_repeat=False):
                 myprocesstask.state = "1"
                 myprocesstask.content = "接口" + script_name + "完成。"
                 myprocesstask.save()
-
-                # if script.script.interface_type == "脚本":
-                #     sys_platform = script.script.hosts_manage.os
-                #     ip = script.script.hosts_manage.host_ip
-                #     username = script.script.hosts_manage.username
-                #     password = script.script.hosts_manage.password
-                #
-                #     # 删除Linux下脚本
-                #     if sys_platform == "Linux":
-                #         del_cmd = 'if [ ! -f "{0}" ]; then'.format(linux_temp_script_file) + '\n' + \
-                #                   '   echo "文件不存在"' + '\n' + \
-                #                   'else' + '\n' + \
-                #                   '   rm -f {0}'.format(linux_temp_script_file) + '\n' + \
-                #                   'fi'
-                #         del_obj = remote.ServerByPara(del_cmd, ip, username, password, sys_platform)
-                #         del_result = del_obj.run("")
-                #     else:
-                #         if result["exec_tag"] == 0:
-                #             # 删除windows的bat脚本
-                #             del_cmd = 'if exist {0} del "{0}"'.format(windows_temp_script_file)
-                #             del_obj = remote.ServerByPara(del_cmd, ip, username, password, sys_platform)
-                #             del_result = del_obj.run("")
 
             if steprun.step.approval == "1" or steprun.verifyitemsrun_set.all():
                 steprun.state = "CONFIRM"
@@ -863,7 +840,7 @@ def create_process_run(process):
     """
     # exec_process.delay(processrunid)
     # data_path/target/origin/
-    origin_name, target_id, data_path = "", None, ""
+    origin_name, target_id, data_path, copy_priority, db_open = "", None, "", 1, 1
     try:
         process_id = int(process)
     except ValueError as e:
@@ -881,27 +858,46 @@ def create_process_run(process):
                 for cur_script in all_scripts:
                     if cur_script.origin:
                         origin_name = cur_script.origin.client_name
+                        data_path = cur_script.origin.data_path
+                        copy_priority = cur_script.origin.copy_priority
+                        db_open = cur_script.origin.db_open
                         if cur_script.origin.target:
                             target_id = cur_script.origin.target.id
-                            data_path = cur_script.origin.target.data_path
                         break
 
             running_process = ProcessRun.objects.filter(process=cur_process, state__in=["RUN", "ERROR"])
             if running_process.exists():
-                pass
+                myprocesstask = ProcessTask()
+                myprocesstask.starttime = datetime.datetime.now()
+                myprocesstask.type = "INFO"
+                myprocesstask.logtype = "END"
+                myprocesstask.state = "0"
+                myprocesstask.processrun = running_process[0]
+                myprocesstask.content = "计划流程({0})已运行或者错误流程未处理，无法按计划创建恢复流程任务。".format(running_process[0].process.name)
+                myprocesstask.save()
                 # result["res"] = '流程启动失败，该流程正在进行中，请勿重复启动。'
             else:
                 myprocessrun = ProcessRun()
+                myprocessrun.creatuser = "Computer Crontab"
                 myprocessrun.process = cur_process
                 myprocessrun.starttime = datetime.datetime.now()
                 myprocessrun.state = "RUN"
                 myprocessrun.target_id = target_id
                 myprocessrun.data_path = data_path
+                myprocessrun.copy_priority = copy_priority
+                myprocessrun.db_open = db_open
                 myprocessrun.origin = origin_name
                 myprocessrun.save()
                 mystep = cur_process.step_set.exclude(state="9")
                 if not mystep.exists():
-                    pass
+                    myprocesstask = ProcessTask()
+                    myprocesstask.starttime = datetime.datetime.now()
+                    myprocesstask.type = "INFO"
+                    myprocesstask.logtype = "END"
+                    myprocesstask.state = "0"
+                    myprocesstask.processrun = running_process[0]
+                    myprocesstask.content = "计划流程({0})不存在可运行步骤，无法按计划创建恢复流程任务。".format(running_process[0].process.name)
+                    myprocesstask.save()
                     # result["res"] = '流程启动失败，没有找到可用步骤。'
                 else:
                     for step in mystep:
@@ -919,15 +915,13 @@ def create_process_run(process):
                             myscriptrun.state = "EDIT"
                             myscriptrun.save()
 
-                    prosssigns = ProcessTask.objects.filter(processrun=myprocessrun, state="0")
-                    if not prosssigns.exists():
-                        myprocesstask = ProcessTask()
-                        myprocesstask.processrun = myprocessrun
-                        myprocesstask.starttime = datetime.datetime.now()
-                        myprocesstask.type = "INFO"
-                        myprocesstask.logtype = "START"
-                        myprocesstask.state = "1"
-                        myprocesstask.content = "流程已启动。"
-                        myprocesstask.save()
+                    myprocesstask = ProcessTask()
+                    myprocesstask.processrun = myprocessrun
+                    myprocesstask.starttime = datetime.datetime.now()
+                    myprocesstask.type = "INFO"
+                    myprocesstask.logtype = "START"
+                    myprocesstask.state = "1"
+                    myprocesstask.content = "流程已启动。"
+                    myprocesstask.save()
 
-                        exec_process.delay(myprocessrun.id)
+                    exec_process.delay(myprocessrun.id)

@@ -4444,7 +4444,6 @@ def run(origin, target, instance, processrun_id):
         "token": "",
         "last_login": 0
     }
-
     cvToken = CV_RestApi_Token()
     cvToken.login(info)
     cvAPI = CV_API(cvToken)

@@ -7178,7 +7178,6 @@ def process_schedule_save(request):
         per_time = request.POST.get('per_time', '')
         per_month = request.POST.get('per_month', '')
         per_week = request.POST.get('per_week', '')
-
         ret = 1
         info = ""
 
@@ -7244,11 +7243,10 @@ def process_schedule_save(request):
                 # 新增
                 if process_schedule_id == 0:
                     cur_crontab_schedule = CrontabSchedule()
-
                     cur_crontab_schedule.hour = hour
                     cur_crontab_schedule.minute = minute
-                    cur_crontab_schedule.day_of_week = per_week
-                    cur_crontab_schedule.day_of_month = per_month
+                    cur_crontab_schedule.day_of_week = per_week if per_week else "*"
+                    cur_crontab_schedule.day_of_month = per_month if per_month else "*"
 
                     cur_crontab_schedule.save()
                     cur_crontab_schedule_id = cur_crontab_schedule.id
@@ -7260,7 +7258,7 @@ def process_schedule_save(request):
                     # 默认关闭
                     cur_periodictask.enabled = 0
                     # 任务名称
-                    cur_periodictask.task = "dbom.tasks.create_process_run"
+                    cur_periodictask.task = "faconstor.tasks.create_process_run"
                     cur_periodictask.args = [cur_process.id]
                     cur_periodictask.save()
                     cur_periodictask_id = cur_periodictask.id
@@ -7284,7 +7282,6 @@ def process_schedule_save(request):
                     else:
 
                         cur_periodictask_id = ps.dj_periodictask_id
-
                         # 启动定时任务
                         try:
                             cur_periodictask = PeriodicTask.objects.get(id=cur_periodictask_id)
@@ -7292,15 +7289,14 @@ def process_schedule_save(request):
                             ret = 0
                             info = "定时任务不存在。"
                         else:
-
                             cur_crontab_schedule = cur_periodictask.crontab
                             cur_crontab_schedule.hour = hour
                             cur_crontab_schedule.minute = minute
-                            cur_crontab_schedule.day_of_week = per_week
-                            cur_crontab_schedule.day_of_month = per_month
+                            cur_crontab_schedule.day_of_week = per_week if per_week else "*"
+                            cur_crontab_schedule.day_of_month = per_month if per_month else "*"
                             cur_crontab_schedule.save()
-
                             # 刷新定时器状态
+                            cur_periodictask.task = "faconstor.tasks.create_process_run"
                             cur_periodictask.args = [cur_process.id]
                             cur_periodictask_status = cur_periodictask.enabled
                             cur_periodictask.enabled = cur_periodictask_status
