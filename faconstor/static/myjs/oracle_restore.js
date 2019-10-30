@@ -2,6 +2,10 @@ $(document).ready(function () {
     $("#target").val("");
     var copy_priority_hidden = $("#copy_priority_hidden").val();
     $("#copy_priority").val(copy_priority_hidden);
+
+    var db_open_hidden = $("#db_open_hidden").val();
+    $("#db_open").val(db_open_hidden);
+
     function customProcessDataTable() {
         $('#sample_1').dataTable({
             "bAutoWidth": true,
@@ -115,6 +119,7 @@ $(document).ready(function () {
 
                     origin: $("#origin").val(),
                     copy_priority: $("#copy_priority").val(),
+                    db_open: $("#db_open").val(),
                 },
             success: function (data) {
                 if (data["res"] == "新增成功。") {

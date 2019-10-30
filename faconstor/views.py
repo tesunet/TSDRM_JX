@@ -10,7 +10,6 @@ import xml.dom.minidom
 from xml.dom.minidom import parse, parseString
 import xlrd
 import xlwt
-import pymssql
 from lxml import etree
 import re
 import pdfkit
@@ -3683,6 +3682,7 @@ def oracle_restore(request, process_id):
         origin = ""
         data_path = ""
         copy_priority = ""
+        db_open = ""
         for cur_step in all_steps:
             all_scripts = Script.objects.filter(step_id=cur_step.id).exclude(state="9")
             for cur_script in all_scripts:
@@ -3691,12 +3691,14 @@ def oracle_restore(request, process_id):
                     target_id = cur_script.origin.target.id
                     data_path = cur_script.origin.data_path
                     copy_priority = cur_script.origin.copy_priority
+                    db_open = cur_script.origin.db_open
                     break
+        print(db_open)
         return render(request, 'oracle_restore.html',
                       {'username': request.user.userinfo.fullname, "pagefuns": getpagefuns(funid, request=request),
                        "wrapper_step_list": wrapper_step_list, "process_id": process_id, "data_path": data_path,
                        "plan_process_run_id": plan_process_run_id, "all_targets": all_targets, "origin": origin,
-                       "target_id": target_id, "copy_priority": copy_priority})
+                       "target_id": target_id, "copy_priority": copy_priority, "db_open": db_open})
     else:
         return HttpResponseRedirect("/login")
 
@@ -3761,6 +3763,7 @@ def cv_oracle_run(request):
         browseJobId = request.POST.get('browseJobId', '')
         data_path = request.POST.get('data_path', '')
         copy_priority = request.POST.get('copy_priority', '')
+        db_open = request.POST.get('db_open', '')
 
         origin = request.POST.get('origin', '')
 
@@ -3768,6 +3771,10 @@ def cv_oracle_run(request):
             copy_priority = int(copy_priority)
         except ValueError as e:
             copy_priority = 1
+        try:
+            db_open = int(db_open)
+        except ValueError as e:
+            db_open = 1
 
         try:
             processid = int(processid)
@@ -3807,6 +3814,7 @@ def cv_oracle_run(request):
                     myprocessrun.browse_job_id = browseJobId
                     myprocessrun.data_path = data_path
                     myprocessrun.copy_priority = copy_priority
+                    myprocessrun.db_open = db_open
                     myprocessrun.origin = origin
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
@@ -6493,6 +6501,7 @@ def origin_data(request):
                 "target_client": origin.target.id,
                 "target_client_name": origin.target.client_name,
                 "copy_priority": origin.copy_priority,
+                "db_open": origin.db_open,
                 "data_path": origin.data_path,
             })
 
@@ -6512,11 +6521,13 @@ def origin_save(request):
         target_client = request.POST.get("target_client", "")
 
         copy_priority = request.POST.get("copy_priority", "")
+        db_open = request.POST.get("db_open", "")
         data_path = request.POST.get("data_path", "")
         ret = 0
         info = ""
         try:
             copy_priority = int(copy_priority)
+            db_open = int(db_open)
             origin_id = int(origin_id)
         except:
             ret = 0
@@ -6553,6 +6564,7 @@ def origin_save(request):
                                 })
                                 cur_origin.target_id = target_id
                                 cur_origin.copy_priority = copy_priority
+                                cur_origin.db_open = db_open
                                 cur_origin.data_path = data_path
                                 cur_origin.save()
                             except Exception as e:
@@ -6578,6 +6590,7 @@ def origin_save(request):
                                         "instance": instance
                                     })
                                     cur_origin.copy_priority = copy_priority
+                                    cur_origin.db_open = db_open
                                     cur_origin.data_path = data_path
                                     cur_origin.target_id = target_id
                                     cur_origin.save()

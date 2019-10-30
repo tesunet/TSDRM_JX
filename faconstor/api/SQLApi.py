@@ -800,12 +800,36 @@ class CVApi(DataMonitor):
         return commserv_info
 
     def get_oracle_backup_job_list(self, client_name):
-        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance]
+        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}' ORDER BY [startdate] DESC;""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
         oracle_backuplist = []
         for i in content:
+            next_SCN = i[5]
+            idataagent = i [6]
+            cur_SCN = ""
+            if next_SCN:
+                if idataagent == "Oracle RAC":
+                    com = re.compile(" \d+")
+                    all_next_SCN = com.findall(next_SCN)
+                    if all_next_SCN:
+                        try:
+                            first_rac_SCN = int(all_next_SCN[0].strip())
+                            second_rac_SCN = int(all_next_SCN[1].strip())
+                        except Exception as e:
+                            print("SCN:", e)
+                        else:
+                            if first_rac_SCN > second_rac_SCN:
+                                cur_SCN = first_rac_SCN - 1
+                            else:
+                                cur_SCN = second_rac_SCN - 1
+                if idataagent == "Oracle Database":
+                    try:
+                        cur_SCN = int(next_SCN) - 1
+                    except:
+                        pass
+
             start_time = "{:%Y-%m-%d %H:%M:%S}".format(i[2].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[2] else ""
             last_time = "{:%Y-%m-%d %H:%M:%S}".format(i[3].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[3] else ""
 
@@ -816,6 +840,7 @@ class CVApi(DataMonitor):
                 "StartTime": start_time,
                 "LastTime": last_time,
                 "instance": i[4],
+                "cur_SCN": cur_SCN,
             })
         return oracle_backuplist
 
@@ -1272,7 +1297,7 @@ def remove_duplicate_for_status(dict_list):
 
 if __name__ == '__main__':
     credit = {
-        "host": "192.168.100.149\COMMVAULT",
+        "host": "10.1.5.160\COMMVAULT",
         "user": "sa_cloud",
         "password": "1qaz@WSX",
         "database": "CommServ",
@@ -1293,9 +1318,14 @@ if __name__ == '__main__':
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
-    ret = dm.get_oracle_backup_job_list("oracle_rac")
-    #     return ret
+    ret = dm.get_oracle_backup_job_list("zfxtora-RAC")
     print(ret)
+    for i in ret:
+        if i["Level"] == "Online Full":
+            print(i)
+            break
+    #     return ret
+    # print(ret)
     # # 并发
     # all_tasks = [pool.submit(get_info) for i in range(100)]
 
