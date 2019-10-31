@@ -2781,7 +2781,7 @@ class CV_Backupset(CV_Client):
                         <backupsetName>default</backupsetName>
                         <clientName>{sourceClient}</clientName>
                         <instanceName>{instance}</instanceName>
-                        <subclientName></subclientName>
+                        <subclientName>default</subclientName>
                     </associations>
                     <subTasks>
                         <options>
@@ -2984,7 +2984,7 @@ class CV_Backupset(CV_Client):
                             <backupsetName>default</backupsetName>
                             <clientName>{sourceClient}</clientName>
                             <instanceName>{instance}</instanceName>
-                            <subclientName></subclientName>
+                            <subclientName>default</subclientName>
                         </associations>
                         <subTasks>
                             <options>
@@ -3174,8 +3174,7 @@ class CV_Backupset(CV_Client):
                         </task>
                     </taskInfo>
                 </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                                                 restoreTime=restoreTime, data_path=data_path,
-                                                 copyPrecedence_xml=copyPrecedence_xml,
+                                                restoreTime=restoreTime, data_path=data_path, copyPrecedence_xml=copyPrecedence_xml,
                                                  data_path_xml=data_path_xml, db_open=db_open)
 
         try:
@@ -3294,7 +3293,7 @@ class CV_Backupset(CV_Client):
                   <backupsetName>defaultBackupSet</backupsetName>
                   <clientName>{sourceClient}</clientName>
                   <instanceName>{instance}</instanceName>
-                  <subclientName></subclientName>
+                  <subclientName>default</subclientName>
                 </associations>
                 <subTasks>
                   <options>
@@ -4444,6 +4443,7 @@ def run(origin, target, instance, processrun_id):
         "token": "",
         "last_login": 0
     }
+
     cvToken = CV_RestApi_Token()
     cvToken.login(info)
     cvAPI = CV_API(cvToken)

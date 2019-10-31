@@ -2781,7 +2781,7 @@ class CV_Backupset(CV_Client):
                         <backupsetName>default</backupsetName>
                         <clientName>{sourceClient}</clientName>
                         <instanceName>{instance}</instanceName>
-                        <subclientName></subclientName>
+                        <subclientName>default</subclientName>
                     </associations>
                     <subTasks>
                         <options>
@@ -2984,7 +2984,7 @@ class CV_Backupset(CV_Client):
                             <backupsetName>default</backupsetName>
                             <clientName>{sourceClient}</clientName>
                             <instanceName>{instance}</instanceName>
-                            <subclientName></subclientName>
+                            <subclientName>default</subclientName>
                         </associations>
                         <subTasks>
                             <options>
@@ -3293,7 +3293,7 @@ class CV_Backupset(CV_Client):
                   <backupsetName>defaultBackupSet</backupsetName>
                   <clientName>{sourceClient}</clientName>
                   <instanceName>{instance}</instanceName>
-                  <subclientName></subclientName>
+                  <subclientName>default</subclientName>
                 </associations>
                 <subTasks>
                   <options>

@@ -1318,10 +1318,10 @@ if __name__ == '__main__':
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
-    ret = dm.get_oracle_backup_job_list("zfxtora-RAC")
+    ret = dm.get_oracle_backup_job_list("jxpj1_per")
     print(ret)
     for i in ret:
-        if i["Level"] == "Online Full":
+        if i["Level"] == "Full":
             print(i)
             break
     #     return ret
