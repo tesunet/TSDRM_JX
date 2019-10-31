@@ -147,7 +147,7 @@ class ProcessRun(models.Model):
     data_path = models.CharField("数据重定向路径", blank=True, null=True, max_length=512)
     copy_priority = models.IntegerField("优先拷贝顺序", blank=True, default=1, null=True)
     origin = models.CharField("源客户端", blank=True, null=True, max_length=256)
-    curSCN = models.IntegerField("当前备份nextSCN-1", blank=True, null=True)
+    curSCN = models.BigIntegerField("当前备份nextSCN-1", blank=True, null=True)
     db_open = models.IntegerField("是否打开数据库", default=1, null=True)
 
 

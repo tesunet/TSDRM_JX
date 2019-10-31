@@ -770,9 +770,8 @@ def exec_process(processrunid, if_repeat=False):
     ret = dm.get_oracle_backup_job_list(cur_client)
     curSCN = None
     for i in ret:
-        if i["Level"] == "Online Full":
-            curSCN = i["cur_SCN"]
-            break
+        curSCN = i["cur_SCN"]
+        break
     processrun.curSCN = curSCN
     processrun.save()
 
@@ -832,7 +831,7 @@ def exec_process(processrunid, if_repeat=False):
 
 
 @shared_task
-def create_process_run(process):
+def create_process_run(*args, **kwargs):
     """
     创建计划流程
     :param process:
@@ -842,7 +841,7 @@ def create_process_run(process):
     # data_path/target/origin/
     origin_name, target_id, data_path, copy_priority, db_open = "", None, "", 1, 1
     try:
-        process_id = int(process)
+        process_id = int(kwargs["cur_process"])
     except ValueError as e:
         pass
     else:
@@ -878,7 +877,7 @@ def create_process_run(process):
                 # result["res"] = '流程启动失败，该流程正在进行中，请勿重复启动。'
             else:
                 myprocessrun = ProcessRun()
-                myprocessrun.creatuser = "Computer Crontab"
+                myprocessrun.creatuser = kwargs["creatuser"]
                 myprocessrun.process = cur_process
                 myprocessrun.starttime = datetime.datetime.now()
                 myprocessrun.state = "RUN"

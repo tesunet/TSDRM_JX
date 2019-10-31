@@ -3693,7 +3693,6 @@ def oracle_restore(request, process_id):
                     copy_priority = cur_script.origin.copy_priority
                     db_open = cur_script.origin.db_open
                     break
-        print(db_open)
         return render(request, 'oracle_restore.html',
                       {'username': request.user.userinfo.fullname, "pagefuns": getpagefuns(funid, request=request),
                        "wrapper_step_list": wrapper_step_list, "process_id": process_id, "data_path": data_path,
@@ -7180,6 +7179,7 @@ def process_schedule_save(request):
         per_week = request.POST.get('per_week', '')
         ret = 1
         info = ""
+        print(request.user.username)
 
         if not process_schedule_name:
             return JsonResponse({
@@ -7259,7 +7259,11 @@ def process_schedule_save(request):
                     cur_periodictask.enabled = 0
                     # 任务名称
                     cur_periodictask.task = "faconstor.tasks.create_process_run"
-                    cur_periodictask.args = [cur_process.id]
+                    # cur_periodictask.args = [cur_process.id, request]
+                    cur_periodictask.kwargs = json.dumps({
+                        'cur_process': cur_process.id,
+                        'creatuser':  request.user.username
+                    })
                     cur_periodictask.save()
                     cur_periodictask_id = cur_periodictask.id
 
@@ -7297,7 +7301,10 @@ def process_schedule_save(request):
                             cur_crontab_schedule.save()
                             # 刷新定时器状态
                             cur_periodictask.task = "faconstor.tasks.create_process_run"
-                            cur_periodictask.args = [cur_process.id]
+                            cur_periodictask.kwargs = json.dumps({
+                                'cur_process': cur_process.id,
+                                'creatuser':  request.user.username
+                            })
                             cur_periodictask_status = cur_periodictask.enabled
                             cur_periodictask.enabled = cur_periodictask_status
                             cur_periodictask.save()
@@ -7365,7 +7372,6 @@ def change_periodictask(request):
     if request.user.is_authenticated():
         process_schedule_id = request.POST.get("process_schedule_id", "")
         process_periodictask_status = request.POST.get("process_periodictask_status", "")
-
         try:
             process_schedule_id = int(process_schedule_id)
             process_periodictask_status = int(process_periodictask_status)
