@@ -283,6 +283,11 @@ if (App.isAngularJsApp() === false) {
 
                     if (data["process_state"] == "RUN") {
                         $("#process_state").val("运行");
+
+                        // 异常异步任务处理
+                        var process_run_id = $("#process_run_id").val();
+                        var abnormal = "0";
+                        getTaskStatus(process_run_id, abnormal);
                     }
 
                     if (data["process_state"] == "PLAN") {
@@ -414,10 +419,7 @@ if (App.isAngularJsApp() === false) {
                                     color = "#26C281"
                                 if (data["step"][i]["scripts"][j]["scriptstate"] == "RUN") {
                                     color = "#32c5d2"
-                                    // 异常异步任务处理
-                                    var process_run_id = $("#process_run_id").val();
-                                    var abnormal = "0";
-                                    getTaskStatus(process_run_id, abnormal);
+
                                 }
 
                                 if (data["step"][i]["scripts"][j]["scriptstate"] == "IGNORE")
@@ -515,10 +517,7 @@ if (App.isAngularJsApp() === false) {
                                         color = "#26C281";
                                     if (data["step"][i]["children"][j]["scripts"][k]["scriptstate"] == "RUN") {
                                         color = "#32c5d2";
-                                        // 异常异步任务处理
-                                        var process_run_id = $("#process_run_id").val();
-                                        var abnormal = "0";
-                                        getTaskStatus(process_run_id, abnormal);
+
                                     }
                                     if (data["step"][i]["children"][j]["scripts"][k]["scriptstate"] == "IGNORE")
                                         color = "#ffd966";
