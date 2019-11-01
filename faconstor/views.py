@@ -223,7 +223,6 @@ def getpagefuns(funid, request=""):
                     current_color = "label-warning"
                 else:
                     pass
-
                 time = custom_time(time)
 
                 message_task.append(
