@@ -800,7 +800,7 @@ class CVApi(DataMonitor):
         return commserv_info
 
     def get_oracle_backup_job_list(self, client_name):
-        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent]
+        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent], [subclient]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}' ORDER BY [startdate] DESC;""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
@@ -841,6 +841,7 @@ class CVApi(DataMonitor):
                 "LastTime": last_time,
                 "instance": i[4],
                 "cur_SCN": cur_SCN,
+                "subclient": i[7]
             })
         return oracle_backuplist
 
@@ -1318,7 +1319,7 @@ if __name__ == '__main__':
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
-    ret = dm.get_oracle_backup_job_list("jxpj1_per")
+    ret = dm.get_oracle_backup_job_list("jxxd")
     print(ret)
     for i in ret:
         if i["Level"] == "Full":
