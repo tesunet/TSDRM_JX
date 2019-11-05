@@ -223,6 +223,7 @@ def getpagefuns(funid, request=""):
                     current_color = "label-warning"
                 else:
                     pass
+
                 time = custom_time(time)
 
                 message_task.append(
@@ -969,11 +970,13 @@ def get_monitor_data(request):
                 if process_run.last().state == "RUN":
                     running_job += 1
 
-            for p_run in process_run:
-                # 成功：一次成功就算成功
-                if p_run.state == 'DONE':
+                if process_run.last().state=="DONE":
                     success_job += 1
-                    break
+            # for p_run in process_run:
+            #     # 成功：一次成功就算成功
+            #     if p_run.state == 'DONE':
+            #         success_job += 1
+            #         break
 
         not_running = 0
         try:
@@ -989,9 +992,10 @@ def get_monitor_data(request):
         drill_monitor = []
 
         for process in all_processes:
-            today_process_run = process.processrun_set.exclude(state__in=["9", "REJECT"]).filter(starttime__startswith=datetime.datetime.now().date()).last()
+            today_process_run = process.processrun_set.exclude(state__in=["9", "REJECT"]).filter(starttime__startswith=datetime.datetime.now().date())
 
             if today_process_run:
+                today_process_run = today_process_run.last()
                 done_step_run = today_process_run.steprun_set.filter(state="DONE")
                 if done_step_run.exists():
                     done_num = len(done_step_run)
@@ -4436,19 +4440,13 @@ def revoke_current_task(request):
             except:
                 task_process_id = ""
             # 终止指定流程的异步任务
-            if value["state"] in ["STARTED", "SUCCESS"] and task_process_id == process_run_id:
+            if value["state"] == "STARTED" and task_process_id == process_run_id:
                 task_id = key
-                break
-
-        # abnormal 对异步任务进行的类型判断
-        #   1.手动终止异步任务
-        #   2.手动终止异步任务，但不修改流程状态
-        #   0.被动终止异步任务：celery-flower检测不到异步任务，但是流程还在跑
-
 
         if abnormal in ["1", "2"]:
             stop_url = "http://127.0.0.1:5555/api/task/revoke/{0}?terminate=true".format(task_id)
             response = requests.post(stop_url)
+            print(response.text)
             task_content = "异步任务被自主关闭。"
 
             # 终止任务
