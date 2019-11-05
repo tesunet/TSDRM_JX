@@ -342,7 +342,9 @@ class CVApi(DataMonitor):
             if i[7] == "Weekly":
                 for day in i[9].split(" "):
                     if day:
-                        schedbackupday += "/" + schedbackupday_chz[day] if day in schedbackupday_chz.keys() else day
+                        schedbackupday += "/" + \
+                            schedbackupday_chz[day] if day in schedbackupday_chz.keys(
+                            ) else day
                 schedbackupday = schedbackupday[1:]
 
                 # 重复schedinterval
@@ -386,8 +388,10 @@ class CVApi(DataMonitor):
                     schedinterval = i[8].replace("Every", "每") + "年"
             # 缺少自动/连续
 
-            schedpattern = period_chz[i[7]] if i[7] in period_chz.keys() else i[7]
-            schedbackuptype = type_chz[i[6]] if i[6] in type_chz.keys() else i[6]
+            schedpattern = period_chz[i[7]
+                                      ] if i[7] in period_chz.keys() else i[7]
+            schedbackuptype = type_chz[i[6]
+                                       ] if i[6] in type_chz.keys() else i[6]
             schedules.append({
                 # "CommCellId": i[0],
                 # "CommCellName": i[1],
@@ -564,7 +568,7 @@ class CVApi(DataMonitor):
 
             for content in extra_content:
                 if content['clientname'] == b_content['clientname'] and content['idataagent'] == b_content[
-                    'idataagent'] and content['backupset'] == b_content['backupset']:
+                        'idataagent'] and content['backupset'] == b_content['backupset']:
                     whole_list.append({
                         "clientname": b_content['clientname'],
                         "idataagent": b_content['idataagent'],
@@ -594,7 +598,8 @@ class CVApi(DataMonitor):
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
             FROM [commserv].[dbo].[CommCellBkScheduleForSubclients] WHERE [clientName]='{0}' AND [idaagent]='{1}' AND [backupset]='{2}'AND [subclient]='{3}' AND [scheduePolicy]='{4}' AND [schedbackuptype]='{5}'""". \
-                format(client, agent, backup_set, sub_client, schedule, schedule_type)
+                format(client, agent, backup_set,
+                       sub_client, schedule, schedule_type)
         elif all([client, agent, backup_set, sub_client, schedule]) and not schedule_type:
             schedule_sql = """SELECT [CommCellId],[CommCellName],[scheduleId],[scheduePolicy],[scheduleName],[scheduletask],[schedbackuptype],[schedpattern],[schedinterval]
             ,[schedbackupday],[schedbackupTime],[schednextbackuptime],[appid],[clientName],[idaagent],[instance],[backupset],[subclient]
@@ -689,7 +694,7 @@ class CVApi(DataMonitor):
         for backup_job in backup_jobs:
             for content in extra_content:
                 if content['clientname'] == backup_job['clientname'] and content['idataagent'] == backup_job[
-                    'idataagent']:
+                        'idataagent']:
                     whole_list.append({
                         "clientname": backup_job['clientname'],
                         "idataagent": backup_job['idataagent'],
@@ -807,7 +812,7 @@ class CVApi(DataMonitor):
         oracle_backuplist = []
         for i in content:
             next_SCN = i[5]
-            idataagent = i [6]
+            idataagent = i[6]
             cur_SCN = ""
             if next_SCN:
                 if idataagent == "Oracle RAC":
@@ -830,8 +835,10 @@ class CVApi(DataMonitor):
                     except:
                         pass
 
-            start_time = "{:%Y-%m-%d %H:%M:%S}".format(i[2].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[2] else ""
-            last_time = "{:%Y-%m-%d %H:%M:%S}".format(i[3].replace(tzinfo=datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=8)))) if i[3] else ""
+            start_time = "{:%Y-%m-%d %H:%M:%S}".format(i[2].replace(tzinfo=datetime.timezone.utc).astimezone(
+                datetime.timezone(datetime.timedelta(hours=8)))) if i[2] else ""
+            last_time = "{:%Y-%m-%d %H:%M:%S}".format(i[3].replace(tzinfo=datetime.timezone.utc).astimezone(
+                datetime.timezone(datetime.timedelta(hours=8)))) if i[3] else ""
 
             oracle_backuplist.append({
                 "jobId": i[0],
@@ -868,7 +875,7 @@ class CVApi(DataMonitor):
                                 FROM [CommServ].[dbo].[APP_CommCell] where [id]=2;"""
         content = self.fetch_all(utc_sql)
         job_controller_list = []
-        if len(content)>0 and content[0][0] != "0:-480:(UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐":
+        if len(content) > 0 and content[0][0] != "0:-480:(UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐":
             update_sql = """update [CommServ].[dbo].[APP_CommCell] set [timeZone] =N'0:-480:(UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐'
                                          where [id]=2;"""
             self.execute(update_sql)
@@ -929,7 +936,7 @@ class CustomFilter(CVApi):
                     specific_content_three = []
                     for content_three in all_content_list:
                         if content_three["clientname"] == client["client_name"] and content_three[
-                            "idataagent"] == agent and content_three["backupset"] == backup_set:
+                                "idataagent"] == agent and content_three["backupset"] == backup_set:
                             # 当前客户端/agent/backupset下所有备份列表
                             specific_content_three.append(content_three)
                     # 当前客户端/agent/backupset的rowspan
@@ -960,8 +967,8 @@ class CustomFilter(CVApi):
                         specific_content_five = []
                         for content_five in all_content_list:
                             if content_five["clientname"] == client["client_name"] and content_five[
-                                "idataagent"] == agent and content_five["backupset"] == backup_set and content_five[
-                                "content"] == content:
+                                    "idataagent"] == agent and content_five["backupset"] == backup_set and content_five[
+                                    "content"] == content:
                                 # 当前客户端/agent/backupset/备份内容的列表
                                 specific_content_five.append(content_five)
 
@@ -1028,7 +1035,7 @@ class CustomFilter(CVApi):
                     specific_storage_three = []
                     for storage_three in all_storage_list:
                         if storage_three["clientname"] == client["client_name"] and storage_three[
-                            "idataagent"] == agent and storage_three["backupset"] == backup_set:
+                                "idataagent"] == agent and storage_three["backupset"] == backup_set:
                             specific_storage_three.append(storage_three)
 
                     backupset_row_list.append(len(specific_storage_three))
@@ -1055,8 +1062,8 @@ class CustomFilter(CVApi):
                         specific_storage_five = []
                         for storage_five in all_storage_list:
                             if storage_five["clientname"] == client["client_name"] and storage_five[
-                                "idataagent"] == agent and storage_five["backupset"] == backup_set and storage_five[
-                                "storagepolicy"] == storage:
+                                    "idataagent"] == agent and storage_five["backupset"] == backup_set and storage_five[
+                                    "storagepolicy"] == storage:
                                 specific_storage_five.append(storage_five)
 
                         storage_row_list.append(len(specific_storage_five))
@@ -1128,7 +1135,7 @@ class CustomFilter(CVApi):
                     specific_schedule_three = []
                     for schedule_three in all_schedule_list:
                         if schedule_three["clientName"] == client["client_name"] and schedule_three[
-                            "idaagent"] == agent and schedule_three["backupset"] == backup_set:
+                                "idaagent"] == agent and schedule_three["backupset"] == backup_set:
                             specific_schedule_three.append(schedule_three)
 
                     backupset_row_list.append(len(specific_schedule_three))
@@ -1155,8 +1162,8 @@ class CustomFilter(CVApi):
                         specific_schedule_five = []
                         for schedule_five in all_schedule_list:
                             if schedule_five["clientName"] == client["client_name"] and schedule_five[
-                                "idaagent"] == agent and schedule_five["backupset"] == backup_set and schedule_five[
-                                "scheduePolicy"] == schedule:
+                                    "idaagent"] == agent and schedule_five["backupset"] == backup_set and schedule_five[
+                                    "scheduePolicy"] == schedule:
                                 specific_schedule_five.append(schedule_five)
 
                         schedule_row_list.append(len(specific_schedule_five))
@@ -1170,15 +1177,17 @@ class CustomFilter(CVApi):
                             specific_schedule_six = []
                             for schedule_six in all_schedule_list:
                                 if schedule_six["clientName"] == client["client_name"] and schedule_six[
-                                    "idaagent"] == agent and schedule_six["backupset"] == backup_set and schedule_six[
-                                    "scheduePolicy"] == schedule and schedule_six[
-                                    "schedbackuptype"] == c_schedule:
+                                        "idaagent"] == agent and schedule_six["backupset"] == backup_set and schedule_six[
+                                        "scheduePolicy"] == schedule and schedule_six[
+                                        "schedbackuptype"] == c_schedule:
                                     specific_schedule_six.append(schedule_six)
 
-                            schedule_type_row_list.append(len(specific_schedule_six))
+                            schedule_type_row_list.append(
+                                len(specific_schedule_six))
 
                             if specific_schedule_six:
-                                whole_schedule_list.extend(specific_schedule_six)
+                                whole_schedule_list.extend(
+                                    specific_schedule_six)
 
         row_dict = {
             "client_row_list": client_row_list,
@@ -1276,7 +1285,8 @@ def remove_duplicate_for_info(dict_list):
     seen = set()
     new_dict_list = []
     for dict in dict_list:
-        t_dict = {'clientname': dict['clientname'], 'idataagent': dict['idataagent'], 'backupset': dict['backupset']}
+        t_dict = {'clientname': dict['clientname'],
+                  'idataagent': dict['idataagent'], 'backupset': dict['backupset']}
         t_tup = tuple(t_dict.items())
         if t_tup not in seen:
             seen.add(t_tup)
@@ -1288,7 +1298,8 @@ def remove_duplicate_for_status(dict_list):
     seen = set()
     new_dict_list = []
     for dict in dict_list:
-        t_dict = {'clientname': dict['clientname'], 'idataagent': dict['idataagent']}
+        t_dict = {'clientname': dict['clientname'],
+                  'idataagent': dict['idataagent']}
         t_tup = tuple(t_dict.items())
         if t_tup not in seen:
             seen.add(t_tup)
@@ -1333,9 +1344,6 @@ if __name__ == '__main__':
     # for future in as_completed(all_tasks):
     #     if future.result():
     #         print(future.result())
-
-
-
 
     # ret = dm.get_job_controller()
     # ret = dm.get_single_installed_client(2)
