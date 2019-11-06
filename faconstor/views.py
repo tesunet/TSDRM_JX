@@ -1154,10 +1154,11 @@ def get_process_run_facts(request):
             all_process_run = cur_process.processrun_set.filter(state__in=["DONE", "STOP", "ERROR"]).filter(
                 starttime__startswith=today_date)
             process_run_today = 2
-            for cur_process_run in all_process_run:
+            
+            if all_process_run.exists():
+                cur_process_run = all_process_run.last()
                 if cur_process_run.state == "DONE":
                     process_run_today = 0
-                    break
                 else:
                     process_run_today = 1
             # 平均RTO

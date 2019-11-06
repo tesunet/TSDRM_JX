@@ -18,6 +18,9 @@ var Dashboard = function () {
                     },
 
                     xAxis: {
+                        title: {
+                            text: '次数 (次)'
+                        },
                         categories: ['1', '2', '3', '4', '5', '6',
                             '7', '8', '9', '10', '11', '12']
                     },
@@ -35,7 +38,8 @@ var Dashboard = function () {
                             value: 0,
                             width: 1,
                             color: '#808080'
-                        }]
+                        }],
+                        tickInterval: 10,
                     },
                     tooltip: {
                         valueSuffix: '分钟'
@@ -46,7 +50,7 @@ var Dashboard = function () {
                         verticalAlign: 'middle',
                         borderWidth: 0
                     },
-                    series: [{}]
+                    series: [{}],
                 })
             });
             $.ajax({
@@ -161,6 +165,7 @@ var Dashboard = function () {
                         }
                     });
                 },
+                timeFormat: 'h:mm',
                 eventAfterAllRender: function (view) {
                     $(".fc-day-grid-event.fc-h-event.fc-event.fc-start.fc-end.invite.fc-draggable").each(function () {
                         var processName = $(this).find('.fc-title').text();
