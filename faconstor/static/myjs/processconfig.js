@@ -648,13 +648,18 @@ $('#save').click(function () {
             // if ($("#skip").val() == "1")
             //     skiptext = "可跳过"
             // $("#curstring_" + $("#id").val()).text(approvaltext + skiptext);
-            if (data["data"]) {
-                $("#id").val(data.data);
-            }
-            alert("保存成功！");
-            $('#tree_2').jstree("destroy");
+            if (data["result"] != "保存成功。"){
+                alert(data["result"])
+            } else {
+                if (data["data"]) {
+                    $("#id").val(data.data);
+                }
+                alert("保存成功！");
+                $('#tree_2').jstree("destroy");
 
-            customTree();
+                customTree();
+            }
+
         },
         error: function (e) {
             alert("保存失败，请于客服联系。");
