@@ -20,7 +20,7 @@
     var inR=bgR+inW/2;//内环半径=内半径+内环宽度/2
     var outR=bgR+inW+outW/2;//外环半径=内半径+内环宽度+外环宽度/2
     var $this=this;
-    $this.ratePieNoAnimation=function(number){
+    $this.ratePieNoAnimation=function(number,state){
         deg=360*number/100;
           //底色大
         ctx.clearRect(0,0,W,H);
@@ -50,6 +50,11 @@
         //圆心背景
         ctx.beginPath();
         ctx.fillStyle="#D9E5E5";
+        if(state=="CONFIRM")
+            ctx.fillStyle="#e0b200";
+        if(state=="ERROR")
+            ctx.fillStyle="#e01b2f";
+
         ctx.arc(W/2,H/2,bgR,0,Math.PI*2,false);
         ctx.fill();
         
@@ -84,7 +89,7 @@
         ctx.fillText(text,W/2 - text_w/2,H/2+R/15);
     };
 
-    $this.ratePie=function(number){
+    $this.ratePie=function(number,state){
           var i=0;
           var t= setInterval(function(){
             if(i==number){
@@ -92,25 +97,25 @@
             }else{
                 number>0?i++:i--;
             }
-            $this.ratePieNoAnimation(i);
+            $this.ratePieNoAnimation(i,state);
             if(i > 100 || i < -100){//如果数字太大，取消动画效果
-                $this.ratePieNoAnimation(number);
+                $this.ratePieNoAnimation(number,state);
                 clearInterval(t);
             }
           }, 2000/(number>0?number:-number));
     }
-	$this.ratePie1=function(oldnumber,number){
+	$this.ratePie1=function(oldnumber,number,state){
 	  var i=oldnumber;
-	  $this.ratePieNoAnimation(i);
+	  $this.ratePieNoAnimation(i,state);
 	  var t= setInterval(function(){
 		if(i==number){
 			clearInterval(t);
 		}else{
 			number>0?i++:i--;
 		}
-		$this.ratePieNoAnimation(i);
+		$this.ratePieNoAnimation(i,state);
 		if(i > 100 || i < -100){//如果数字太大，取消动画效果
-			$this.ratePieNoAnimation(number);
+			$this.ratePieNoAnimation(number,state);
 			clearInterval(t);
 		}
 	  }, 2000/(number>0?number:-number));

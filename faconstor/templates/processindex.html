@@ -60,7 +60,7 @@
             <div class="progress_run" >
                 <h2></h2>
 
-                <canvas id="pie1" class="canvas" width="350px" height="350px"></canvas>
+                <a id="pieurl"  href='#' target='_blank'><canvas id="pie1" class="canvas" width="350px" height="350px"></canvas></a>
 
 
                 <div class="box-progress" >
@@ -88,10 +88,6 @@
         util.run();
     </script>
     <script>
-        $("body").dblclick(function () {
-            var process_run_id = $("#process_run_id").val();
-            window.parent.open("/processindex/" + process_run_id.toString());
-        });
         $(".start_hand").click(function () {
             var planProcessRunId = $("#process_run_id").val()
             var processId = $("#process_id").val()

@@ -386,8 +386,7 @@ def get_process_index_data(request):
                     all_done_step_list = []
                     for step in all_steps:
                         step_id = step.id
-                        done_step_run = StepRun.objects.filter(
-                            processrun_id=processrun_id).filter(state="DONE")
+                        done_step_run = StepRun.objects.filter(step_id=step_id,processrun_id=processrun_id).filter(state="DONE")
                         if done_step_run.exists():
                             all_done_step_list.append(done_step_run[0])
 
@@ -396,7 +395,7 @@ def get_process_index_data(request):
                     else:
                         inner_step_run_percent = 0
 
-                    if c_step_run.state in ["DONE", "STOP"]:
+                    if c_step_run.state in ["DONE"]:
                         inner_step_run_percent = 100
 
                     start_time = c_step_run.starttime
@@ -460,6 +459,10 @@ def get_process_index_data(request):
                 })
             # 构造展示步骤
             process_rate = "%02d" % (done_num / len(current_processrun.steprun_set.all()) * 100)
+            isConfirm = "0"
+            confirmStepruns = StepRun.objects.exclude(state="9").filter(processrun_id=processrun_id, state='CONFIRM')
+            if len(confirmStepruns) > 0:
+                isConfirm = "1"
 
             if current_processrun.state == "SIGN":
                 rtostate = "DONE"
@@ -474,6 +477,7 @@ def get_process_index_data(request):
                 "state": state,
                 "rtostate": rtostate,
                 "percent": process_rate,
+                "isConfirm": isConfirm,
                 "steps": steps,
                 "showtasks": showtasks
             }
