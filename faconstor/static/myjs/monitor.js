@@ -77,9 +77,9 @@ $(document).ready(function () {
     };
     weekDrillChart.setOption(weekDrillOption);
 
-    // 平均RTO趋势
-    var avgRTOChart = echarts.init(document.getElementById('amiddboxtbott2'));
-    var avgRTOOption = {
+    // 演练总耗时
+    var allRTOChart = echarts.init(document.getElementById('amiddboxtbott2'));
+    var allRTOOption = {
         backgroundColor: 'rgba(1,202,217,.2)',
         grid: {
             left: 60,
@@ -101,7 +101,7 @@ $(document).ready(function () {
                 fontSize: 10,
                 color: 'rgba(255,255,255,.7)'
             },
-            data: ['平均RTO']
+            data: ['演练总耗时']
         },
         xAxis: [
             {
@@ -130,9 +130,6 @@ $(document).ready(function () {
             {
                 type: 'value',
                 name: '',
-                min: 0,
-                max: 30,
-                interval: 5,
                 axisLine: {
                     lineStyle: {
                         color: 'rgba(255,255,255,.3)'
@@ -145,8 +142,8 @@ $(document).ready(function () {
                 },
 
                 axisLabel: {
-                    formatter: '{value} min'
-                }
+                    formatter: '{value} 分钟'
+                },
             },
 
         ],
@@ -179,7 +176,7 @@ $(document).ready(function () {
             }
         ]
     };
-    avgRTOChart.setOption(avgRTOOption);
+    allRTOChart.setOption(allRTOOption);
 
     // 系统演练次数TOP5
     var drillTopTimeChart = echarts.init(document.getElementById('pleftbox2bott_cont'));
@@ -352,8 +349,8 @@ $(document).ready(function () {
                     data: data.week_drill.drill_times
                 }]
             });
-            // 平均RTO
-            avgRTOChart.setOption({
+            // 演练总耗时
+            allRTOChart.setOption({
                 xAxis: {
                     data: data.avgRTO.drill_day
                 },
