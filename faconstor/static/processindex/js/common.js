@@ -10,7 +10,7 @@ var util = {
     run: function () {
         util.request();
         interval = setInterval(function () {
-            if (state === 'DONE') {
+            if (state === 'DONE' || state === 'STOP' ) {
                 clearInterval(interval);
             }
             util.request();
@@ -52,12 +52,17 @@ var util = {
             $('.progress_run h2').html("<a  href='" + process_run_url + "' target='_blank' style='color:#e8e8e8 '>" + headerTitle + "</a>");
         }
         $(".progress_list").html("");
+        $("#pieurl").attr("href",process_run_url);
         var percent = parseInt(data.percent);
         var oldpercent=$("#oldpercent").val()
+
+        var piestate=state;
+        if(piestate!='ERROR' && data.isConfirm=="1")
+            piestate='CONFIRM';
         if (oldpercent=="")
-            new Chart("pie1").ratePie(percent);
+            new Chart("pie1").ratePie(percent,piestate);
         else {
-            new Chart("pie1").ratePie1($("#oldpercent").val(), percent);
+            new Chart("pie1").ratePie1($("#oldpercent").val(), percent,piestate);
         }
         $("#oldpercent").val(percent)
 
@@ -107,10 +112,10 @@ var util = {
         var progressBar = $('.progress-par');
         progressBar.attr('style', 'width:' + curStepPercent + '%');
         progressBar.find('i').text(curStepPercent + '%');
-        for (var cindex = 0; cindex < allState.length; cindex++) {
-            progressBar.removeClass(allState[cindex]);
-        }
-        progressBar.addClass(curState);
+        // for (var cindex = 0; cindex < allState.length; cindex++) {
+        //     progressBar.removeClass(allState[cindex]);
+        // }
+        // progressBar.addClass(curState);
 
 
         var stateArr = ['DONE', 'STOP', 'ERROR'];
