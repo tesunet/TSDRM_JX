@@ -806,29 +806,39 @@ def exec_process(processrunid, if_repeat=False):
         myprocesstask.content = "流程结束。"
         myprocesstask.save()
 
-    #
-    #     processtasks = ProcessTask.objects.filter(state="0", processrun=processrun)
-    #     if len(processtasks) > 0:
-    #         processtasks[0].state = "1"
-    #         processtasks[0].endtime = datetime.datetime.now()
-    #         processtasks[0].save()
-    # else:
-    #     processrun.state = "ERROR"
-    #     processrun.save()
-    #     processtasks = ProcessTask.objects.filter(state="0", processrun=processrun)
-    #     if len(processtasks) > 0:
-    #         processtasks[0].state = "1"
-    #         processtasks[0].save()
-    #
-    #         myprocesstask = ProcessTask()
-    #         myprocesstask.processrun = processrun
-    #         myprocesstask.starttime = datetime.datetime.now()
-    #         myprocesstask.senduser = processtasks[0].senduser
-    #         myprocesstask.receiveuser = processtasks[0].receiveuser
-    #         myprocesstask.type = "RUN"
-    #         myprocesstask.state = "0"
-    #         myprocesstask.content = processrun.process.name + " 流程运行出错，请处理。"
-    #         myprocesstask.save()
+        # ************************ 写入RTO *************************
+        cur_process = processrun.process
+
+        # 正确顺序的父级Step
+        all_pnode_steps = cur_process.step_set.exclude(state="9").filter(pnode_id=None).order_by("sort")
+
+        correct_step_id_list = []
+
+        for pnode_step in all_pnode_steps:
+            correct_step_id_list.append(pnode_step)
+
+        # 正确顺序的父级StepRun
+        correct_step_run_list = []
+
+        for pnode_step in correct_step_id_list:
+            current_step_run = pnode_step.steprun_set.filter(processrun_id=processrun.id)
+            if current_step_run.exists():
+                current_step_run = current_step_run[0]
+                correct_step_run_list.append(current_step_run)
+        starttime = processrun.starttime
+        rtoendtime = processrun.starttime
+
+        for c_step_run in reversed(correct_step_run_list):
+            if c_step_run.step.rto_count_in == "1":
+                rtoendtime = c_step_run.endtime
+                break
+
+        delta_time = 0
+        if rtoendtime:
+            delta_time = (rtoendtime - starttime).total_seconds()
+
+        processrun.rto = delta_time
+        processrun.save()
 
 
 @shared_task
