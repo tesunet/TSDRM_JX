@@ -150,6 +150,8 @@ class ProcessRun(models.Model):
     curSCN = models.BigIntegerField("当前备份nextSCN-1", blank=True, null=True)
     db_open = models.IntegerField("是否打开数据库", default=1, null=True)
 
+    rto = models.IntegerField("流程RTO", default=0, null=True)
+
 
 class StepRun(models.Model):
     step = models.ForeignKey(Step, blank=True, null=True)

@@ -240,6 +240,46 @@ def getpagefuns(funid, request=""):
 def test(request):
     if request.user.is_authenticated():
         errors = []
+
+        # 填充原RTO数据
+        all_process_run = ProcessRun.objects.exclude(state="9")
+        for processrun in all_process_run:
+            if processrun.state == "DONE":
+                cur_process = processrun.process
+
+                # 正确顺序的父级Step
+                all_pnode_steps = cur_process.step_set.exclude(state="9").filter(pnode_id=None).order_by("sort")
+
+                correct_step_id_list = []
+
+                for pnode_step in all_pnode_steps:
+                    correct_step_id_list.append(pnode_step)
+
+                # 正确顺序的父级StepRun
+                correct_step_run_list = []
+
+                for pnode_step in correct_step_id_list:
+                    current_step_run = pnode_step.steprun_set.filter(processrun_id=processrun.id)
+                    if current_step_run.exists():
+                        current_step_run = current_step_run[0]
+                        correct_step_run_list.append(current_step_run)
+                starttime = processrun.starttime
+                rtoendtime = processrun.starttime
+
+                for c_step_run in reversed(correct_step_run_list):
+                    if c_step_run.step.rto_count_in == "1":
+                        rtoendtime = c_step_run.endtime
+                        break
+                delta_time = 0
+                if rtoendtime:
+                    delta_time = (rtoendtime - starttime).total_seconds()
+
+                processrun.rto = delta_time
+                processrun.save()
+            else:
+                processrun.rto = 0
+                processrun.save()
+
         return render(request, 'test.html',
                       {'username': request.user.userinfo.fullname, "errors": errors})
     else:
@@ -1104,38 +1144,38 @@ def get_process_run_rto(processrun):
     # 构造出正确顺序的父级步骤RTO，                         #
     # 最后一个步骤rto_count_in="0"，记录endtime为rtoendtime #
     ########################################################
-    cur_process = processrun.process
+    # cur_process = processrun.process
+    #
+    # # 正确顺序的父级Step
+    # all_pnode_steps = cur_process.step_set.exclude(state="9").filter(pnode_id=None).order_by("sort")
+    #
+    # correct_step_id_list = []
+    # if all_pnode_steps:
+    #     for pnode_step in all_pnode_steps:
+    #         correct_step_id_list.append(pnode_step)
+    # else:
+    #     raise Http404()
+    #
+    # # 正确顺序的父级StepRun
+    # correct_step_run_list = []
+    #
+    # for pnode_step in correct_step_id_list:
+    #     current_step_run = pnode_step.steprun_set.filter(processrun_id=processrun.id)
+    #     if current_step_run.exists():
+    #         current_step_run = current_step_run[0]
+    #         correct_step_run_list.append(current_step_run)
+    # starttime = processrun.starttime
+    # rtoendtime = processrun.starttime
+    # if correct_step_run_list:
+    #     for c_step_run in reversed(correct_step_run_list):
+    #         if c_step_run.step.rto_count_in == "1":
+    #             rtoendtime = c_step_run.endtime
+    #             break
+    # delta_time = 0
+    # if rtoendtime:
+    #     delta_time = (rtoendtime - starttime).total_seconds()
 
-    # 正确顺序的父级Step
-    all_pnode_steps = Step.objects.exclude(state="9").filter(process_id=cur_process.id, pnode_id=None).order_by(
-        "sort")
-    correct_step_id_list = []
-    if all_pnode_steps:
-        for pnode_step in all_pnode_steps:
-            pnode_step_id = pnode_step.id
-            correct_step_id_list.append(pnode_step_id)
-    else:
-        raise Http404()
-
-    # 正确顺序的父级StepRun
-    correct_step_run_list = []
-    for step_id in correct_step_id_list:
-        current_step_run = StepRun.objects.filter(step_id=step_id).filter(
-            processrun_id=processrun.id).select_related("step")
-        if current_step_run.exists():
-            current_step_run = current_step_run[0]
-            correct_step_run_list.append(current_step_run)
-    starttime = processrun.starttime
-    rtoendtime = processrun.starttime
-    if correct_step_run_list:
-        for c_step_run in reversed(correct_step_run_list):
-            if c_step_run.step.rto_count_in == "1":
-                rtoendtime = c_step_run.endtime
-                break
-    delta_time = 0
-    if rtoendtime:
-        delta_time = (rtoendtime - starttime).total_seconds()
-
+    delta_time = processrun.rto
     return delta_time
 
 
@@ -1212,7 +1252,6 @@ def get_process_run_facts(request):
                 "process_run_rate": process_run_rate,
                 "process_id": cur_process.id,
             })
-
         return JsonResponse({"data": cv_oracle_process_list})
     else:
         return HttpResponseRedirect("/login")
@@ -1230,33 +1269,6 @@ def get_process_rto(request):
                 current_rto_list = []
                 for processrun_rto_obj in processrun_rto_obj_list:
                     step_rto = get_process_run_rto(processrun_rto_obj)
-                    # all_step_runs = processrun_rto_obj.steprun_set.exclude(state="9").exclude(
-                    #     step__rto_count_in="0").filter(step__pnode=None)
-                    # step_rto = 0
-                    # if all_step_runs:
-                    #     for step_run in all_step_runs:
-                    #         rto = 0
-                    #         end_time = step_run.endtime
-                    #         start_time = step_run.starttime
-                    #         if end_time and start_time:
-                    #             delta_time = (end_time - start_time)
-                    #             rto = delta_time.total_seconds()
-                    #
-                    #         step_rto += rto
-                    # # 扣除子级步骤中可能的rto_count_in的时间
-                    # all_inner_step_runs = processrun_rto_obj.steprun_set.exclude(state="9").filter(
-                    #     step__rto_count_in="0").exclude(
-                    #     step__pnode=None).filter(step__pnode__rto_count_in="1")
-                    # inner_rto_not_count_in = 0
-                    # if all_inner_step_runs:
-                    #     for inner_step_run in all_inner_step_runs:
-                    #         end_time = inner_step_run.endtime
-                    #         start_time = inner_step_run.starttime
-                    #         if end_time and start_time:
-                    #             delta_time = (end_time - start_time)
-                    #             rto = delta_time.total_seconds()
-                    #             inner_rto_not_count_in += rto
-                    # step_rto -= inner_rto_not_count_in
 
                     current_rto = float("%.2f" % (step_rto / 60))
 
@@ -4449,8 +4461,13 @@ def revoke_current_task(request):
             except:
                 task_process_id = ""
             # 终止指定流程的异步任务
-            if value["state"] == "STARTED" and task_process_id == process_run_id:
+            if value["state"] in ["STARTED", "SUCCESS"] and task_process_id == process_run_id:
                 task_id = key
+
+        # abnormal 对异步任务进行的类型判断
+        #   1.手动终止异步任务
+        #   2.手动终止异步任务，但不修改流程状态
+        #   0.被动终止异步任务：celery-flower检测不到异步任务，但是流程还在跑
 
         if abnormal in ["1", "2"]:
             stop_url = "http://127.0.0.1:5555/api/task/revoke/{0}?terminate=true".format(task_id)
@@ -5066,33 +5083,6 @@ def show_result(request):
             "%Y-%m-%d %H:%M:%S") if current_processrun.endtime else ""
 
         step_rto = get_process_run_rto(current_processrun)
-
-        # all_step_runs = current_processrun.steprun_set.exclude(state="9").exclude(step__rto_count_in="0").filter(
-        #     step__pnode=None)
-        # step_rto = 0
-        # if all_step_runs:
-        #     for step_run in all_step_runs:
-        #         rto = 0
-        #         end_time = step_run.endtime
-        #         start_time = step_run.starttime
-        #         if end_time and start_time:
-        #             delta_time = (end_time - start_time)
-        #             rto = delta_time.total_seconds()
-        #         step_rto += rto
-        # # 扣除子级步骤中可能的rto_count_in的时间
-        # all_inner_step_runs = current_processrun.steprun_set.exclude(state="9").filter(
-        #     step__rto_count_in="0").exclude(
-        #     step__pnode=None)
-        # inner_rto_not_count_in = 0
-        # if all_inner_step_runs:
-        #     for inner_step_run in all_inner_step_runs:
-        #         end_time = inner_step_run.endtime
-        #         start_time = inner_step_run.starttime
-        #         if end_time and start_time:
-        #             delta_time = (end_time - start_time)
-        #             rto = delta_time.total_seconds()
-        #             inner_rto_not_count_in += rto
-        #             step_rto -= inner_rto_not_count_in
 
         m, s = divmod(step_rto, 60)
         h, m = divmod(m, 60)

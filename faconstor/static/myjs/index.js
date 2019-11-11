@@ -216,7 +216,7 @@ $("ul#locate_task").on("click", " li", function () {
     $("#processrunreason").val($("#a".replace("a", task_id)).find("input#process_run_reason").val());
 });
 
-
+// 演练概况
 $.ajax({
     type: 'POST',
     dataType: 'json',
