@@ -238,7 +238,7 @@ def getpagefuns(funid, request=""):
 
 
 def test(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         errors = []
         return render(request, 'test.html',
                       {'username': request.user.userinfo.fullname, "errors": errors})
@@ -945,7 +945,7 @@ def get_monitor_data(request):
 
         # 演练日志
         task_list = []
-        all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"]).order_by("-starttime")
+        all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"]).order_by("-starttime").select_related("processrun", "processrun__process")
         for num, process_task in enumerate(all_process_tasks):
             if num == 15:
                 break
@@ -2291,7 +2291,7 @@ def groupsavefuntree(request):
 
 
 def script(request, funid):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         errors = []
         if request.method == 'POST':
             my_file = request.FILES.get("myfile", None)  # 获取上传的文件，如果没有文件，则默认为None
@@ -2381,9 +2381,9 @@ def script(request, funid):
 
 
 def scriptdata(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         result = []
-        allscript = Script.objects.exclude(state="9").filter(step_id=None)
+        allscript = Script.objects.exclude(state="9").filter(step_id=None).select_related("origin", "hosts_manage")
         if (len(allscript) > 0):
             for script in allscript:
                 # modify
@@ -2434,7 +2434,7 @@ def scriptdel(request):
     :param request:
     :return:
     """
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         if 'id' in request.POST:
             id = request.POST.get('id', '')
             try:
@@ -2457,7 +2457,7 @@ def scriptdel(request):
 
 
 def scriptsave(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         if 'id' in request.POST:
             result = {}
             id = request.POST.get('id', '')
@@ -2666,7 +2666,7 @@ def scriptexport(request):
 
 
 def processscriptsave(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         if 'id' in request.POST:
             result = {}
             processid = request.POST.get('processid', '')
@@ -2872,7 +2872,7 @@ def processscriptsave(request):
 
 
 def verify_items_save(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         if 'id' in request.POST:
             result = {}
             id = request.POST.get('id', '')
@@ -2907,7 +2907,7 @@ def verify_items_save(request):
 
 
 def get_verify_items_data(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         if 'id' in request.POST:
             id = request.POST.get('id', '')
             try:
@@ -2923,7 +2923,7 @@ def get_verify_items_data(request):
 
 
 def remove_verify_item(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         # 移除当前步骤中的脚本关联
         verify_id = request.POST.get("verify_id", "")
         try:
@@ -2939,7 +2939,7 @@ def remove_verify_item(request):
 
 
 def get_script_data(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         if 'id' in request.POST:
             id = request.POST.get('id', '')
             try:
@@ -2947,7 +2947,7 @@ def get_script_data(request):
             except:
                 raise Http404()
             script_id = request.POST.get("script_id", "")
-            allscript = Script.objects.exclude(state="9").filter(id=script_id)
+            allscript = Script.objects.exclude(state="9").filter(id=script_id).select_related("origin")
             script_data = ""
             if (len(allscript) > 0):
                 cur_script = allscript[0]
@@ -2973,7 +2973,7 @@ def get_script_data(request):
 
 
 def remove_script(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         # 移除当前步骤中的脚本关联
         script_id = request.POST.get("script_id", "")
         try:
@@ -3463,7 +3463,7 @@ def process_design(request, funid):
 
 
 def process_data(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         result = []
         all_process = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort").values()
         if (len(all_process) > 0):
@@ -3483,7 +3483,7 @@ def process_data(request):
 
 
 def process_save(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         if 'id' in request.POST:
             result = {}
             id = request.POST.get('id', '')
@@ -3696,7 +3696,7 @@ def oracle_restore(request, process_id):
         copy_priority = ""
         db_open = ""
         for cur_step in all_steps:
-            all_scripts = Script.objects.filter(step_id=cur_step.id).exclude(state="9")
+            all_scripts = Script.objects.filter(step_id=cur_step.id).exclude(state="9").select_related("origin")
             for cur_script in all_scripts:
                 if cur_script.origin:
                     origin = cur_script.origin
@@ -3909,7 +3909,7 @@ def cv_oracle_run(request):
 
 
 def cv_oracle_run_invited(request):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         result = {}
         process_id = request.POST.get('processid', '')
         run_person = request.POST.get('run_person', '')
@@ -4680,10 +4680,10 @@ def get_current_scriptinfo(request):
         else:
             selected_script_id = None
 
-        scriptrun_objs = ScriptRun.objects.filter(id=selected_script_id)
+        scriptrun_objs = ScriptRun.objects.filter(id=selected_script_id).select_related("steprun", "steprun__processrun")
         script_id = scriptrun_objs[0].script_id if scriptrun_objs else None
 
-        script_objs = Script.objects.filter(id=script_id)
+        script_objs = Script.objects.filter(id=script_id).select_related("hosts_manage", "origin")
         script_obj = script_objs[0] if script_objs else None
 
         if script_obj:
@@ -4740,7 +4740,7 @@ def ignore_current_script(request):
         scriptruns.save()
 
         # 继续运行
-        current_script_run = ScriptRun.objects.filter(id=selected_script_id)
+        current_script_run = ScriptRun.objects.filter(id=selected_script_id).select_related("steprun")
         if current_script_run:
             current_script_run = current_script_run[0]
             current_process_run = current_script_run.steprun.processrun
@@ -4995,7 +4995,7 @@ def show_result(request):
                     step_name = step.name
                     inner_second_el_dict["step_name"] = step_name
                     steprun_obj = StepRun.objects.exclude(state="9").filter(processrun_id=processrun_id).filter(
-                        step=step)
+                        step=step).select_related("step")
                     if steprun_obj:
                         steprun_obj = steprun_obj[0]
                         if steprun_obj.step.rto_count_in == "0":
@@ -6498,7 +6498,7 @@ def origin(request, funid):
 
 def origin_data(request):
     if request.user.is_authenticated():
-        all_origin = Origin.objects.exclude(state="9")
+        all_origin = Origin.objects.exclude(state="9").select_related("target")
         all_origin_list = []
         for origin in all_origin:
             origin_info = json.loads(origin.info)
@@ -6795,7 +6795,7 @@ def hosts_manage_del(request):
 
 
 def serverconfig(request, funid):
-    if request.user.is_authenticated() and request.session['isadmin']:
+    if request.user.is_authenticated():
         cvvendor = Vendor.objects.first()
         id = 0
         webaddr = ""
@@ -7085,7 +7085,7 @@ def manualrecovery(request, funid):
 def manualrecoverydata(request):
     if request.user.is_authenticated():
         result = []
-        all_origins = Origin.objects.exclude(state="9")
+        all_origins = Origin.objects.exclude(state="9").select_related("target")
         for origin in all_origins:
             result.append({
                 "client_manage_id": origin.id,
@@ -7191,7 +7191,6 @@ def process_schedule_save(request):
         per_week = request.POST.get('per_week', '')
         ret = 1
         info = ""
-        print(request.user.username)
 
         if not process_schedule_name:
             return JsonResponse({
@@ -7341,7 +7340,7 @@ def process_schedule_data(request):
     if request.user.is_authenticated():
         result = []
 
-        all_process_schedules = ProcessSchedule.objects.exclude(state="9")
+        all_process_schedules = ProcessSchedule.objects.exclude(state="9").select_related("process", "dj_periodictask", "dj_periodictask__crontab")
 
         for process_schedule in all_process_schedules:
             process_id = process_schedule.process.id
