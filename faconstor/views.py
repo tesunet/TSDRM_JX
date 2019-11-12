@@ -1188,7 +1188,8 @@ def get_process_run_facts(request):
         #######################################################
         cv_oracle_process_list = []
 
-        all_process = Process.objects.exclude(state="9").order_by("sort").filter(type="cv_oracle")
+        all_process = Process.objects.exclude(state="9").order_by("sort").filter(type="cv_oracle").\
+            prefetch_related("processrun_set", "step_set", "step_set__script_set", "step_set__script_set__origin")
 
         for cur_process in all_process:
             # 今日演练(状态)  0/1/2
@@ -1284,10 +1285,11 @@ def get_process_rto(request):
 
 def get_daily_processrun(request):
     if request.user.is_authenticated():
-        all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP")).select_related("process")
+        all_processrun_objs = ProcessRun.objects.select_related("process").filter(state__in=["DONE", "STOP", "PLAN"])
         process_success_rate_list = []
-        if all_processrun_objs:
-            for process_run in all_processrun_objs:
+
+        for process_run in all_processrun_objs:
+            if process_run.state in ["DONE", "STOP"]:
                 process_name = process_run.process.name
                 start_time = process_run.starttime
                 end_time = process_run.endtime
@@ -1306,9 +1308,7 @@ def get_daily_processrun(request):
                     "invite": "0"
                 }
                 process_success_rate_list.append(process_run_dict)
-        all_process_run_invited = ProcessRun.objects.filter(state="PLAN").select_related("process")
-        if all_process_run_invited:
-            for process_run_invited in all_process_run_invited:
+            if process_run.state == "PLAN":
                 invitations_dict = {
                     "process_name": process_run_invited.process.name,
                     "start_time": process_run_invited.starttime,
@@ -1319,6 +1319,7 @@ def get_daily_processrun(request):
                     "invite": "1",
                 }
                 process_success_rate_list.append(invitations_dict)
+                
         return JsonResponse({"data": process_success_rate_list})
 
 
