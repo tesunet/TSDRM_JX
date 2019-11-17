@@ -39,7 +39,7 @@ var Dashboard = function () {
                             width: 1,
                             color: '#808080'
                         }],
-                        tickInterval: 10,
+                        tickInterval: 5,
                     },
                     tooltip: {
                         valueSuffix: '分钟'
@@ -165,7 +165,7 @@ var Dashboard = function () {
                         }
                     });
                 },
-                timeFormat: 'h:mm',
+                timeFormat: 'H:mm',
                 eventAfterAllRender: function (view) {
                     $(".fc-day-grid-event.fc-h-event.fc-event.fc-start.fc-end.invite.fc-draggable").each(function () {
                         var processName = $(this).find('.fc-title').text();

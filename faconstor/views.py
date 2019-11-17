@@ -3588,7 +3588,7 @@ def process_del(request):
 def oracle_restore(request, process_id):
     if request.user.is_authenticated():
         all_wrapper_steps = Step.objects.exclude(state="9").filter(process_id=process_id, pnode_id=None).order_by(
-            "sort")
+            "sort").prefetch_related("script_set", "verifyitems_set")
         wrapper_step_list = []
         num_to_char_choices = {
             "1": "一",
@@ -3638,7 +3638,7 @@ def oracle_restore(request, process_id):
             pnode_id = wrapper_step.id
             inner_step_list = []
             all_inner_steps = Step.objects.exclude(state="9").filter(process_id=process_id, pnode_id=pnode_id).order_by(
-                "sort")
+                "sort").prefetch_related("script_set", "verifyitems_set")
             for inner_step in all_inner_steps:
                 inner_step_dict = {}
                 inner_step_dict["inner_step_name"] = inner_step.name
@@ -3701,7 +3701,8 @@ def oracle_restore(request, process_id):
         all_targets = Target.objects.exclude(state="9")
 
         # commvault源客户端
-        all_steps = Step.objects.exclude(state="9").filter(process_id=process_id)
+        all_steps = Step.objects.exclude(state="9").filter(process_id=process_id).prefetch_related(
+            "script_set", "script_set__origin", "script_set__origin__target")
 
         target_id = ""
         origin = ""
@@ -3709,7 +3710,8 @@ def oracle_restore(request, process_id):
         copy_priority = ""
         db_open = ""
         for cur_step in all_steps:
-            all_scripts = Script.objects.filter(step_id=cur_step.id).exclude(state="9").select_related("origin")
+            # all_scripts = Script.objects.filter(step_id=cur_step.id).exclude(state="9").select_related("origin")
+            all_scripts = cur_step.script_set.exclude(state="9")
             for cur_script in all_scripts:
                 if cur_script.origin:
                     origin = cur_script.origin
