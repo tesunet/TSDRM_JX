@@ -307,10 +307,7 @@ $(document).ready(function () {
             // 演练日志
             $("#drill_log").empty();
             for (var i = 0; i < data.task_list.length; i++) {
-                var drill_log_class = "";
-                if (i % 2 == 0) {
-                    drill_log_class == ' class="bg"';
-                }
+                var drill_log_class = i % 2?' class="bg"':'';
                 $("#drill_log").append('<li ' + drill_log_class + '>\n' +
                     '    <p class="fl"><b>' + data.task_list[i].process_name + '</b><br>\n' +
                     '        ' + data.task_list[i].content + '<br>\n' +
@@ -323,12 +320,10 @@ $(document).ready(function () {
             // error_processrun
             $("#error_process").empty();
             for (var i = 0; i < data.error_processrun.length; i++) {
-                var error_processrun_class = "";
-                if (i % 2 == 0) {
-                    error_processrun_class == ' class="bg"';
-                }
+                var error_processrun_class = i % 2?' class="bg"':'';
+
                 $("#error_process").append('<li ' + error_processrun_class + '>\n' +
-                    '    <p class="fl"><a target="_blank" href="' + data.error_processrun[i].processrun_url + '"><b>' + data.error_processrun[i].process_name + '</b></a></p>\n' +
+                    '    <p class="fl"><a style="text-decoration: none;" target="_blank" href="' + data.error_processrun[i].processrun_url + '"><b>' + data.error_processrun[i].process_name + '</b></a></p>\n' +
                     '    <p class="fr pt17">' + data.error_processrun[i].start_time + '</p>\n' +
                     '</li>');
             }
