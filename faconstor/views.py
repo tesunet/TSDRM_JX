@@ -3244,9 +3244,15 @@ def custom_step_tree(request):
                 root["text"] = rootnode.name
                 root["id"] = rootnode.id
                 group_name = ""
-                if rootnode.group:
-                    group_id = rootnode.group
-                    group_name = Group.objects.filter(id=group_id)[0].name
+
+                try:
+                    group_id = int(rootnode.group)
+                    cur_group = Group.objects.get(id=group_id)
+
+                    group_name = cur_group.name
+                except:
+                    pass
+
                 root["data"] = {"time": rootnode.time, "approval": rootnode.approval, "skip": rootnode.skip,
                                 "allgroups": group_string, "group": rootnode.group, "group_name": group_name,
                                 "scripts": script_string, "errors": errors, "title": title,
