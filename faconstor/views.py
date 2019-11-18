@@ -1016,11 +1016,6 @@ def get_monitor_data(request):
 
                 if process_run.last().state=="DONE":
                     success_job += 1
-            # for p_run in process_run:
-            #     # 成功：一次成功就算成功
-            #     if p_run.state == 'DONE':
-            #         success_job += 1
-            #         break
 
         not_running = 0
         try:
@@ -1090,6 +1085,16 @@ def get_monitor_data(request):
                     "percent": "0%"
                 })
 
+        # 演练错误流程
+        error_processrun_list = []
+        error_processrun = ProcessRun.objects.filter(state="ERROR").select_related("process").order_by("-starttime")
+        for epr in error_processrun:
+            error_processrun_list.append({
+                "process_name": epr.process.name,
+                "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(epr.starttime) if epr.starttime else "",
+                "processrun_url": "/cv_oracle/{processrun_id}/".format(processrun_id=epr.id)
+            })
+
         return JsonResponse({
             "week_drill": week_drill,
             "avgRTO": avgRTO,
@@ -1103,6 +1108,7 @@ def get_monitor_data(request):
                 "error_job": error_job,
                 "not_running": not_running
             },
+            "error_processrun": error_processrun_list
         })
     else:
         return HttpResponseRedirect("/login")
