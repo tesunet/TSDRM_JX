@@ -77,107 +77,6 @@ $(document).ready(function () {
     };
     weekDrillChart.setOption(weekDrillOption);
 
-    // 演练总耗时
-    var allRTOChart = echarts.init(document.getElementById('amiddboxtbott2'));
-    var allRTOOption = {
-        backgroundColor: 'rgba(1,202,217,.2)',
-        grid: {
-            left: 60,
-            right: 60,
-            top: 50,
-            bottom: 40
-        },
-        toolbox: {
-            feature: {
-                dataView: {show: true, readOnly: false},
-                magicType: {show: true, type: ['line', 'bar']},
-                restore: {show: true},
-                saveAsImage: {show: true}
-            }
-        },
-        legend: {
-            top: 10,
-            textStyle: {
-                fontSize: 10,
-                color: 'rgba(255,255,255,.7)'
-            },
-            data: ['演练总耗时']
-        },
-        xAxis: [
-            {
-                type: 'category',
-                axisLine: {
-                    lineStyle: {
-                        color: 'rgba(255,255,255,.2)'
-                    }
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: 'rgba(255,255,255,.1)'
-                    }
-                },
-                axisLabel: {
-                    color: "rgba(255,255,255,.7)"
-                },
-
-                data: [],
-                axisPointer: {
-                    type: 'shadow'
-                }
-            }
-        ],
-        yAxis: [
-            {
-                type: 'value',
-                name: '',
-                axisLine: {
-                    lineStyle: {
-                        color: 'rgba(255,255,255,.3)'
-                    }
-                },
-                splitLine: {
-                    lineStyle: {
-                        color: 'rgba(255,255,255,.1)'
-                    }
-                },
-
-                axisLabel: {
-                    formatter: '{value} 分钟'
-                },
-            },
-
-        ],
-        series: [
-            {
-                name: '平均RTO',
-                type: 'line',
-                itemStyle: {
-                    normal: {
-                        color: new echarts.graphic.LinearGradient(
-                            0, 0, 0, 1,
-                            [
-                                {offset: 0, color: '#fffb34'},
-                                {offset: 1, color: '#fffb34'}
-                            ]
-                        )
-                    }
-                },
-                yAxisIndex: 0,
-                data: [],
-                label: {
-                    normal: {
-                        show: true,
-                        position: 'top',
-                        textStyle: {
-                            color: 'white'
-                        }
-                    }
-                },
-            }
-        ]
-    };
-    allRTOChart.setOption(allRTOOption);
-
     // 系统演练次数TOP5
     var drillTopTimeChart = echarts.init(document.getElementById('pleftbox2bott_cont'));
     var drillTopTimeOption = {
@@ -349,15 +248,7 @@ $(document).ready(function () {
                     data: data.week_drill.drill_times
                 }]
             });
-            // 演练总耗时
-            allRTOChart.setOption({
-                xAxis: {
-                    data: data.avgRTO.drill_day
-                },
-                series: [{
-                    data: data.avgRTO.drill_rto
-                }]
-            });
+
             // 系统演练次数TOP5
             drillTopTimeChart.setOption({
                 yAxis: {
@@ -425,6 +316,20 @@ $(document).ready(function () {
                     '        ' + data.task_list[i].content + '<br>\n' +
                     '    </p>\n' +
                     '    <p class="fr pt17">' + data.task_list[i].start_time + '</p>\n' +
+                    '</li>');
+            }
+
+            // 错误流程
+            // error_processrun
+            $("#error_process").empty();
+            for (var i = 0; i < data.error_processrun.length; i++) {
+                var error_processrun_class = "";
+                if (i % 2 == 0) {
+                    error_processrun_class == ' class="bg"';
+                }
+                $("#error_process").append('<li ' + error_processrun_class + '>\n' +
+                    '    <p class="fl"><a target="_blank" href="' + data.error_processrun[i].processrun_url + '"><b>' + data.error_processrun[i].process_name + '</b></a></p>\n' +
+                    '    <p class="fr pt17">' + data.error_processrun[i].start_time + '</p>\n' +
                     '</li>');
             }
 
