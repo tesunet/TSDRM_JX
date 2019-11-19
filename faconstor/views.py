@@ -962,14 +962,13 @@ def get_monitor_data(request):
         }
 
         # 系统演练次数TOP5
-        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort")
+        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle")
         drill_name = []
         drill_time = []
         for process in all_process:
             process_runs = process.processrun_set.exclude(state__in=["RUN", "REJECT", "9"])
             cur_drill_time = len(process_runs)
-            drill_name.append(process.name)
-            drill_time.append(cur_drill_time)
+
             if drill_time:
                 if cur_drill_time > max(drill_time):
                     drill_name.append(process.name)
