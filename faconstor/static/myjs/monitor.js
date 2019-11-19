@@ -307,7 +307,7 @@ $(document).ready(function () {
             // 演练日志
             $("#drill_log").empty();
             for (var i = 0; i < data.task_list.length; i++) {
-                var drill_log_class = i % 2?' class="bg"':'';
+                var drill_log_class = i % 2 ? ' class="bg"' : '';
                 $("#drill_log").append('<li ' + drill_log_class + '>\n' +
                     '    <p class="fl"><b>' + data.task_list[i].process_name + '</b><br>\n' +
                     '        ' + data.task_list[i].content + '<br>\n' +
@@ -319,13 +319,21 @@ $(document).ready(function () {
             // 错误流程
             // error_processrun
             $("#error_process").empty();
-            for (var i = 0; i < data.error_processrun.length; i++) {
-                var error_processrun_class = i % 2?' class="bg"':'';
+            console.log(data.error_processrun.length)
+            if (data.error_processrun.length < 1) {
+                $("#error_process").append('<li>\n' +
+                    '    <p class="fl"><a style="text-decoration: none;"><b>无</b></a></p>\n' +
+                    '    <p class="fr pt17"></p>\n' +
+                    '</li>')
+            } else {
+                for (var i = 0; i < data.error_processrun.length; i++) {
+                    var error_processrun_class = i % 2 ? ' class="bg"' : '';
 
-                $("#error_process").append('<li ' + error_processrun_class + '>\n' +
-                    '    <p class="fl"><a style="text-decoration: none;" target="_blank" href="' + data.error_processrun[i].processrun_url + '"><b>' + data.error_processrun[i].process_name + '</b></a></p>\n' +
-                    '    <p class="fr pt17">' + data.error_processrun[i].start_time + '</p>\n' +
-                    '</li>');
+                    $("#error_process").append('<li ' + error_processrun_class + '>\n' +
+                        '    <p class="fl"><a style="text-decoration: none;" target="_blank" href="' + data.error_processrun[i].processrun_url + '"><b>' + data.error_processrun[i].process_name + '</b></a></p>\n' +
+                        '    <p class="fr pt17">' + data.error_processrun[i].start_time + '</p>\n' +
+                        '</li>');
+                }
             }
 
             // 今日作业
@@ -341,20 +349,20 @@ $(document).ready(function () {
             var aEditHref = '/restore_search?runstate=EDIT';
 
             if (data.today_job.running_job > 0) {
-                $("#running_job").html('<a href="'+ aRunningHref +'" target="_blank">' + data.today_job.running_job + '</a>');
+                $("#running_job").html('<a href="' + aRunningHref + '" target="_blank">' + data.today_job.running_job + '</a>');
                 $("#running_job").find("a").css("color", "#44ee44");
             } else {
                 $("#running_job").html(data.today_job.running_job);
             }
             console.log(data.today_job.success_job)
             if (data.today_job.success_job > 0) {
-                $("#success_job").html('<a href="'+ aSuccessHref +'" target="_blank">' + data.today_job.success_job + '</a>');
+                $("#success_job").html('<a href="' + aSuccessHref + '" target="_blank">' + data.today_job.success_job + '</a>');
                 $("#success_job").find("a").css("color", "#24c9ff");
             } else {
                 $("#success_job").html(data.today_job.success_job);
             }
             if (data.today_job.error_job > 0) {
-                $("#error_job").html('<a href="'+ aErrorHref +'" target="_blank">' + data.today_job.error_job + '</a>');
+                $("#error_job").html('<a href="' + aErrorHref + '" target="_blank">' + data.today_job.error_job + '</a>');
                 $("#error_job").find("a").css("color", "#e02222");
 
             } else {

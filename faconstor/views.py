@@ -962,7 +962,7 @@ def get_monitor_data(request):
         }
 
         # 系统演练次数TOP5
-        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle")
+        all_process = Process.objects.exclude(state="9").filter(type="cv_oracle").order_by("sort")
         drill_name = []
         drill_time = []
         for process in all_process:
@@ -987,7 +987,7 @@ def get_monitor_data(request):
         task_list = []
         all_process_tasks = ProcessTask.objects.filter(logtype__in=["ERROR", "STOP", "END", "START"]).order_by("-starttime").select_related("processrun", "processrun__process")
         for num, process_task in enumerate(all_process_tasks):
-            if num == 15:
+            if num == 50:
                 break
             process_name = ""
             try:
@@ -1000,7 +1000,6 @@ def get_monitor_data(request):
                 "start_time": "{0: %Y-%m-%d %H:%M:%S}".format(process_task.starttime) if process_task.starttime else "",
                 "content": process_task.content
             })
-
         # 今日作业
         running_job, success_job, error_job = 0, 0, 0
         all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle")
@@ -1085,7 +1084,7 @@ def get_monitor_data(request):
                     "percent": "0%"
                 })
 
-        # 演练错误流程
+        # 待处理异常
         error_processrun_list = []
         error_processrun = ProcessRun.objects.filter(state="ERROR").select_related("process").order_by("-starttime")
         for epr in error_processrun:
@@ -1094,7 +1093,6 @@ def get_monitor_data(request):
                 "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(epr.starttime) if epr.starttime else "",
                 "processrun_url": "/cv_oracle/{processrun_id}/".format(processrun_id=epr.id)
             })
-
         return JsonResponse({
             "week_drill": week_drill,
             "avgRTO": avgRTO,

@@ -875,7 +875,8 @@ def create_process_run(*args, **kwargs):
                             target_id = cur_script.origin.target.id
                         break
 
-            running_process = ProcessRun.objects.filter(process=cur_process, state__in=["RUN", "ERROR"])
+            # running_process = ProcessRun.objects.filter(process=cur_process, state__in=["RUN", "ERROR"])
+            running_process = ProcessRun.objects.filter(process=cur_process, state__in=["RUN"])
             if running_process.exists():
                 myprocesstask = ProcessTask()
                 myprocesstask.starttime = datetime.datetime.now()
@@ -937,38 +938,38 @@ def create_process_run(*args, **kwargs):
                     exec_process.delay(myprocessrun.id)
 
 
-@shared_task
-def crond_stop_process_run():
-    """
-    时隔一个小时检测流程，过滤错误流程至现在时间超过24小时，则终止该流程
-    :return:
-    """
-    all_process = Process.objects.exclude(state="9").filter(type="cv_oracle")
-    for process in all_process:
-        process_runs = process.processrun_set.filter(state="ERROR")
-        if process_runs.exists():
-            process_run = process_runs.last()
-            error_time = process_run.starttime
-            time_now = datetime.datetime.now()
-
-            if error_time:
-                try:
-                    delta_time = (time_now - error_time).total_seconds()
-                except:
-                    pass
-                else:
-                    # if delta_time >= 10:
-                    if delta_time >= 60 * 60 * 24:
-                        process_run.state = "STOP"
-                        process_run.save()
-
-                        myprocesstask = ProcessTask()
-                        myprocesstask.processrun = process_run
-                        myprocesstask.starttime = datetime.datetime.now()
-                        myprocesstask.senduser = process_run.creatuser
-                        myprocesstask.type = "INFO"
-                        myprocesstask.logtype = "END"
-                        myprocesstask.state = "1"
-                        myprocesstask.content = "流程" + process_run.process.name + "执行失败超过24小时，自动终止。"
-                        myprocesstask.save()
-
+# @shared_task
+# def crond_stop_process_run():
+#     """
+#     时隔一个小时检测流程，过滤错误流程至现在时间超过24小时，则终止该流程
+#     :return:
+#     """
+#     all_process = Process.objects.exclude(state="9").filter(type="cv_oracle")
+#     for process in all_process:
+#         process_runs = process.processrun_set.filter(state="ERROR")
+#         if process_runs.exists():
+#             process_run = process_runs.last()
+#             error_time = process_run.starttime
+#             time_now = datetime.datetime.now()
+#
+#             if error_time:
+#                 try:
+#                     delta_time = (time_now - error_time).total_seconds()
+#                 except:
+#                     pass
+#                 else:
+#                     # if delta_time >= 10:
+#                     if delta_time >= 60 * 60 * 24:
+#                         process_run.state = "STOP"
+#                         process_run.save()
+#
+#                         myprocesstask = ProcessTask()
+#                         myprocesstask.processrun = process_run
+#                         myprocesstask.starttime = datetime.datetime.now()
+#                         myprocesstask.senduser = process_run.creatuser
+#                         myprocesstask.type = "INFO"
+#                         myprocesstask.logtype = "END"
+#                         myprocesstask.state = "1"
+#                         myprocesstask.content = "流程" + process_run.process.name + "执行失败超过24小时，自动终止。"
+#                         myprocesstask.save()
+#
