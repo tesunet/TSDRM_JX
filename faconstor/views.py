@@ -970,23 +970,22 @@ def get_monitor_data(request):
             cur_drill_time = len(process_runs)
 
             if drill_time:
-                if cur_drill_time > max(drill_time):
+                for dt in drill_time:
+                    dt_index = drill_time.index(dt)
+                    if cur_drill_time > dt:
+                        drill_name.insert(dt_index, process.name)
+                        drill_time.insert(dt_index, cur_drill_time)
+                        break
+                else:
                     drill_name.append(process.name)
                     drill_time.append(cur_drill_time)
-                else:
-                    for dt in drill_time:
-                        dt_index = drill_time.index(dt)
-                        if cur_drill_time < dt:
-                            drill_name.insert(dt_index, process.name)
-                            drill_time.insert(dt_index, cur_drill_time)
-                            break
             else:
                 drill_name.append(process.name)
                 drill_time.append(cur_drill_time)
 
         drill_top_time = {
-            "drill_name": drill_name[:5] if len(drill_name) > 5 else drill_name,
-            "drill_time": drill_time[:5] if len(drill_time) > 5 else drill_time
+            "drill_name": drill_name[:5][::-1] if len(drill_name[::-1]) > 5 else drill_name,
+            "drill_time": drill_time[:5][::-1] if len(drill_time[::-1]) > 5 else drill_time
         }
         # print(drill_top_time)
         # 演练成功率
