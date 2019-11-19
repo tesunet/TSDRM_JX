@@ -906,8 +906,8 @@ def create_process_run(*args, **kwargs):
                     myprocesstask.type = "INFO"
                     myprocesstask.logtype = "END"
                     myprocesstask.state = "0"
-                    myprocesstask.processrun = running_process[0]
-                    myprocesstask.content = "计划流程({0})不存在可运行步骤，无法按计划创建恢复流程任务。".format(running_process[0].process.name)
+                    myprocesstask.processrun = myprocessrun
+                    myprocesstask.content = "计划流程({0})不存在可运行步骤，无法按计划创建恢复流程任务。".format(myprocessrun.process.name)
                     myprocesstask.save()
                     # result["res"] = '流程启动失败，没有找到可用步骤。'
                 else:
