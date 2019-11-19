@@ -970,11 +970,26 @@ def get_monitor_data(request):
             cur_drill_time = len(process_runs)
             drill_name.append(process.name)
             drill_time.append(cur_drill_time)
+            if drill_time:
+                if cur_drill_time > max(drill_time):
+                    drill_name.append(process.name)
+                    drill_time.append(cur_drill_time)
+                else:
+                    for dt in drill_time:
+                        dt_index = drill_time.index(dt)
+                        if cur_drill_time < dt:
+                            drill_name.insert(dt_index, process.name)
+                            drill_time.insert(dt_index, cur_drill_time)
+                            break
+            else:
+                drill_name.append(process.name)
+                drill_time.append(cur_drill_time)
 
         drill_top_time = {
             "drill_name": drill_name[:5] if len(drill_name) > 5 else drill_name,
             "drill_time": drill_time[:5] if len(drill_time) > 5 else drill_time
         }
+        # print(drill_top_time)
         # 演练成功率
         all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP"))
         successful_processruns = ProcessRun.objects.filter(state="DONE")
@@ -1222,6 +1237,12 @@ def get_process_run_facts(request):
                     # 最后一个步骤rto_count_in="0"，记录endtime为rtoendtime #
                     ########################################################
                     delta_time = get_process_run_rto(processrun)
+
+                    try:
+                        delta_time = int(delta_time)
+                    except ValueError as e:
+                        delta_time = 0
+
                     rto_sum_seconds += delta_time
 
                 m, s = divmod(rto_sum_seconds / len(cur_client_succeed_process), 60)
