@@ -462,6 +462,7 @@ def get_process_index_data(request):
                         if origin:
                             dm = SQLApi.CustomFilter(settings.sql_credit)
                             all_jobs = dm.get_job_controller()
+                            dm.close()
                             for job in all_jobs:
                                 if origin.upper() == job["clientComputer"].upper():
                                     inner_step_run_percent = job["progress"]
@@ -657,6 +658,7 @@ def index(request, funid):
 
         cvsql = SQLApi.CVApi(settings.sql_credit)
         cvsql.updateCVUTC()
+        cvsql.close()
 
         if len(rows) > 0:
             for task in rows:
@@ -1142,7 +1144,7 @@ def get_clients_status(request):
         client_name_list = [client_name[0] for client_name in client_list]
         # 报警客户端
         whole_backup_list = dm.custom_concrete_job_list(client_name_list)
-
+        dm.close()
         return JsonResponse({
             "clients_status": {
                 "service_status": service_status,
@@ -6310,6 +6312,7 @@ def target(request, funid):
 
         # 获取包含oracle模块所有客户端
         installed_client = dm.get_all_install_clients()
+        dm.close()
         oracle_data_list = []
         pre_od_name = ""
         for od in oracle_data:
@@ -6331,7 +6334,6 @@ def target(request, funid):
                 })
                 # 去重
                 pre_od_name = od["clientname"]
-
         return render(request, 'target.html',
                       {'username': request.user.userinfo.fullname,
                        "oracle_data": json.dumps(oracle_data_list),
@@ -6485,6 +6487,7 @@ def origin(request, funid):
 
         # 获取包含oracle模块所有客户端
         installed_client = dm.get_all_install_clients()
+        dm.close()
         oracle_data_list = []
         pre_od_name = ""
         for od in oracle_data:
@@ -6934,8 +6937,8 @@ def get_backup_status(request):
         tmp_client_manage = [tmp_client["client_name"] for tmp_client in all_client_manage]
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
-
         whole_list = dm.custom_concrete_job_list(tmp_client_manage)
+        dm.close()
     except Exception as e:
         return JsonResponse({
             "ret": 0,
@@ -6964,6 +6967,7 @@ def get_backup_content(request):
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
         ret, row_dict = dm.custom_all_backup_content(tmp_client_manage)
+        dm.close()
         for content in ret:
             content_dict = OrderedDict()
             content_dict["clientName"] = content["clientname"]
@@ -7005,6 +7009,7 @@ def get_storage_policy(request):
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
         ret, row_dict = dm.custom_all_storages(tmp_client_manage)
+        dm.close()
         for storage in ret:
             storage_dict = OrderedDict()
             storage_dict["clientName"] = storage["clientname"]
@@ -7055,6 +7060,7 @@ def get_schedule_policy(request):
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
         ret, row_dict = dm.custom_all_schedules(tmp_client_manage)
+        dm.close()
         for schedule in ret:
             schedule_dict = OrderedDict()
             schedule_dict["clientName"] = schedule["clientName"]
@@ -7183,6 +7189,7 @@ def oraclerecoverydata(request):
 
         dm = SQLApi.CustomFilter(settings.sql_credit)
         result = dm.get_oracle_backup_job_list(client_name)
+        dm.close()
         return JsonResponse({"data": result})
     else:
         return HttpResponseRedirect("/login")
