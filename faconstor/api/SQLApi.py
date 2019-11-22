@@ -34,7 +34,6 @@ class DataMonitor(object):
             with self._conn.cursor() as cursor:
                 cursor.execute(temp_sql)
                 result = cursor.fetchone()
-                # self._conn.close()
         return result
 
     def fetch_all(self, temp_sql):
@@ -43,7 +42,6 @@ class DataMonitor(object):
             with self._conn.cursor() as cursor:
                 cursor.execute(temp_sql)
                 result = cursor.fetchall()
-                # self._conn.close()
         return result
 
     def execute(self, temp_sql):
@@ -53,6 +51,8 @@ class DataMonitor(object):
                 cursor.execute(temp_sql)
                 self._conn.commit()
 
+    def close(self):
+        self._conn.close()
 
 class CVApi(DataMonitor):
     def get_all_install_clients(self):
