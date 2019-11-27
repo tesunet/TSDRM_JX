@@ -65,6 +65,10 @@ if (App.isAngularJsApp() === false) {
                 }
             }, 3000);
         }
+
+        // default run
+        getstep();
+
         customOurInterval();
 
         function showResult() {

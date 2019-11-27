@@ -1,21 +1,21 @@
-#************************* Centos7 °²×°docker *******************
-# ²Î¿¼£ºhttps://yeasy.gitbooks.io/docker_practice/install/centos.html
-# ½«dockerÌí¼ÓÖÁÓÃ»§×é£¬²»ĞèÒªÊ¹ÓÃsudoÃüÁî
+#************************* Centos7 å®‰è£…docker *******************
+# å‚è€ƒï¼šhttps://yeasy.gitbooks.io/docker_practice/install/centos.html
+# å°†dockeræ·»åŠ è‡³ç”¨æˆ·ç»„ï¼Œä¸éœ€è¦ä½¿ç”¨sudoå‘½ä»¤
 sudo groupadd docker
 sudo gpasswd -a $USER docker
 newgrp docker
-docker ps  # ²âÊÔÊÇ·ñ²»ĞèÒªsudo
+docker ps  # æµ‹è¯•æ˜¯å¦ä¸éœ€è¦sudo
 
-# ²é¿´¹Ù·½¾µÏñ
+# æŸ¥çœ‹å®˜æ–¹é•œåƒ
 docker search --filter=is-official=true mysql
 
-#************************* MySQLÈİÆ÷ **************************
-# ËŞÖ÷»úÏà¹ØÎÄ¼ş
-mysql >> conf >> my.cnf   # ÅäÖÃÎÄ¼ş
-         data             # ¹ÒÔØµÄÊı¾İ¿âÎÄ¼ş
-         logs             # ¹ÒÔØµÄÈÕÖ¾ÎÄ¼ş
+#************************* MySQLå®¹å™¨ **************************
+# å®¿ä¸»æœºç›¸å…³æ–‡ä»¶
+mysql >> conf >> my.cnf   # é…ç½®æ–‡ä»¶
+         data             # æŒ‚è½½çš„æ•°æ®åº“æ–‡ä»¶
+         logs             # æŒ‚è½½çš„æ—¥å¿—æ–‡ä»¶
 
-# ´´½¨ÈİÆ÷(mysqlÄ¿Â¼ÏÂÖ´ĞĞ):ËŞÖ÷»ú3306¶Ë¿Ú¿ÉÄÜ±»ËŞÖ÷»úÕ¼ÓÃ
+# åˆ›å»ºå®¹å™¨(mysqlç›®å½•ä¸‹æ‰§è¡Œ):å®¿ä¸»æœº3306ç«¯å£å¯èƒ½è¢«å®¿ä¸»æœºå ç”¨
 docker run -p 3307:3306 --name mysql_tsdrm \
     -v $PWD/mysql/conf:/etc/mysql/conf.d \
     -v $PWD/mysql/logs:/logs \
@@ -24,30 +24,30 @@ docker run -p 3307:3306 --name mysql_tsdrm \
     -d \
     registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_db:1.1
 
-# ½øÈëÈİÆ÷
-docker exec -it mysql_tsdrm /bin/bash  # ÈİÆ÷¿ªÆôµÄ×´Ì¬ÏÂ
+# è¿›å…¥å®¹å™¨
+docker exec -it mysql_tsdrm /bin/bash  # å®¹å™¨å¼€å¯çš„çŠ¶æ€ä¸‹
 
-# ¸´ÖÆsqlÎÄ¼şÖÁÈİÆ÷
-docker cp /home/username/×ÀÃæ/tesudrm.sql mysql_tsdrm:/
+# å¤åˆ¶sqlæ–‡ä»¶è‡³å®¹å™¨
+docker cp /home/username/æ¡Œé¢/tesudrm.sql mysql_tsdrm:/
 
-# ´´½¨Êı¾İ¿â/µ¼ÈëÊı¾İ
+# åˆ›å»ºæ•°æ®åº“/å¯¼å…¥æ•°æ®
 mysql -uroot -p
 create dababase example charset=utf8;
 
 mysql -uroot -p example < tesudrm.sql
 
-# ************************* RedisÈİÆ÷ **************************
-# ËŞÖ÷»úÏà¹ØÎÄ¼ş
+# ************************* Rediså®¹å™¨ **************************
+# å®¿ä¸»æœºç›¸å…³æ–‡ä»¶
 redis >> conf  >> redis.conf
          data
 
-# dockerÖĞredisÄ¬ÈÏÎŞÅäÖÃÎÄ¼şÆô¶¯
-# ÅäÖÃÎÄ¼şredis.conf(¸ù¾İĞèÇó×Ô¼ºÅäÖÃ,²ÎÊıËµÃ÷£ºhttps://www.cnblogs.com/qq78292959/archive/2013/09/21/3331032.html)
+# dockerä¸­redisé»˜è®¤æ— é…ç½®æ–‡ä»¶å¯åŠ¨
+# é…ç½®æ–‡ä»¶redis.conf(æ ¹æ®éœ€æ±‚è‡ªå·±é…ç½®,å‚æ•°è¯´æ˜ï¼šhttps://www.cnblogs.com/qq78292959/archive/2013/09/21/3331032.html)
 requirepass tesunet
 daemonize no
 port 6379
 
-# Æô¶¯/À­È¡redis:4.0£¬Í¬Ê±ÃüÃû£¬Í¬Ê±¹ÒÔØÅäÖÃÎÄ¼ş/Êı¾İÎÄ¼şÖÁËŞÖ÷»úµ±Ç°ÎÄ¼şÏÂ(Ö´ĞĞÃüÁîµÄÎ»ÖÃ)
+# å¯åŠ¨/æ‹‰å–redis:4.0ï¼ŒåŒæ—¶å‘½åï¼ŒåŒæ—¶æŒ‚è½½é…ç½®æ–‡ä»¶/æ•°æ®æ–‡ä»¶è‡³å®¿ä¸»æœºå½“å‰æ–‡ä»¶ä¸‹(æ‰§è¡Œå‘½ä»¤çš„ä½ç½®)
 docker run -p 6378:6379 --name redis_tsdrm \
     -v $PWD/redis/conf/redis.conf:/etc/redis/redis.conf \
     -v $PWD/redis/data:/data \
@@ -55,15 +55,15 @@ docker run -p 6378:6379 --name redis_tsdrm \
     registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_cache:1.0 \
     redis-server /etc/redis/redis.conf
 
-# Ìí¼ÓÕË»§:requirepass tesunet
-# ÈÏÖ¤: redis-cli: >> AUTH "tesunet"
+# æ·»åŠ è´¦æˆ·:requirepass tesunet
+# è®¤è¯: redis-cli: >> AUTH "tesunet"
 
-# ********************* Python¾µÏñ+djangoÏîÄ¿ ******************
-# ËŞÖ÷»úÏà¹ØÎÄ¼ş
+# ********************* Pythoné•œåƒ+djangoé¡¹ç›® ******************
+# å®¿ä¸»æœºç›¸å…³æ–‡ä»¶
 django_tsdrm >> requirements.txt
-             >> TSDRM(ÏîÄ¿)
+             >> TSDRM(é¡¹ç›®)
 
-# settings.py mysqlµÄhost¸Ä³Édb,mysql_tsdrm±íÊ¾mysqlÈİÆ÷µÄÃû³Æ(ÈİÆ÷¼äÍ¨ĞÅ)¡£
+# settings.py mysqlçš„hostæ”¹æˆdb,mysql_tsdrmè¡¨ç¤ºmysqlå®¹å™¨çš„åç§°(å®¹å™¨é—´é€šä¿¡)ã€‚
 docker run -p 8000:8000 \
     -v $PWD/django_data/TSDRM:/TSDRM \
     --link mysql_tsdrm:db_server \
@@ -71,44 +71,44 @@ docker run -p 8000:8000 \
     --name django_tsdrm \
     -itd \
     registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_pro:1.2
-    # (ÃüÁîÎ»ÖÃĞ´´íºÜÂé·³)
-# ¸´ÖÆrequiremens.txtÖÁÈİÆ÷
+    # (å‘½ä»¤ä½ç½®å†™é”™å¾ˆéº»çƒ¦)
+# å¤åˆ¶requiremens.txtè‡³å®¹å™¨
 docker cp requirements.txt django_tsdrm:/
-# ½øÈëÈİÆ÷
+# è¿›å…¥å®¹å™¨
 docker exec -it django_tsdrm /bin/bash
-# °²×°ÒÀÀµ
+# å®‰è£…ä¾èµ–
 pip3 install -r requirements.txt
-# ¸´ÖÆÏîÄ¿ÖÁÈİÆ÷
-# ĞŞ¸Äsettings.py
->>> redis/mysqlµÄhost¸ÄÎª:db_server/redis_server
+# å¤åˆ¶é¡¹ç›®è‡³å®¹å™¨
+# ä¿®æ”¹settings.py
+>>> redis/mysqlçš„hostæ”¹ä¸º:db_server/redis_server
 docker cp TSDRM django_tsdrm:/
 
-# ÔËĞĞÏîÄ¿
+# è¿è¡Œé¡¹ç›®
 python manage.py runserver 0.0.0.0:8000
 
-# ·ÃÎÊÏîÄ¿url
+# è®¿é—®é¡¹ç›®url
 http://ip:8000
 
-# ÔËĞĞcelery/celery beat/celery flower
+# è¿è¡Œcelery/celery beat/celery flower
 python3 manage.py celery -A TSDRM worker -l info
 python3 manage.py celery -A TSDRM flower -l info
 python3 manage.py celery -A TSDRM beat -l info
 
-# ÊØ»¤½ø³ÌµÄ·½Ê½Æô¶¯ celery/celery-beat/celery-flower
+# å®ˆæŠ¤è¿›ç¨‹çš„æ–¹å¼å¯åŠ¨ celery/celery-beat/celery-flower
 #python3 /TSDRM/manage.py celery multi start worker -A TSDRM -l info --logfile=./celery.log \
 #    & celery -A TSDRM beat -l info --logfile=./celery_beat.log \
 #    & celery -A TSDRM flower -l info --logfile=./celery_flower.log
 
-# ¹Ø±Õcelery
+# å…³é—­celery
 python3 manage.py celery multi stop/stopwait worker -A TSDRM -l info --logfile=./celery.log
 
-# *********************   uwsgiÔËĞĞÏîÄ¿ ******************************
-# 1.°²×°uwsgi
+# *********************   uwsgiè¿è¡Œé¡¹ç›® ******************************
+# 1.å®‰è£…uwsgi
 pip3 install uwsgi
 
-# 2.ÅäÖÃuwsgi.ini
+# 2.é…ç½®uwsgi.ini
 [uwsgi]
-socket=0.0.0.0:8000 # ÅäÖÃnginx´úÀíÊ±Ê¹ÓÃ
+socket=0.0.0.0:8000 # é…ç½®nginxä»£ç†æ—¶ä½¿ç”¨
 #http=0.0.0.0:8000
 chdir=/TSDRM
 #module=TSDRM.wsgi:application
@@ -122,28 +122,28 @@ daemonize=/TSDRM/log/wsgi.log
 static-map=/static=/TSDRM/static
 
 
-# 3.collectstaticÃüÁîÊÕ¼¯¾²Ì¬ÎÄ¼şÖÁÏîÄ¿Ä¿Â¼ÏÂ
+# 3.collectstaticå‘½ä»¤æ”¶é›†é™æ€æ–‡ä»¶è‡³é¡¹ç›®ç›®å½•ä¸‹
 python manage.py collectstatic
 
-# 4.×¢ÊÍµôSTATIC_ROOT£¬Ìí¼Ó
+# 4.æ³¨é‡Šæ‰STATIC_ROOTï¼Œæ·»åŠ 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static")
 ]
 
-# 5.urls.pyÌí¼Ó
+# 5.urls.pyæ·»åŠ 
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-# ¸½£º
-# 1.ÃüÁîµÄ·½Ê½Æô¶¯
+# é™„ï¼š
+# 1.å‘½ä»¤çš„æ–¹å¼å¯åŠ¨
 uwsgi --static-map /static=/TSDRM/static --http 0.0.0.0:80 --chdir /TSDRM --wsgi-file /TSDRM/TSDRM/wsgi.py
-# 2.ÅäÖÃÎÄ¼şµÄ·½Ê½Æô¶¯
+# 2.é…ç½®æ–‡ä»¶çš„æ–¹å¼å¯åŠ¨
 uwsgi --ini uwsgi.ini
 
-# ********************** nginxÈİÆ÷ *************************
-# 1.ÏÂÔØ¾µÏñ/°²×°ÈİÆ÷(½«djangoÏîÄ¿ÀïµÄstaticÎÄ¼ş¹ÒÔØÖÁnginxÈİÆ÷ÖĞ×ö¾²Ì¬ÎÄ¼ş´úÀí)
+# ********************** nginxå®¹å™¨ *************************
+# 1.ä¸‹è½½é•œåƒ/å®‰è£…å®¹å™¨(å°†djangoé¡¹ç›®é‡Œçš„staticæ–‡ä»¶æŒ‚è½½è‡³nginxå®¹å™¨ä¸­åšé™æ€æ–‡ä»¶ä»£ç†)
 docker run -v $PWD/nginx/log:/var/log/nginx/ \
     -v $PWD/nginx/nginx.conf:/etc/nginx/nginx.conf \
     -v $PWD/django_data/TSDRM/static:/static \
@@ -152,11 +152,11 @@ docker run -v $PWD/nginx/log:/var/log/nginx/ \
     -p 8888:80 \
     registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_nginx:1.0
 
-# 2.½øÈëÈİÆ÷
+# 2.è¿›å…¥å®¹å™¨
 docker exec -it nginx /bin/bash
-# È±Ê¡µÄNginx°²×°ÔÚ/var/lib/nginxÏÂ£¬ÅäÖÃÔÚ/etc/nginxÏÂÃæ£¬°üÀ¨nginx.confÖ÷ÅäÖÃÎÄ¼ş£¬conf.dºÍsite-enabledÊÇ¸½¼ÓµÄÅäÖÃÎÄ¼ş¡£ºóÃæ£¬ÎÒÃÇ½«»á¸ÃÄ¿Â¼Ó³Éäµ½ËŞÖ÷»úÄ¿Â¼£¬ÒÔ±ãÓÚĞŞ¸ÄºÍ¹ÜÀí¡£
+# ç¼ºçœçš„Nginxå®‰è£…åœ¨/var/lib/nginxä¸‹ï¼Œé…ç½®åœ¨/etc/nginxä¸‹é¢ï¼ŒåŒ…æ‹¬nginx.confä¸»é…ç½®æ–‡ä»¶ï¼Œconf.då’Œsite-enabledæ˜¯é™„åŠ çš„é…ç½®æ–‡ä»¶ã€‚åé¢ï¼Œæˆ‘ä»¬å°†ä¼šè¯¥ç›®å½•æ˜ å°„åˆ°å®¿ä¸»æœºç›®å½•ï¼Œä»¥ä¾¿äºä¿®æ”¹å’Œç®¡ç†ã€‚
 
-# 3.ÅäÖÃnginx
+# 3.é…ç½®nginx
 worker_processes  1;
 events {
     worker_connections  1024;
@@ -181,105 +181,105 @@ http {
     }
 }
 
-# ****************** ÔÚdjango¾µÏñÖĞ°²×°Éú³ÉpdfÎÄ¼şµÄÈí¼ş wkhtmltopdf ************
-# 1.ÔÚwkhtmltopdf¹ÙÍøÏÂÔØÖ¸¶¨ÏµÍ³µÄwkhtmltopdf°²×°°ü
-    ÈİÆ÷ÖĞÊ±debian£¬ËùÒÔÏÂÔØÁË£ºwkhtmltox_0.12.5-1.jessie_amd64.deb
+# ****************** åœ¨djangoé•œåƒä¸­å®‰è£…ç”Ÿæˆpdfæ–‡ä»¶çš„è½¯ä»¶ wkhtmltopdf ************
+# 1.åœ¨wkhtmltopdfå®˜ç½‘ä¸‹è½½æŒ‡å®šç³»ç»Ÿçš„wkhtmltopdfå®‰è£…åŒ…
+    å®¹å™¨ä¸­æ—¶debianï¼Œæ‰€ä»¥ä¸‹è½½äº†ï¼šwkhtmltox_0.12.5-1.jessie_amd64.deb
     dpkg -i wkhtmltox_0.12.5-1.jessie_amd64.deb
-# 2.°²×°¹ı³ÌÖĞĞèÒªÒÔÏÂÒÀÀµ£¬Í¨Í¨ÏÂÔØÍ¨¹ıdpkg°²×°£¬ÔÙÈ¥°²×°wkhtmltopdf
+# 2.å®‰è£…è¿‡ç¨‹ä¸­éœ€è¦ä»¥ä¸‹ä¾èµ–ï¼Œé€šé€šä¸‹è½½é€šè¿‡dpkgå®‰è£…ï¼Œå†å»å®‰è£…wkhtmltopdf
     xfonts-75dpi
     xfonts-base
         xfonts-utils
             libfontenc1
             xfonts-encodings
-# 3.½â¾öpdfÖĞÎÄÏÔÊ¾ÎÊÌâ
-    ÏÂÔØËÎÌå:simsun.ttc ¸´ÖÆµ½ÈİÆ÷µÄ/usr/share/fonts/truetype/ÎÄ¼ş¼ĞÏÂ
+# 3.è§£å†³pdfä¸­æ–‡æ˜¾ç¤ºé—®é¢˜
+    ä¸‹è½½å®‹ä½“:simsun.ttc å¤åˆ¶åˆ°å®¹å™¨çš„/usr/share/fonts/truetype/æ–‡ä»¶å¤¹ä¸‹
 
 
-# *********************** ÆäËû²Ù×÷ *************************
-¸½Â¼£ºÊ¹ÓÃµÚÈı·½ÈİÆ÷²Ö¿â£º°¢ÀïÔÆ
+# *********************** å…¶ä»–æ“ä½œ *************************
+é™„å½•ï¼šä½¿ç”¨ç¬¬ä¸‰æ–¹å®¹å™¨ä»“åº“ï¼šé˜¿é‡Œäº‘
 docker login --username=username registry.cn-hangzhou.aliyuncs.com
-docker tag [ImageId] registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_pro:[¾µÏñ°æ±¾ºÅ]
-docker push registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_pro:[¾µÏñ°æ±¾ºÅ]
+docker tag [ImageId] registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_pro:[é•œåƒç‰ˆæœ¬å·]
+docker push registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_pro:[é•œåƒç‰ˆæœ¬å·]
 
-docker pull registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_pro:[¾µÏñ°æ±¾ºÅ]
+docker pull registry.cn-hangzhou.aliyuncs.com/tp_pro/tp_pro:[é•œåƒç‰ˆæœ¬å·]
 
 
-# 1.»ùÓÚµ±Ç°ÈİÆ÷ÖØĞÂ´´½¨¾µÏñ
-docker commit -m "³õÊ¼»¯TSDRMÏîÄ¿" -a "username" -p django_tsdrm django_tsdrm:1.0 # -p±íÊ¾Ìá½»Ê±Í£Ö¹ÈİÆ÷
+# 1.åŸºäºå½“å‰å®¹å™¨é‡æ–°åˆ›å»ºé•œåƒ
+docker commit -m "åˆå§‹åŒ–TSDRMé¡¹ç›®" -a "username" -p django_tsdrm django_tsdrm:1.0 # -pè¡¨ç¤ºæäº¤æ—¶åœæ­¢å®¹å™¨
 
-# 2.ÉÏ´«mysql¾µÏñ
-¡¤ÉÏ´«¾µÏñ(Ä¬ÈÏÉÏ´«µ½Docker Hub¹Ù·½²Ö¿â£¬ĞèÒªµÇÂ¼)
+# 2.ä¸Šä¼ mysqlé•œåƒ
+Â·ä¸Šä¼ é•œåƒ(é»˜è®¤ä¸Šä¼ åˆ°Docker Hubå®˜æ–¹ä»“åº“ï¼Œéœ€è¦ç™»å½•)
     docker login
-    # Îª¾µÏñÌí¼ÓĞÂµÄ±êÇ©
-    docker tag test:latest ÓÃ»§Ãû/test:latest
-    # ÉÏ´«¾µÏñÖÁ²Ö¿â
-    docker push ÓÃ»§Ãû/test:latest
-    # ´ËÊ±£¬ÄãµÄdockerhub¾Í»á¶àÒ»¸örepository¡£
+    # ä¸ºé•œåƒæ·»åŠ æ–°çš„æ ‡ç­¾
+    docker tag test:latest ç”¨æˆ·å/test:latest
+    # ä¸Šä¼ é•œåƒè‡³ä»“åº“
+    docker push ç”¨æˆ·å/test:latest
+    # æ­¤æ—¶ï¼Œä½ çš„dockerhubå°±ä¼šå¤šä¸€ä¸ªrepositoryã€‚
 
-# 3.ÏÂÔØ¾µÏñ£¬ÔËĞĞ
+# 3.ä¸‹è½½é•œåƒï¼Œè¿è¡Œ
 tsdrm
     django_tsdrm >> requirements.txt
-                 >> TSDRM(ÏîÄ¿)
+                 >> TSDRM(é¡¹ç›®)
     redis >> conf  >> redis.conf
              data
-    mysql >> conf >> my.cnf   # ÅäÖÃÎÄ¼ş
-             data             # ¹ÒÔØµÄÊı¾İ¿âÎÄ¼ş
-             logs             # ¹ÒÔØµÄÈÕÖ¾ÎÄ¼ş
+    mysql >> conf >> my.cnf   # é…ç½®æ–‡ä»¶
+             data             # æŒ‚è½½çš„æ•°æ®åº“æ–‡ä»¶
+             logs             # æŒ‚è½½çš„æ—¥å¿—æ–‡ä»¶
     setup.sh
-    # 1.ÏÂÀ­Æô¶¯¾µÏñ
+    # 1.ä¸‹æ‹‰å¯åŠ¨é•œåƒ
     docker pull username/tp_pro:1.0
     docker pull username/tp_db:1.0
     docker pull username/tp_cache:1.0
 
-    # 2.´´½¨ÊµÀı
+    # 2.åˆ›å»ºå®ä¾‹
     docker run -p 3307:3306 --name mysql_tsdrm -v $PWD/mysql/conf:/etc/mysql/conf.d -v $PWD/mysql/logs:/logs -v $PWD/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=password -d username/tp_db:1.1
     docker run -p 6378:6379 --name redis_tsdrm -v $PWD/redis/conf/redis.conf:/etc/redis/redis.conf -v $PWD//redis/data:/data -d username/tp_cache:1.0 redis-server /etc/redis/redis.conf
     docker run -p 8080:80 --link mysql_tsdrm:db_server --link redis_tsdrm:redis_server --name django_tsdrm -itd username/tp_pro:1.0
 
-    # 3.ÔËĞĞÏîÄ¿
+    # 3.è¿è¡Œé¡¹ç›®
     /
-    # 1.ÏÂÀ­Æô¶¯¾µÏñ£¬Í¬Ê±ÔËĞĞ¶à¸öÃüÁî
+    # 1.ä¸‹æ‹‰å¯åŠ¨é•œåƒï¼ŒåŒæ—¶è¿è¡Œå¤šä¸ªå‘½ä»¤
 
-    # 4.²é¿´mysqlÓëredisÊÇ·ñ¿ÉÓÃ
+    # 4.æŸ¥çœ‹mysqlä¸redisæ˜¯å¦å¯ç”¨
     import pymysql.cursors
 
     connection = pymysql.connect(host='db_server',user='root',password='password',db='tesudrm',charset='utf8mb4',cursorclass=pymysql.cursors.DictCursor)
 
-# ÍË³öÈİÆ÷
-exit»òÕßctrl+dÍË³öµÄÈİÆ÷
+# é€€å‡ºå®¹å™¨
+exitæˆ–è€…ctrl+dé€€å‡ºçš„å®¹å™¨
 
-# Æô¶¯ÈİÆ÷
+# å¯åŠ¨å®¹å™¨
 docker start mysql_tsdrm
 
-# ¹Ø±ÕÈİÆ÷
-docker stop ÈİÆ÷id
-docker pause ÈİÆ÷id
-docker kill ÈİÆ÷id
+# å…³é—­å®¹å™¨
+docker stop å®¹å™¨id
+docker pause å®¹å™¨id
+docker kill å®¹å™¨id
 
-# É¾³ıÈİÆ÷
+# åˆ é™¤å®¹å™¨
 docker rm
 
-# ²é¿´ÈİÆ÷
-docker container inspect ÈİÆ÷id
-docker top ÈİÆ÷id
-docker stats ÈİÆ÷id
+# æŸ¥çœ‹å®¹å™¨
+docker container inspect å®¹å™¨id
+docker top å®¹å™¨id
+docker stats å®¹å™¨id
 docker ps -qa
 
-# ************** dockerÈİÆ÷ÖĞ°²×°ÃüÁî(ÈİÆ÷ÄÚÖÃapt-getÉÌµê)
-# 1.Ê¹ÓÃ¹úÄÚÔ´(ÏÈ±¸·İ£¬ºóÖØĞÂĞ´Èë)
+# ************** dockerå®¹å™¨ä¸­å®‰è£…å‘½ä»¤(å®¹å™¨å†…ç½®apt-getå•†åº—)
+# 1.ä½¿ç”¨å›½å†…æº(å…ˆå¤‡ä»½ï¼Œåé‡æ–°å†™å…¥)
 mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
 echo "deb http://mirrors.163.com/debian/ jessie main non-free contrib" >/etc/apt/sources.list && \
 echo "deb http://mirrors.163.com/debian/ jessie-proposed-updates main non-free contrib" >>/etc/apt/sources.list && \
 echo "deb-src http://mirrors.163.com/debian/ jessie main non-free contrib" >>/etc/apt/sources.list && \
 echo "deb-src http://mirrors.163.com/debian/ jessie-proposed-updates main non-free contrib" >>/etc/apt/sources.list
-# Êµ¼ùÖĞ·¢ÏÖĞèÒªÖØÆôÊµÀı»òÕßËŞÖ÷»ú£¬·ñÔòÎŞ·¨Ó¦ÓÃ
+# å®è·µä¸­å‘ç°éœ€è¦é‡å¯å®ä¾‹æˆ–è€…å®¿ä¸»æœºï¼Œå¦åˆ™æ— æ³•åº”ç”¨
 
-# 2.¸üĞÂapt-getÉÌµê
+# 2.æ›´æ–°apt-getå•†åº—
 apt-get update
 
-# 3.°²×°apt
+# 3.å®‰è£…apt
 apt install vim
-# ÅäÖÃvim
+# é…ç½®vim
 set hlsearch
 set backspace=2
 set autoindent
@@ -306,39 +306,39 @@ https://cr.console.aliyun.com/
 
 # ***************************** DockerFile ******************************
 
-# 1.ÅäÖÃÖ¸Áî
-ARG         ´´½¨¾µÏñÊ±Ê¹ÓÃµÄ±äÁ¿£¬´´½¨ºó²»ÔÙ´æÔÚ
-FROM        »ù´¡¾µÏñ
+# 1.é…ç½®æŒ‡ä»¤
+ARG         åˆ›å»ºé•œåƒæ—¶ä½¿ç”¨çš„å˜é‡ï¼Œåˆ›å»ºåä¸å†å­˜åœ¨
+FROM        åŸºç¡€é•œåƒ
     ARG VERSION=9.3
     FROM debian:${VERSION}
-LABEL       ¹ıÂË¾µÏñĞÅÏ¢µÄÌõ¼ş:version/author/description
-EXPOSE      ¾µÏñÄÚ·şÎñ¼àÌı¶Ë¿Ú£¬Ö»ÊÇÉêÃ÷£¬²¢Ã»ÓĞ¶Ë¿ÚÓ³Éä
-ENV         ÈİÆ÷Æô¶¯ºóÒÀ¾É´æÔÚµÄ»·¾³±äÁ¿
-    docker run --env¿ÉÒÔ¸²¸Ç
-ENTRYPOSINT["param1", "param2"] Ä¬ÈÏÈë¿ÚÃüÁî
-    execµ÷ÓÃÖ´ĞĞ
-    ¿ÉÒÔ±»--entrypoint¸²¸Ç
-VOLUME      Êı¾İ¾í¹ÒÔØµã
+LABEL       è¿‡æ»¤é•œåƒä¿¡æ¯çš„æ¡ä»¶:version/author/description
+EXPOSE      é•œåƒå†…æœåŠ¡ç›‘å¬ç«¯å£ï¼Œåªæ˜¯ç”³æ˜ï¼Œå¹¶æ²¡æœ‰ç«¯å£æ˜ å°„
+ENV         å®¹å™¨å¯åŠ¨åä¾æ—§å­˜åœ¨çš„ç¯å¢ƒå˜é‡
+    docker run --envå¯ä»¥è¦†ç›–
+ENTRYPOSINT["param1", "param2"] é»˜è®¤å…¥å£å‘½ä»¤
+    execè°ƒç”¨æ‰§è¡Œ
+    å¯ä»¥è¢«--entrypointè¦†ç›–
+VOLUME      æ•°æ®å·æŒ‚è½½ç‚¹
     VOLUME["/data"]
 USER
-WORKDIR     ÎªRUN/CMD/ENTRYPOINTÅäÖÃ¹¤×÷Ä¿Â¼
+WORKDIR     ä¸ºRUN/CMD/ENTRYPOINTé…ç½®å·¥ä½œç›®å½•
     WORKDIR /path/to/workdir
 ONBUILD
 STOPSIGNAL
 HEALTHCHECK
 SHELL
 
-# 2.²Ù×÷Ö¸Áî
-RUN         ÔËĞĞÃüÁî
-CMD         Æô¶¯ÈİÆ÷Ê±Ä¬ÈÏÖ´ĞĞµÄÃüÁî
-ADD         ÄÚÈİÌí¼Óµ½¾µÏñ
-    ADD ËŞÖ÷»úÏà¶ÔÂ·¾¶ ÈİÆ÷¾ø¶ÔÂ·¾¶
-COPY        ¸´ÖÆÄÚÈİÖÁ¾µÏñ(ÍÆ¼öÊ¹ÓÃ)
+# 2.æ“ä½œæŒ‡ä»¤
+RUN         è¿è¡Œå‘½ä»¤
+CMD         å¯åŠ¨å®¹å™¨æ—¶é»˜è®¤æ‰§è¡Œçš„å‘½ä»¤
+ADD         å†…å®¹æ·»åŠ åˆ°é•œåƒ
+    ADD å®¿ä¸»æœºç›¸å¯¹è·¯å¾„ å®¹å™¨ç»å¯¹è·¯å¾„
+COPY        å¤åˆ¶å†…å®¹è‡³é•œåƒ(æ¨èä½¿ç”¨)
 
-# 3.´´½¨¾µÏñ
+# 3.åˆ›å»ºé•œåƒ
 docker build -t builder/first_image:1.0 /yemp/docker_builder/
-    -t      Éú³É¾µÏñµÄ±êÇ©ĞÅÏ¢
-    -f      Ö¸¶¨·ÇÉÏÏÂÎÄµÄDockerfileÂ·¾¶
+    -t      ç”Ÿæˆé•œåƒçš„æ ‡ç­¾ä¿¡æ¯
+    -f      æŒ‡å®šéä¸Šä¸‹æ–‡çš„Dockerfileè·¯å¾„
 
 
 
