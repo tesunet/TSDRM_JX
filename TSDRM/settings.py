@@ -24,7 +24,8 @@ from lxml import etree
 db_host, db_name, db_user, db_password = '', '', '', ''
 
 try:
-    db_config_file = os.path.join(os.path.join(os.path.join(os.getcwd(), "faconstor"), "config"), "db_config.xml")
+    # db_config_file = os.path.join(os.path.join(os.path.join(os.getcwd(), "faconstor"), "config"), "db_config.xml")
+    db_config_file = r'D:\Pros\PRO_JX\TSDRM\faconstor\config\db_config.xml'
     with open(db_config_file, "r") as f:
         content = etree.XML(f.read())
         db_config = content.xpath('./DB_CONFIG')
@@ -134,8 +135,8 @@ djcelery.setup_loader()
 # BROKER_URL = 'django://'
 # CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 
-# BROKER_URL = 'redis://:tesunet@127.0.0.1:6379/0'
-BROKER_URL = 'redis://:tesunet@223.247.155.54:6379/0'
+BROKER_URL = 'redis://:tesunet@127.0.0.1:6379/0'
+# BROKER_URL = 'redis://:tesunet@223.247.155.54:6379/0'
 # CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
 # BROKER_URL = 'amqp://root:password@localhost:5672/myvhost'
 
@@ -352,5 +353,22 @@ EMAIL_PORT = 25
 #
 #     'filters': {
 #         # 过滤器
+#     }
+# }
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console':{
+#             'level':'DEBUG',
+#             'class':'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'handlers': ['console'],
+#             'propagate': True,
+#             'level':'DEBUG',
+#         },
 #     }
 # }
