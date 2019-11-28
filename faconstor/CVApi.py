@@ -2715,12 +2715,6 @@ class CV_Backupset(CV_Client):
             if "copy_priority" not in keys:
                 self.msg = "operator - no copy_priority"
                 return jobId
-            if "db_open" not in keys:
-                self.msg = "operator - no db_open"
-                return jobId
-            if "curSCN" not in keys:
-                self.msg = "operator - no curSCN"
-                return jobId
         else:
             self.msg = "param not set"
             return jobId
@@ -2730,23 +2724,11 @@ class CV_Backupset(CV_Client):
         restoreTime = operator["restoreTime"]
         data_path = operator["data_path"]
         copy_priority = operator["copy_priority"]
-        curSCN = operator["curSCN"] if operator["curSCN"] else ""
-        db_open = operator["db_open"]
 
         try:
             copy_priority = int(copy_priority)
         except ValueError as e:
             copy_priority = 1
-
-        try:
-            db_open = int(db_open)
-        except ValueError as e:
-            db_open = 1
-
-        if db_open == 2:
-            db_open = "false"
-        else:
-            db_open = "true"
 
         copyPrecedence_xml = '''                                        
         <copyPrecedence>
@@ -2902,18 +2884,17 @@ class CV_Backupset(CV_Client):
                                     <isDeviceTypeSelected>false</isDeviceTypeSelected>
                                     <logTarget></logTarget>
                                     <logTime>
-                                        <fromTimeValue>{restoreTime}</fromTimeValue>
                                         <toTimeValue>{restoreTime}</toTimeValue>
                                     </logTime>
                                     <maxOpenFiles>0</maxOpenFiles>
                                     <mountDatabase>false</mountDatabase>
                                     <noCatalog>true</noCatalog>
-                                    <openDatabase>{db_open}</openDatabase>
+                                    <openDatabase>true</openDatabase>
                                     <osID>2</osID>
                                     <partialRestore>false</partialRestore>
                                     <recover>true</recover>
-                                    <recoverFrom>2</recoverFrom>
-                                    <recoverSCN>{curSCN}</recoverSCN>
+                                    <recoverFrom>4</recoverFrom>
+                                    <recoverSCN></recoverSCN>
                                     <recoverTime>
                                         <timeValue>{restoreTime}</timeValue>
                                     </recoverTime>
@@ -2977,8 +2958,7 @@ class CV_Backupset(CV_Client):
                 </taskInfo>
             </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
                                              restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()),
-                                             copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
-                                             curSCN=curSCN, db_open=db_open)
+                                             copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml)
 
         if restoreTime:
             restoreoracleXML = '''
@@ -3105,13 +3085,12 @@ class CV_Backupset(CV_Client):
                         <isDeviceTypeSelected>false</isDeviceTypeSelected>
                         <logTarget></logTarget>
                         <logTime>
-                          <fromTimeValue>{restoreTime}</fromTimeValue>
                           <toTimeValue>{restoreTime}</toTimeValue>
                         </logTime>
                         <maxOpenFiles>0</maxOpenFiles>
                         <mountDatabase>false</mountDatabase>
                         <noCatalog>true</noCatalog>
-                        <openDatabase>{db_open}</openDatabase>
+                        <openDatabase>true</openDatabase>
                         <osID>2</osID>
                         <partialRestore>false</partialRestore>
                         <recover>true</recover>
@@ -3134,7 +3113,7 @@ class CV_Backupset(CV_Client):
                         <restoreTablespace>false</restoreTablespace>
                         <restoreTag></restoreTag>
                         <restoreTime>
-                          <timeValue>2019-11-03 13:43:44</timeValue>
+                          <timeValue>{restoreTime}</timeValue>
                         </restoreTime>
                         <setDBId>true</setDBId>
                         <skipTargetConnection>false</skipTargetConnection>
@@ -3183,7 +3162,7 @@ class CV_Backupset(CV_Client):
             </TMMsg_CreateTaskReq>
             '''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
                        restoreTime=restoreTime, copyPrecedence_xml=copyPrecedence_xml,
-                       data_path_xml=data_path_xml, db_open=db_open)
+                       data_path_xml=data_path_xml)
 
         try:
             root = ET.fromstring(restoreoracleXML)
@@ -3229,12 +3208,6 @@ class CV_Backupset(CV_Client):
             if "copy_priority" not in keys:
                 self.msg = "operator - no copy_priority"
                 return jobId
-            if "db_open" not in keys:
-                self.msg = "operator - no db_open"
-                return jobId
-            if "curSCN" not in keys:
-                self.msg = "operator - no curSCN"
-                return jobId
         else:
             self.msg = "param not set"
             return jobId
@@ -3245,23 +3218,11 @@ class CV_Backupset(CV_Client):
         browseJobId = operator["browseJobId"]
         data_path = operator["data_path"]
         copy_priority = operator["copy_priority"]
-        db_open = operator["db_open"]
-        curSCN = operator["curSCN"] if operator["curSCN"] else ""
 
         try:
             copy_priority = int(copy_priority)
         except ValueError as e:
             copy_priority = 1
-
-        try:
-            db_open = int(db_open)
-        except ValueError as e:
-            db_open = 1
-
-        if db_open == 2:
-            db_open = "false"
-        else:
-            db_open = "true"
 
         copyPrecedence_xml = '''                                        
         <copyPrecedence>
@@ -3417,20 +3378,19 @@ class CV_Backupset(CV_Client):
                         <isDeviceTypeSelected>false</isDeviceTypeSelected>
                         <logTarget></logTarget>
                         <logTime>
-                          <fromTimeValue>{restoreTime}</fromTimeValue>
                           <toTimeValue>{restoreTime}</toTimeValue>
                         </logTime>
                         <maxOpenFiles>0</maxOpenFiles>
                         <mountDatabase>false</mountDatabase>
                         <noCatalog>true</noCatalog>
-                        <openDatabase>{db_open}</openDatabase>
+                        <openDatabase>true</openDatabase>
                         <osID>2</osID>
                         <partialRestore>false</partialRestore>
                         <racDataStreamAllcation>1 0</racDataStreamAllcation>
                         <racDataStreamAllcation>2 0</racDataStreamAllcation>
                         <recover>true</recover>
                         <recoverFrom>4</recoverFrom>
-                        <recoverSCN>{curSCN}</recoverSCN>
+                        <recoverSCN></recoverSCN>
                         <recoverTime>
                           <timeValue>{restoreTime}</timeValue>
                         </recoverTime>
@@ -3495,8 +3455,7 @@ class CV_Backupset(CV_Client):
               </taskInfo>
             </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
                                              restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()),
-                                             copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
-                                             curSCN=curSCN, db_open=db_open)
+                                             copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml)
         if restoreTime:
             restoreoracleRacXML = """
             <TMMsg_CreateTaskReq>
@@ -3622,13 +3581,12 @@ class CV_Backupset(CV_Client):
                         <isDeviceTypeSelected>false</isDeviceTypeSelected>
                         <logTarget></logTarget>
                         <logTime>
-                          <fromTimeValue>{restoreTime}</fromTimeValue>
                           <toTimeValue>{restoreTime}</toTimeValue>
                         </logTime>
                         <maxOpenFiles>0</maxOpenFiles>
                         <mountDatabase>false</mountDatabase>
                         <noCatalog>true</noCatalog>
-                        <openDatabase>{db_open}</openDatabase>
+                        <openDatabase>true</openDatabase>
                         <osID>2</osID>
                         <partialRestore>false</partialRestore>
                         <racDataStreamAllcation>1 0</racDataStreamAllcation>
@@ -3701,9 +3659,7 @@ class CV_Backupset(CV_Client):
                 </task>
               </taskInfo>
             </TMMsg_CreateTaskReq>""".format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                                             restoreTime=restoreTime,
-                                             copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
-                                             db_open=db_open)
+                                             restoreTime=restoreTime, copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
