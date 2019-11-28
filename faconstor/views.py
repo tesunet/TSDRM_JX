@@ -7160,7 +7160,6 @@ def dooraclerecovery(request):
             if not instance:
                 return HttpResponse("恢复任务启动失败, 数据库实例不存在。")
             oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
-            print("111111", oraRestoreOperator)
 
             cvToken = CV_RestApi_Token()
             cvToken.login(settings.CVApi_credit)
