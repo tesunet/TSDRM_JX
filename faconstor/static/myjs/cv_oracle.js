@@ -69,6 +69,17 @@ if (App.isAngularJsApp() === false) {
         // default run
         getstep();
 
+
+        // 点击页面后1分钟刷新页面
+        $(document).on('click', function () {
+            global_end = true;
+            console.log("点击页面，不动")
+            setTimeout(function () {
+                global_end = false;
+                customOurInterval();
+            }, 60000);
+        });
+
         customOurInterval();
 
         function showResult() {
