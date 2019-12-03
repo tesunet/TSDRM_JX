@@ -204,8 +204,12 @@ class ServerByPara(object):
     def run(self, succeedtext):
         if self.system_choice == "Linux":
             result = self.exec_linux_cmd(succeedtext)
+            if self.client:
+                self.client.close()
         elif self.system_choice == "AIX":
             result = self.exec_linux_cmd(succeedtext, port=22)
+            if self.client:
+                self.client.close()
         else:
             result = self.exec_win_cmd(succeedtext)
         print(result)
