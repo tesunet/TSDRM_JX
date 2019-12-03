@@ -52,7 +52,8 @@ class DataMonitor(object):
                 self._conn.commit()
 
     def close(self):
-        self._conn.close()
+        if self._conn:
+            self._conn.close()
 
 class CVApi(DataMonitor):
     def get_all_install_clients(self):
