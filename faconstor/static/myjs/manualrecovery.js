@@ -10,7 +10,6 @@ $(document).ready(function () {
             {"data": "client_os"},
 
         ],
-
         "columnDefs": [{
             "targets": 0,
             "mRender": function (data, type, full) {
