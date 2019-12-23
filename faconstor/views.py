@@ -7141,6 +7141,13 @@ def dooraclerecovery(request):
             data_path = request.POST.get('data_path', '')
             copy_priority = request.POST.get('copy_priority', '')
 
+            try:
+                copy_priority = int(copy_priority)
+            except:
+                pass
+
+            data_sp = request.POST.get('data_sp', '')
+
             #################################
             # sourceClient>> instance_name  #
             #################################
@@ -7157,26 +7164,62 @@ def dooraclerecovery(request):
                         instance = oracle_info["instance"]
                     except:
                         pass
-            if not instance:
-                return HttpResponse("恢复任务启动失败, 数据库实例不存在。")
-            oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
+                if not instance:
+                    return HttpResponse("恢复任务启动失败, 数据库实例不存在。")
+                if copy_priority == 2:
+                    # 辅助拷贝状态
+                    dm = SQLApi.CustomFilter(settings.sql_credit)
+                    auxcopys = dm.get_all_auxcopys()
+                    oraclecopys = dm.get_oracle_backup_job_list(sourceClient)
 
-            cvToken = CV_RestApi_Token()
-            cvToken.login(settings.CVApi_credit)
-            cvAPI = CV_API(cvToken)
-            if agent.upper() == "ORACLE DATABASE":
-                if cvAPI.restoreOracleBackupset(sourceClient, destClient, instance, oraRestoreOperator):
-                    return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
+                    dm.close()
+
+                    auxcopy_status = 'Success'
+                    for auxcopy in auxcopys:
+                        if auxcopy['storagepolicy'] == data_sp:
+                            auxcopy_status = auxcopy['jobstatus']
+                            break
+                        
+                    if auxcopy_status not in ["Completed", "Success"]:
+                        # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
+                        for auxcopy in auxcopys:
+                            if auxcopy['storagepolicy'] == data_sp and auxcopy['jobstatus'] in ["Completed", "Success"]:
+                                bytesxferred = auxcopy['bytesxferred']
+
+                                end_tag = False
+                                for orcl_copy in oraclecopys:
+                                    try:
+                                        orcl_copy_starttime = datetime.datetime.strptime(orcl_copy['StartTime'], "%Y-%m-%d %H:%M:%S")
+                                        aux_copy_starttime = datetime.datetime.strptime(auxcopy['startdate'], "%Y-%m-%d %H:%M:%S")
+                                        if orcl_copy['numbytesuncomp'] == bytesxferred and orcl_copy_starttime < aux_copy_starttime and orcl_copy['subclient'] == "default":
+                                            # 获取enddate,转化时间
+                                            restoreTime = orcl_copy['LastTime']
+                                            end_tag = True
+                                            break
+                                    except Exception as e:
+                                        print(e)
+                                        pass
+                                if end_tag:
+                                    break
+
+                oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
+
+                cvToken = CV_RestApi_Token()
+                cvToken.login(settings.CVApi_credit)
+                cvAPI = CV_API(cvToken)
+                if agent.upper() == "ORACLE DATABASE":
+                    if cvAPI.restoreOracleBackupset(sourceClient, destClient, instance, oraRestoreOperator):
+                        return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
+                    else:
+                        return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
+                elif agent.upper() == "ORACLE RAC":
+                    oraRestoreOperator["browseJobId"] = browseJobId
+                    if cvAPI.restoreOracleRacBackupset(sourceClient, destClient, instance, oraRestoreOperator):
+                        return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
+                    else:
+                        return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
                 else:
-                    return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
-            elif agent.upper() == "ORACLE RAC":
-                oraRestoreOperator["browseJobId"] = browseJobId
-                if cvAPI.restoreOracleRacBackupset(sourceClient, destClient, instance, oraRestoreOperator):
-                    return HttpResponse("恢复任务已经启动。" + cvAPI.msg)
-                else:
-                    return HttpResponse("恢复任务启动失败。" + cvAPI.msg)
-            else:
-                return HttpResponse("无当前模块，恢复任务启动失败。")
+                    return HttpResponse("无当前模块，恢复任务启动失败。")
         else:
             return HttpResponse("恢复任务启动失败。")
 

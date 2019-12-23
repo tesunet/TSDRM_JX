@@ -237,7 +237,8 @@ def force_exec_script(processrunid):
                         linux_temp_script_name = "tmp_script_{scriptrun_id}.sh".format(**{"scriptrun_id": script.id})
                         linux_temp_script_file = linux_temp_script_path + "/" + linux_temp_script_name
 
-                        tmp_cmd = r"cat > {0} << \EOH".format(linux_temp_script_file) + "\n" + script.script.script_text + "\nEOH"
+                        tmp_cmd = r"cat > {0} << \EOH".format(
+                            linux_temp_script_file) + "\n" + script.script.script_text + "\nEOH"
                         tmp_obj = remote.ServerByPara(tmp_cmd, ip, username, password, system_tag)
                         tmp_result = tmp_obj.run("")
 
@@ -431,7 +432,8 @@ def runstep(steprun, if_repeat=False):
                         linux_temp_script_name = "tmp_script_{scriptrun_id}.sh".format(**{"scriptrun_id": script.id})
                         linux_temp_script_file = linux_temp_script_path + "/" + linux_temp_script_name
 
-                        tmp_cmd = r"cat > {0} << \EOH".format(linux_temp_script_file) + "\n" + script.script.script_text + "\nEOH"
+                        tmp_cmd = r"cat > {0} << \EOH".format(
+                            linux_temp_script_file) + "\n" + script.script.script_text + "\nEOH"
                         tmp_obj = remote.ServerByPara(tmp_cmd, ip, username, password, system_tag)
                         tmp_result = tmp_obj.run("")
 
@@ -764,15 +766,77 @@ def exec_process(processrunid, if_repeat=False):
 
     # nextSCN-1
     # 获取流程客户端
-
     cur_client = processrun.origin
+
     dm = SQLApi.CustomFilter(settings.sql_credit)
     ret = dm.get_oracle_backup_job_list(cur_client)
     curSCN = None
-    for i in ret:
-        if i["subclient"] == "default":
-            curSCN = i["cur_SCN"]
-            break
+
+    process = processrun.process
+
+    # copy_priority
+    copy_priority = 1
+    steps = process.step_set.exclude(state='9')
+    for step in steps:
+        scripts = step.script_set.exclude(state='9')
+        for script in scripts:
+            if script.interface_type == "commvault":
+                origin_id = script.origin.id
+
+                try:
+                    c_origin = Origin.objects.get(id=origin_id)
+                except Origin.DoesNotExist:
+                    pass
+                else:
+                    copy_priority = c_origin.copy_priority
+
+                break
+
+    if copy_priority == 2:
+        auxcopys = dm.get_all_auxcopys()
+
+        orcl_storagepolicy = ""
+        try:
+            orcl_storagepolicy = ret[0]['storagepolicy']
+        except Exception as e:
+            print(e)
+            pass
+
+        auxcopy_status = 'Success'
+        for auxcopy in auxcopys:
+            if auxcopy['storagepolicy'] == orcl_storagepolicy:
+                auxcopy_status = auxcopy['jobstatus']
+                break
+            
+        if auxcopy_status not in ["Completed", "Success"]:
+            # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
+            for auxcopy in auxcopys:
+                if auxcopy['storagepolicy'] == orcl_storagepolicy and auxcopy['jobstatus'] in ["Completed", "Success"]:
+                    bytesxferred = auxcopy['bytesxferred']
+
+                    end_tag = False
+                    for orcl_copy in ret:
+                        try:
+                            orcl_copy_starttime = datetime.datetime.strptime(orcl_copy['StartTime'], "%Y-%m-%d %H:%M:%S")
+                            aux_copy_starttime = datetime.datetime.strptime(auxcopy['startdate'], "%Y-%m-%d %H:%M:%S")
+                            if orcl_copy['numbytesuncomp'] == bytesxferred and orcl_copy_starttime < aux_copy_starttime and orcl_copy["subclient"] == "default":
+                                # 获取enddate,转化时间
+                                cur_SCN = orcl_copy['cur_SCN']
+                                end_tag = True
+                                break
+                        except Exception as e:
+                            print(e)
+                            pass
+                    if end_tag:
+                        break
+    else:
+        for i in ret:
+            if i["subclient"] == "default":
+                curSCN = i["cur_SCN"]
+                break
+
+    dm.close()
+
     processrun.curSCN = curSCN
     processrun.save()
 
@@ -936,7 +1000,6 @@ def create_process_run(*args, **kwargs):
                     myprocesstask.save()
 
                     exec_process.delay(myprocessrun.id)
-
 
 # @shared_task
 # def crond_stop_process_run():
