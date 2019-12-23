@@ -89,11 +89,13 @@ $(document).ready(function () {
         $('#backup_point tbody').on('click', 'button#select', function () {
             var table = $('#backup_point').DataTable();
             var data = table.row($(this).parents('tr')).data();
+            var pre_data = table.row($(this).parents('tr').next()).data();
+            $('#pre_restore_time').val(pre_data.LastTime);
             $("#datetimepicker").val(data.LastTime);
             $("input[name='optionsRadios'][value='1']").prop("checked", false);
             $("input[name='optionsRadios'][value='2']").prop("checked", true);
             $("#browseJobId").val(data.jobId);
-
+            $("#data_sp").val(data.data_sp);
         });
 
         $("#recovery_time_redio_group").click(function () {
@@ -129,7 +131,8 @@ $(document).ready(function () {
                         // 判断是oracle还是oracle rac
                         agent: $("#agent").val(),
                         data_path: $("#data_path").val(),
-                        copy_priority: $("#copy_priority").val()
+                        copy_priority: $("#copy_priority").val(),
+                        data_sp: $("#data_sp").val(),
                     },
                     success: function (data) {
                         alert(data);

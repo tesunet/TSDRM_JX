@@ -721,16 +721,21 @@ class CVApi(DataMonitor):
         return whole_list
 
     def get_all_auxcopys(self):
-        auxcopy_sql = """SELECT [storagepolicy], [jobstatus], [sourcecopyid], [destcopyid] FROM [commserv].[dbo].[CommCellAuxCopyInfo] 
+        auxcopy_sql = """SELECT [storagepolicy], [jobstatus], [sourcecopyid], [destcopyid], [bytesxferred], [startdate] FROM [commserv].[dbo].[CommCellAuxCopyInfo] 
                         WHERE [destcopyid] != '' ORDER BY [startdate] DESC"""
         content = self.fetch_all(auxcopy_sql)
         auxcopys = []
         for i in content:
+            start_time = "{:%Y-%m-%d %H:%M:%S}".format(i[5].replace(tzinfo=datetime.timezone.utc).astimezone(
+                datetime.timezone(datetime.timedelta(hours=8)))) if i[5] else ""
+
             auxcopys.append({
                 "storagepolicy": i[0],
                 "jobstatus": i[1],
                 "sourcecopyid": i[2],
                 "destcopyid": i[3],
+                "bytesxferred": i[4],
+                "startdate": start_time,
             })
         return auxcopys
 
@@ -806,7 +811,7 @@ class CVApi(DataMonitor):
         return commserv_info
 
     def get_oracle_backup_job_list(self, client_name):
-        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent], [subclient]
+        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent], [subclient], [storagePolicy], numbytesuncomp
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}' ORDER BY [startdate] DESC;""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
@@ -849,7 +854,9 @@ class CVApi(DataMonitor):
                 "LastTime": last_time,
                 "instance": i[4],
                 "cur_SCN": cur_SCN,
-                "subclient": i[7]
+                "subclient": i[7],
+                "data_sp": i[8],
+                "numbytesuncomp": i[9]
             })
         return oracle_backuplist
 
@@ -1310,7 +1317,7 @@ def remove_duplicate_for_status(dict_list):
 
 if __name__ == '__main__':
     credit = {
-        "host": "10.1.5.160\COMMVAULT",
+        "host": "192.168.100.149\COMMVAULT",
         "user": "sa_cloud",
         "password": "1qaz@WSX",
         "database": "CommServ",
@@ -1331,12 +1338,12 @@ if __name__ == '__main__':
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
-    ret = dm.get_oracle_backup_job_list("jxxd")
-    print(ret)
-    for i in ret:
-        if i["Level"] == "Full":
-            print(i)
-            break
+    ret = dm.get_oracle_backup_job_list("kela")
+    # print(ret)
+    # for i in ret:
+    #     if i["Level"] == "Full":
+    #         print(i)
+    #         break
     #     return ret
     # print(ret)
     # # 并发
@@ -1356,12 +1363,16 @@ if __name__ == '__main__':
     # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
     # ret = dm.get_all_backup_jobs()
-    # ret = dm.get_all_auxcopys()
+    ret = dm.get_all_auxcopys()
+    if ret[0]['startdate']< datetime.datetime.now():
+        print(1)
+    else:
+        print(2)
     # ret = dm.custom_concrete_job_list()
     # ret = dm.get_all_schedules()
 
     # ret = dm.get_oracle_backup_job_list("win-2qls3b7jx3v.hzx")
-    # print(ret)
+    print(ret)
     # for i in ret:
     #     print(i)
     # import json
