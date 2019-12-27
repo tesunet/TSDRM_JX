@@ -7179,7 +7179,7 @@ def dooraclerecovery(request):
                         if auxcopy['storagepolicy'] == data_sp:
                             auxcopy_status = auxcopy['jobstatus']
                             break
-                    auxcopy_status = 'ERROR'
+                    # auxcopy_status = 'ERROR'
                     if auxcopy_status not in ["Completed", "Success"]:
                         # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
                         for auxcopy in auxcopys:
