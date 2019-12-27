@@ -811,7 +811,7 @@ class CVApi(DataMonitor):
         return commserv_info
 
     def get_oracle_backup_job_list(self, client_name):
-        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent], [subclient], [storagePolicy], numbytesuncomp
+        oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent], [subclient], [storagePolicy], [numbytesuncomp]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
                             WHERE [jobstatus]='Success' AND [clientname]='{0}' ORDER BY [startdate] DESC;""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
@@ -1363,11 +1363,11 @@ if __name__ == '__main__':
     # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
     # ret = dm.get_all_backup_jobs()
-    ret = dm.get_all_auxcopys()
-    if ret[0]['startdate']< datetime.datetime.now():
-        print(1)
-    else:
-        print(2)
+    # ret = dm.get_all_auxcopys()
+    # if ret[0]['startdate']< datetime.datetime.now():
+    #     print(1)
+    # else:
+    #     print(2)
     # ret = dm.custom_concrete_job_list()
     # ret = dm.get_all_schedules()
 
