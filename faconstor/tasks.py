@@ -791,44 +791,50 @@ def exec_process(processrunid, if_repeat=False):
                     copy_priority = c_origin.copy_priority
 
                 break
+    
+    # 区分主动流程与定时流程
+    if processrun.copy_priority != copy_priority and processrun.copy_priority:
+        copy_priority = processrun.copy_priority
 
+    # print('~~~~%s' % copy_priority)
     if copy_priority == 2:
         auxcopys = dm.get_all_auxcopys()
 
         orcl_storagepolicy = ""
         try:
-            orcl_storagepolicy = ret[0]['storagepolicy']
+            orcl_storagepolicy = ret[0]['data_sp']
         except Exception as e:
             print(e)
-            pass
-
+        # print('~~~%s'%orcl_storagepolicy)
         auxcopy_status = 'Success'
         for auxcopy in auxcopys:
             if auxcopy['storagepolicy'] == orcl_storagepolicy:
                 auxcopy_status = auxcopy['jobstatus']
                 break
-            
+        # print('~~~%s' % auxcopy_status)
+        # auxcopy_status = 'ERROR'
         if auxcopy_status not in ["Completed", "Success"]:
             # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
             for auxcopy in auxcopys:
                 if auxcopy['storagepolicy'] == orcl_storagepolicy and auxcopy['jobstatus'] in ["Completed", "Success"]:
                     bytesxferred = auxcopy['bytesxferred']
-
+                    # print('满足条件')
                     end_tag = False
                     for orcl_copy in ret:
                         try:
                             orcl_copy_starttime = datetime.datetime.strptime(orcl_copy['StartTime'], "%Y-%m-%d %H:%M:%S")
                             aux_copy_starttime = datetime.datetime.strptime(auxcopy['startdate'], "%Y-%m-%d %H:%M:%S")
                             if orcl_copy['numbytesuncomp'] == bytesxferred and orcl_copy_starttime < aux_copy_starttime and orcl_copy["subclient"] == "default":
+                                # print('找到该备份记录 %s' % orcl_copy_starttime)
                                 # 获取enddate,转化时间
                                 cur_SCN = orcl_copy['cur_SCN']
                                 end_tag = True
                                 break
                         except Exception as e:
                             print(e)
-                            pass
                     if end_tag:
                         break
+        # print('该备份记录的SCN号', cur_SCN)
     else:
         for i in ret:
             if i["subclient"] == "default":
