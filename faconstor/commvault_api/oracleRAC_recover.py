@@ -2897,7 +2897,7 @@ class CV_Backupset(CV_Client):
                                     <isDeviceTypeSelected>false</isDeviceTypeSelected>
                                     <logTarget></logTarget>
                                     <logTime>
-                                        <fromTimeValue>{restoreTime}</fromTimeValue>
+                                        <fromTimeValue></fromTimeValue>
                                         <toTimeValue>{restoreTime}</toTimeValue>
                                     </logTime>
                                     <maxOpenFiles>0</maxOpenFiles>
@@ -3100,7 +3100,7 @@ class CV_Backupset(CV_Client):
                         <isDeviceTypeSelected>false</isDeviceTypeSelected>
                         <logTarget></logTarget>
                         <logTime>
-                          <fromTimeValue>{restoreTime}</fromTimeValue>
+                          <fromTimeValue></fromTimeValue>
                           <toTimeValue>{restoreTime}</toTimeValue>
                         </logTime>
                         <maxOpenFiles>0</maxOpenFiles>
@@ -3412,7 +3412,7 @@ class CV_Backupset(CV_Client):
                         <isDeviceTypeSelected>false</isDeviceTypeSelected>
                         <logTarget></logTarget>
                         <logTime>
-                          <fromTimeValue>{restoreTime}</fromTimeValue>
+                          <fromTimeValue></fromTimeValue>
                           <toTimeValue>{restoreTime}</toTimeValue>
                         </logTime>
                         <maxOpenFiles>0</maxOpenFiles>
@@ -3617,7 +3617,7 @@ class CV_Backupset(CV_Client):
                         <isDeviceTypeSelected>false</isDeviceTypeSelected>
                         <logTarget></logTarget>
                         <logTime>
-                          <fromTimeValue>{restoreTime}</fromTimeValue>
+                          <fromTimeValue></fromTimeValue>
                           <toTimeValue>{restoreTime}</toTimeValue>
                         </logTime>
                         <maxOpenFiles>0</maxOpenFiles>

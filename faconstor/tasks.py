@@ -796,7 +796,14 @@ def exec_process(processrunid, if_repeat=False):
     if processrun.copy_priority != copy_priority and processrun.copy_priority:
         copy_priority = processrun.copy_priority
 
-    # print('~~~~%s' % copy_priority)
+    
+    for i in ret:
+        if i["subclient"] == "default":
+            print('>>>>>')
+            curSCN = i["cur_SCN"]
+            break
+
+    # print('~~~~%s curSCN: %s' % (copy_priority, curSCN))
     if copy_priority == 2:
         auxcopys = dm.get_all_auxcopys()
 
@@ -827,20 +834,16 @@ def exec_process(processrunid, if_repeat=False):
                             if orcl_copy['numbytesuncomp'] == bytesxferred and orcl_copy_starttime < aux_copy_starttime and orcl_copy["subclient"] == "default":
                                 # print('找到该备份记录 %s' % orcl_copy_starttime)
                                 # 获取enddate,转化时间
-                                cur_SCN = orcl_copy['cur_SCN']
+                                curSCN = orcl_copy['cur_SCN']
                                 end_tag = True
                                 break
                         except Exception as e:
                             print(e)
                     if end_tag:
                         break
-        # print('该备份记录的SCN号', cur_SCN)
-    else:
-        for i in ret:
-            if i["subclient"] == "default":
-                curSCN = i["cur_SCN"]
-                break
 
+
+    # print(curSCN)
     dm.close()
 
     processrun.curSCN = curSCN
