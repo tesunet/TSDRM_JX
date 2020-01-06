@@ -7179,6 +7179,7 @@ def dooraclerecovery(request):
                         if auxcopy['storagepolicy'] == data_sp:
                             auxcopy_status = auxcopy['jobstatus']
                             break
+                    # 假设未恢复成功
                     # auxcopy_status = 'ERROR'
                     if auxcopy_status not in ["Completed", "Success"]:
                         # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
@@ -7202,7 +7203,8 @@ def dooraclerecovery(request):
                                     break
 
                 oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
-
+                # print("> %s > %s, %s, %s" % (oraRestoreOperator, sourceClient, destClient, instance))
+                
                 cvToken = CV_RestApi_Token()
                 cvToken.login(settings.CVApi_credit)
                 cvAPI = CV_API(cvToken)
