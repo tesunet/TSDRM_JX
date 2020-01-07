@@ -3838,9 +3838,6 @@ def cv_oracle_run(request):
         except:
             return JsonResponse({"res": "当前流程不存在。"})
 
-        # if not data_path.strip():
-        #     return JsonResponse({"res": "数据文件重定向路径不能为空。"})
-
         if not origin.strip():
             return JsonResponse({"res": "流程步骤中未添加Commvault接口，导致源客户端未空。"})
 
@@ -7166,22 +7163,42 @@ def dooraclerecovery(request):
                         pass
                 if not instance:
                     return HttpResponse("恢复任务启动失败, 数据库实例不存在。")
+
+                # restoreTime对应curSCN号
+                dm = SQLApi.CustomFilter(settings.sql_credit)
+                oraclecopys = dm.get_oracle_backup_job_list(sourceClient)
+
+                curSCN = None
+                if restoreTime:
+                    for i in oraclecopys:
+                        if i["subclient"] == "default" and i['LastTime'] == restoreTime:
+                            # print('>>>>>')
+                            curSCN = i["cur_SCN"]
+                            break
+                else:
+                    for i in ret:
+                        if i["subclient"] == "default":
+                            # print('>>>>>')
+                            curSCN = i["cur_SCN"]
+                            break
+                
                 if copy_priority == 2:
                     # 辅助拷贝状态
-                    dm = SQLApi.CustomFilter(settings.sql_credit)
                     auxcopys = dm.get_all_auxcopys()
-                    oraclecopys = dm.get_oracle_backup_job_list(sourceClient)
+                    jobs_controller = dm.get_job_controller()
 
                     dm.close()
 
-                    auxcopy_status = 'Success'
-                    for auxcopy in auxcopys:
-                        if auxcopy['storagepolicy'] == data_sp:
-                            auxcopy_status = auxcopy['jobstatus']
+                    # 判断当前存储策略是否有辅助拷贝未完成
+                    auxcopy_completed = True
+                    for job in jobs_controller:
+                        if job['storagePolicy'] == data_sp and job['operation'] == "Aux Copy":
+                            auxcopy_completed = False
                             break
                     # 假设未恢复成功
                     # auxcopy_status = 'ERROR'
-                    if auxcopy_status not in ["Completed", "Success"]:
+                    print('当前备份记录对应的辅助拷贝状态 %s' % auxcopy_completed)
+                    if not auxcopy_completed:
                         # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
                         for auxcopy in auxcopys:
                             if auxcopy['storagepolicy'] == data_sp and auxcopy['jobstatus'] in ["Completed", "Success"]:
@@ -7194,7 +7211,7 @@ def dooraclerecovery(request):
                                         aux_copy_starttime = datetime.datetime.strptime(auxcopy['startdate'], "%Y-%m-%d %H:%M:%S")
                                         if orcl_copy['numbytesuncomp'] == bytesxferred and orcl_copy_starttime < aux_copy_starttime and orcl_copy['subclient'] == "default":
                                             # 获取enddate,转化时间
-                                            restoreTime = orcl_copy['LastTime']
+                                            curSCN = orcl_copy['cur_SCN']
                                             end_tag = True
                                             break
                                     except Exception as e:
@@ -7202,7 +7219,7 @@ def dooraclerecovery(request):
                                 if end_tag:
                                     break
 
-                oraRestoreOperator = {"restoreTime": restoreTime, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
+                oraRestoreOperator = {"curSCN": curSCN, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
                 # print("> %s > %s, %s, %s" % (oraRestoreOperator, sourceClient, destClient, instance))
                 
                 cvToken = CV_RestApi_Token()

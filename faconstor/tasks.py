@@ -796,16 +796,26 @@ def exec_process(processrunid, if_repeat=False):
     if processrun.copy_priority != copy_priority and processrun.copy_priority:
         copy_priority = processrun.copy_priority
 
-    
-    for i in ret:
-        if i["subclient"] == "default":
-            print('>>>>>')
-            curSCN = i["cur_SCN"]
-            break
+    # 区分是当前时间还是选择时间点 > 找到对应SCN号
+    recover_time = '{:%Y-%m-%d %H:%M:%S}'.format(processrun.recover_time) if processrun.recover_time else ""
+    # print('~~~~~ %s' % recover_time)        
+    if recover_time:
+        for i in ret:
+            if i["subclient"] == "default" and i['LastTime'] == recover_time:
+                # print('>>>>>')
+                curSCN = i["cur_SCN"]
+                break
+    else:
+        for i in ret:
+            if i["subclient"] == "default":
+                # print('>>>>>')
+                curSCN = i["cur_SCN"]
+                break
 
     # print('~~~~%s curSCN: %s' % (copy_priority, curSCN))
     if copy_priority == 2:
         auxcopys = dm.get_all_auxcopys()
+        jobs_controller = dm.get_job_controller()
 
         orcl_storagepolicy = ""
         try:
@@ -813,14 +823,17 @@ def exec_process(processrunid, if_repeat=False):
         except Exception as e:
             print(e)
         # print('~~~%s'%orcl_storagepolicy)
-        auxcopy_status = 'Success'
-        for auxcopy in auxcopys:
-            if auxcopy['storagepolicy'] == orcl_storagepolicy:
-                auxcopy_status = auxcopy['jobstatus']
+
+        # 判断当前存储策略是否有辅助拷贝未完成
+        auxcopy_completed = True
+        for job in jobs_controller:
+            if job['storagePolicy'] == orcl_storagepolicy and job['operation'] == "Aux Copy":
+                auxcopy_completed = False
                 break
-        # print('~~~%s' % auxcopy_status)
+        # 假设未恢复成功
         # auxcopy_status = 'ERROR'
-        if auxcopy_status not in ["Completed", "Success"]:
+        print('当前备份记录对应的辅助拷贝状态 %s' % auxcopy_completed)
+        if not auxcopy_completed:
             # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
             for auxcopy in auxcopys:
                 if auxcopy['storagepolicy'] == orcl_storagepolicy and auxcopy['jobstatus'] in ["Completed", "Success"]:
