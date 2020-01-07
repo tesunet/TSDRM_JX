@@ -873,8 +873,10 @@ class CVApi(DataMonitor):
                 "operation": i[1],
                 "clientComputer": i[2],
                 "agentType": i[3],
+                "storagePolicy": i[7],
                 "progress": i[10],
-                "delayReason": i[12]
+                "delayReason": i[12],
+                "instanceName": i[15],
             })
         return job_controller_list
 
@@ -1338,13 +1340,13 @@ if __name__ == '__main__':
     dm = CustomFilter(credit)
     # print(dm.connection)
     # ret = dm.get_all_install_clients()
-    ret = dm.get_oracle_backup_job_list("kela")
-    # print(ret)
+    # ret = dm.get_oracle_backup_job_list("pdb")
+    # # print(ret)
     # for i in ret:
-    #     if i["Level"] == "Full":
-    #         print(i)
+    #     if i["LastTime"] == "2020-01-06 18:38:49":
+    #         print('-----------------------')
     #         break
-    #     return ret
+        # return ret
     # print(ret)
     # # 并发
     # all_tasks = [pool.submit(get_info) for i in range(100)]
@@ -1363,7 +1365,7 @@ if __name__ == '__main__':
     # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
     # ret = dm.get_all_backup_jobs()
-    # ret = dm.get_all_auxcopys()
+    ret = dm.get_all_auxcopys()
     # if ret[0]['startdate']< datetime.datetime.now():
     #     print(1)
     # else:
