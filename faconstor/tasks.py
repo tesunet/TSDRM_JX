@@ -770,7 +770,7 @@ def exec_process(processrunid, if_repeat=False):
 
     dm = SQLApi.CustomFilter(settings.sql_credit)
     ret = dm.get_oracle_backup_job_list(cur_client)
-    curSCN = None
+    curSCN = ""
 
     process = processrun.process
 

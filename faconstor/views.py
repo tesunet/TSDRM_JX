@@ -7167,18 +7167,19 @@ def dooraclerecovery(request):
                 # restoreTime对应curSCN号
                 dm = SQLApi.CustomFilter(settings.sql_credit)
                 oraclecopys = dm.get_oracle_backup_job_list(sourceClient)
-
-                curSCN = None
+                # print("> %s" % restoreTime)
+                curSCN = ""
                 if restoreTime:
                     for i in oraclecopys:
                         if i["subclient"] == "default" and i['LastTime'] == restoreTime:
-                            # print('>>>>>')
+                            # print('>>>>>1')
+                            print(i['LastTime'])
                             curSCN = i["cur_SCN"]
                             break
                 else:
-                    for i in ret:
+                    for i in oraclecopys:
                         if i["subclient"] == "default":
-                            # print('>>>>>')
+                            # print('>>>>>2')
                             curSCN = i["cur_SCN"]
                             break
                 
@@ -7219,7 +7220,8 @@ def dooraclerecovery(request):
                                 if end_tag:
                                     break
 
-                oraRestoreOperator = {"curSCN": curSCN, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority}
+                # print('Rac %s' % curSCN)
+                oraRestoreOperator = {"curSCN": curSCN, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority, "restoreTime": restoreTime}
                 # print("> %s > %s, %s, %s" % (oraRestoreOperator, sourceClient, destClient, instance))
                 
                 cvToken = CV_RestApi_Token()

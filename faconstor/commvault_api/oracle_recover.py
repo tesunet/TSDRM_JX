@@ -3102,6 +3102,9 @@ class CV_Backupset(CV_Client):
             if "curSCN" not in keys:
                 self.msg = "operator - no curSCN"
                 return jobId
+            if "recover_time" not in keys:
+                self.msg = "operator - no recover_time"
+                return jobId
         else:
             self.msg = "param not set"
             return jobId
@@ -3112,6 +3115,7 @@ class CV_Backupset(CV_Client):
         data_path = operator["data_path"]
         copy_priority = operator["copy_priority"]
         db_open = operator["db_open"]
+        recover_time = operator["recover_time"]
         curSCN = operator["curSCN"] if operator["curSCN"] else ""
 
         try:
@@ -3158,6 +3162,13 @@ class CV_Backupset(CV_Client):
             <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
             <redirectAllItemsSelected>true</redirectAllItemsSelected>
             '''.format(data_path=data_path)
+
+        # OracleRac 根据recover_time来判断恢复最新事件还是根据curSCN号恢复
+        if recover_time:
+            recover_from = 2
+        else:
+            recover_from = 4
+            curSCN = ""
 
         restoreoracleRacXML = '''
             <TMMsg_CreateTaskReq>
@@ -3295,7 +3306,7 @@ class CV_Backupset(CV_Client):
                         <racDataStreamAllcation>1 0</racDataStreamAllcation>
                         <racDataStreamAllcation>2 0</racDataStreamAllcation>
                         <recover>true</recover>
-                        <recoverFrom>4</recoverFrom>
+                        <recoverFrom>{recover_from}</recoverFrom>
                         <recoverSCN>{curSCN}</recoverSCN>
                         <recoverTime>
                           <timeValue>{restoreTime}</timeValue>
@@ -3360,9 +3371,9 @@ class CV_Backupset(CV_Client):
                 </task>
               </taskInfo>
             </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()),
+                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format( datetime.datetime.now()),
                                              copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
-                                             curSCN=curSCN, db_open=db_open)
+                                             curSCN=curSCN, db_open=db_open, recover_from=recover_from)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
