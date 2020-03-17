@@ -4018,7 +4018,11 @@ def run(origin, target, instance, processrun_id):
         exit(1)
     else:
         while True:
-            ret = cvAPI.getJobList(origin, type="restore")
+            ret = []
+            try:
+                ret = cvAPI.getJobList(origin, type="restore")
+            except:
+                pass
             for i in ret:
                 if str(i["jobId"]) == str(jobId):
                     if i['status'] in ['运行', '等待']:
