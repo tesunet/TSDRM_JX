@@ -796,7 +796,7 @@ def exec_process(processrunid, if_repeat=False):
     if processrun.copy_priority != copy_priority and processrun.copy_priority:
         copy_priority = processrun.copy_priority
 
-    # 区分是当前时间还是选择时间点 > 找到对应SCN号
+    # 区分是当前时间还是选择时间点 > 从备份记录中匹配到对应SCN号
     recover_time = '{:%Y-%m-%d %H:%M:%S}'.format(processrun.recover_time) if processrun.recover_time else ""
     # print('~~~~~ %s' % recover_time)        
     if recover_time:
@@ -806,57 +806,20 @@ def exec_process(processrunid, if_repeat=False):
                 curSCN = i["cur_SCN"]
                 break
     else:
+        # 当前时间点，选择最新的SCN号
         for i in ret:
             if i["subclient"] == "default":
                 # print('>>>>>')
                 curSCN = i["cur_SCN"]
                 break
 
-    # print('~~~~%s curSCN: %s' % (copy_priority, curSCN))
+    # 辅助拷贝优先的恢复
     if copy_priority == 2:
-        auxcopys = dm.get_all_auxcopys()
-        jobs_controller = dm.get_job_controller()
+        aux_data = dm.get_oracle_backup_job_list(cur_client, aux=True)
+        if aux_data:
+            curSCN = aux_data[0]["cur_SCN"]
+            processrun.recover_time = datetime.datetime.strptime(aux_data[0]["StartTime"], "%Y-%m-%d %H:%M:%S") if aux_data[0]["StartTime"] else None
 
-        orcl_storagepolicy = ""
-        try:
-            orcl_storagepolicy = ret[0]['data_sp']
-        except Exception as e:
-            print(e)
-        # print('~~~%s'%orcl_storagepolicy)
-
-        # 判断当前存储策略是否有辅助拷贝未完成
-        auxcopy_completed = True
-        for job in jobs_controller:
-            if job['storagePolicy'] == orcl_storagepolicy and job['operation'] == "Aux Copy":
-                auxcopy_completed = False
-                break
-        # 假设未恢复成功
-        # auxcopy_status = 'ERROR'
-        print('当前备份记录对应的辅助拷贝状态 %s' % auxcopy_completed)
-        if not auxcopy_completed:
-            # 找到成功的辅助拷贝，开始时间在辅助拷贝前的、值对应上的主拷贝备份时间点(最终转化UTC)
-            for auxcopy in auxcopys:
-                if auxcopy['storagepolicy'] == orcl_storagepolicy and auxcopy['jobstatus'] in ["Completed", "Success"]:
-                    bytesxferred = auxcopy['bytesxferred']
-                    # print('满足条件')
-                    end_tag = False
-                    for orcl_copy in ret:
-                        try:
-                            orcl_copy_starttime = datetime.datetime.strptime(orcl_copy['StartTime'], "%Y-%m-%d %H:%M:%S")
-                            aux_copy_starttime = datetime.datetime.strptime(auxcopy['startdate'], "%Y-%m-%d %H:%M:%S")
-                            if orcl_copy['numbytesuncomp'] == bytesxferred and orcl_copy_starttime < aux_copy_starttime and orcl_copy["subclient"] == "default":
-                                # print('找到该备份记录 %s' % orcl_copy_starttime)
-                                # 获取enddate,转化时间
-                                curSCN = orcl_copy['cur_SCN']
-                                end_tag = True
-                                break
-                        except Exception as e:
-                            print(e)
-                    if end_tag:
-                        break
-
-
-    # print(curSCN)
     dm.close()
 
     processrun.curSCN = curSCN
