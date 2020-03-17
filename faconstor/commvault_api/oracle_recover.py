@@ -2796,6 +2796,9 @@ class CV_Backupset(CV_Client):
             if "curSCN" not in keys:
                 self.msg = "operator - no curSCN"
                 return jobId
+            if "recover_time" not in keys:
+                self.msg = "operator - no recover_time"
+                return jobId
         else:
             self.msg = "param not set"
             return jobId
@@ -2806,6 +2809,7 @@ class CV_Backupset(CV_Client):
         copy_priority = operator["copy_priority"]
         curSCN = operator["curSCN"] if operator["curSCN"] else ""
         db_open = operator["db_open"]
+        recover_time = operator["recover_time"]
 
         try:
             copy_priority = int(copy_priority)
@@ -2851,6 +2855,14 @@ class CV_Backupset(CV_Client):
             <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
             <redirectAllItemsSelected>true</redirectAllItemsSelected>
             '''.format(data_path=data_path)
+
+        if recover_time:
+            recover_from = 2
+            restore_from = 1
+        else:
+            recover_from = 4
+            restore_from = 0
+            curSCN = ""
 
         restoreoracleXML = '''
             <TMMsg_CreateTaskReq>
@@ -2986,7 +2998,7 @@ class CV_Backupset(CV_Client):
                                     <osID>2</osID>
                                     <partialRestore>false</partialRestore>
                                     <recover>true</recover>
-                                    <recoverFrom>2</recoverFrom>
+                                    <recoverFrom>{recover_from}</recoverFrom>
                                     <recoverSCN>{curSCN}</recoverSCN>
                                     <recoverTime>
                                         <timeValue>{restoreTime}</timeValue>
@@ -3002,10 +3014,12 @@ class CV_Backupset(CV_Client):
                                     <restoreFailover>false</restoreFailover>
                                     <restoreFrom>0</restoreFrom>
                                     <restoreSPFile>false</restoreSPFile>
-                                    <restoreStream>1</restoreStream>
+                                    <restoreStream>{restore_from}</restoreStream>
                                     <restoreTablespace>false</restoreTablespace>
                                     <restoreTag></restoreTag>
-                                    <restoreTime/>
+                                    <restoreTime>
+                                        <timeValue>{restoreTime}</timeValue>
+                                    </restoreTime>
                                     <setDBId>true</setDBId>
                                     <skipTargetConnection>false</skipTargetConnection>
                                     <spFileBackupPiece></spFileBackupPiece>
@@ -3050,8 +3064,8 @@ class CV_Backupset(CV_Client):
                     </task>
                 </taskInfo>
             </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(
-                                                 datetime.datetime.now()),
+                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(recover_time if recover_from else
+                                                 datetime.datetime.now()), restore_from=restore_from, recover_from=recover_from,
                                              copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
                                              curSCN=curSCN, db_open=db_open)
 
@@ -3166,8 +3180,10 @@ class CV_Backupset(CV_Client):
         # OracleRac 根据recover_time来判断恢复最新事件还是根据curSCN号恢复
         if recover_time:
             recover_from = 2
+            restore_from = 1
         else:
             recover_from = 4
+            restore_from = 0
             curSCN = ""
 
         restoreoracleRacXML = '''
@@ -3319,13 +3335,15 @@ class CV_Backupset(CV_Client):
                         <restoreData>true</restoreData>
                         <restoreDataTag>false</restoreDataTag>
                         <restoreFailover>false</restoreFailover>
-                        <restoreFrom>0</restoreFrom>
+                        <restoreFrom>{restore_from}</restoreFrom>
                         <restoreInstanceLog>false</restoreInstanceLog>
                         <restoreSPFile>false</restoreSPFile>
                         <restoreStream>1</restoreStream>
                         <restoreTablespace>false</restoreTablespace>
                         <restoreTag></restoreTag>
-                        <restoreTime/>
+                        <restoreTime>
+                            <timeValue>{restoreTime}</timeValue>
+                        </restoreTime>
                         <setDBId>true</setDBId>
                         <skipTargetConnection>false</skipTargetConnection>
                         <spFileBackupPiece></spFileBackupPiece>
@@ -3371,9 +3389,9 @@ class CV_Backupset(CV_Client):
                 </task>
               </taskInfo>
             </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format( datetime.datetime.now()),
+                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(recover_time if recover_time else datetime.datetime.now()),
                                              copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
-                                             curSCN=curSCN, db_open=db_open, recover_from=recover_from)
+                                             curSCN=curSCN, db_open=db_open, recover_from=recover_from, restore_from=restore_from)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
@@ -4048,6 +4066,7 @@ def run(origin, target, instance, processrun_id):
     copy_priority = ""
     curSCN = ""
     db_open = ""
+    recover_time = ""
 
     if recovery_result:
         browse_job_id = recovery_result["browse_job_id"]
@@ -4055,6 +4074,7 @@ def run(origin, target, instance, processrun_id):
         copy_priority = recovery_result["copy_priority"]
         db_open = recovery_result["db_open"]
         curSCN = recovery_result["curSCN"]
+        recover_time = recovery_result["recover_time"]
 
     webaddr = ""
     port = ""
@@ -4094,14 +4114,18 @@ def run(origin, target, instance, processrun_id):
 
     jobId = cvAPI.restoreOracleBackupset(origin, target, instance,
                                          {'browseJobId': browse_job_id, 'data_path': data_path, "copy_priority": copy_priority, "curSCN": curSCN,
-                                          "db_open": db_open})
+                                          "db_open": db_open, "recover_time": recover_time})
     # jobId = 4553295
     if jobId == -1:
         print("oracle恢复接口调用失败，{0}。".format(cvAPI.msg))
         exit(1)
     else:
         while True:
-            ret = cvAPI.getJobList(origin, type="restore")
+            ret = []
+            try:
+                ret = cvAPI.getJobList(origin, type="restore")
+            except:
+                pass
             for i in ret:
                 if str(i["jobId"]) == str(jobId):
                     if i['status'] in ['运行', '等待']:
