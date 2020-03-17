@@ -2929,9 +2929,9 @@ class CV_Backupset(CV_Client):
                                     <restoreData>true</restoreData>
                                     <restoreDataTag>false</restoreDataTag>
                                     <restoreFailover>false</restoreFailover>
-                                    <restoreFrom>0</restoreFrom>
+                                    <restoreFrom>{restore_from}</restoreFrom>
                                     <restoreSPFile>false</restoreSPFile>
-                                    <restoreStream>{restore_from}</restoreStream>
+                                    <restoreStream>1</restoreStream>
                                     <restoreTablespace>false</restoreTablespace>
                                     <restoreTag></restoreTag>
                                     <restoreTime>
