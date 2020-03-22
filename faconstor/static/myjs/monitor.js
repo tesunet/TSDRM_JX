@@ -248,13 +248,14 @@ $(document).ready(function () {
                     data: data.week_drill.drill_times
                 }]
             });
+
             // 系统演练次数TOP5
             drillTopTimeChart.setOption({
                 yAxis: {
                     data: data.drill_top_time.drill_name
                 },
                 series: [{
-                    data: data.drill_top_time.drill_time.reverse()
+                    data: data.drill_top_time.drill_time
                 }]
             });
             // 演练成功率
@@ -318,6 +319,7 @@ $(document).ready(function () {
             // 错误流程
             // error_processrun
             $("#error_process").empty();
+            console.log(data.error_processrun.length)
             if (data.error_processrun.length < 1) {
                 $("#error_process").append('<li>\n' +
                     '    <p class="fl"><a style="text-decoration: none;"><b>无</b></a></p>\n' +

@@ -15,6 +15,10 @@ from TSDRM import settings
 import json
 from .api import SQLApi
 import subprocess
+import logging
+from .CVApi import *
+
+logger = logging.getLogger('process')
 
 
 def is_connection_usable():
@@ -344,7 +348,6 @@ def runstep(steprun, if_repeat=False):
         # 将错误流程改成RUN
         processrun.state = "RUN"
         processrun.save()
-
         if steprun.state != "DONE":
             # 判断是否有子步骤，如果有，先执行子步骤
             # 取消错误消息展示
@@ -384,6 +387,8 @@ def runstep(steprun, if_repeat=False):
                 script.result = ""
                 script.state = "RUN"
                 script.save()
+
+                recover_job_id = ''
 
                 if script.script.interface_type == "脚本":
                     # HostsManage
@@ -577,7 +582,6 @@ def runstep(steprun, if_repeat=False):
                         target = script.steprun.processrun.target.client_name if script.steprun.processrun.target else ""
                     else:
                         target = script.script.target.client_name if script.script.target else ""
-                    # recover_time = script.steprun.processrun.recover_time
                     oracle_info = json.loads(script.script.origin.info)
 
                     instance = ""
@@ -585,10 +589,7 @@ def runstep(steprun, if_repeat=False):
                         instance = oracle_info["instance"]
 
                     oracle_param = "%s %s %s %d" % (origin, target, instance, processrun.id)
-                    # # 测试定时任务
-                    # result["exec_tag"] = 0
-                    # result["data"] = "调用commvault接口成功。"
-                    # result["log"] = "调用commvault接口成功。"
+
                     try:
                         ret = subprocess.getstatusoutput(commvault_api_path + " %s" % oracle_param)
                         exec_status, recover_job_id = ret
@@ -622,6 +623,11 @@ def runstep(steprun, if_repeat=False):
                             # 查看任务错误信息写入>>result["data"]
                             result["data"] = recover_error
                             result["log"] = "Oracle恢复出错。"
+                        elif exec_status == 3:
+                            result["exec_tag"] = 3
+                            # 查看任务错误信息写入>>result["data"]
+                            result["data"] = "长时间未获取到Commvault状态，请检查Commvault恢复情况。"
+                            result["log"] = "长时间未获取到Commvault状态，请检查Commvault恢复情况。"
                         else:
                             result["exec_tag"] = 1
                             result["data"] = recover_job_id
@@ -630,7 +636,6 @@ def runstep(steprun, if_repeat=False):
                 script.endtime = datetime.datetime.now()
                 script.result = result['exec_tag']
                 script.explain = result['data']
-
                 # 处理接口调用执行失败问题
                 if result["exec_tag"] == 1:
                     script.runlog = result['log']  # 写入错误类型
@@ -654,10 +659,9 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.save()
                     return 0
                 # Oracle恢复失败问题
-                if result["exec_tag"] == 2:
+                if result["exec_tag"] in [2, 3]:
                     script.runlog = result['log']  # 写入错误类型
                     script.explain = result['data']
-                    print("Oracle恢复失败,结束任务!")
                     script.state = "ERROR"
                     script.save()
                     steprun.state = "ERROR"
@@ -672,11 +676,30 @@ def runstep(steprun, if_repeat=False):
                     myprocesstask.type = "ERROR"
                     myprocesstask.logtype = "SCRIPT"
                     myprocesstask.state = "0"
-                    myprocesstask.content = "接口" + script_name + "调用过程中，Oracle恢复异常。"
                     myprocesstask.steprun_id = steprun.id
-                    myprocesstask.save()
-                    return 0
+                    if result["exec_tag"] == 2:
+                        myprocesstask.content = "接口" + script_name + "调用过程中，Oracle恢复异常。"
+                        myprocesstask.save()
+                        # 辅助拷贝未完成
+                        if "RMAN Script execution failed  with error [RMAN-03002" in result['data']:
+                            # 终止commvault作业
+                            if recover_job_id != '':
+                                try:
+                                    cvToken = CV_RestApi_Token()
+                                    cvToken.login(settings.CVApi_credit)
+                                    cvOperate = CV_OperatorInterFace(cvToken)
+                                    cvOperate.kill_job(recover_job_id)
+                                except Exception as e:
+                                    logger.info(str(e))
 
+                            myprocesstask.logtype = "STOP"
+                            myprocesstask.content = "由于辅助拷贝未完成，本次演练中止。"
+                            myprocesstask.save()
+                            return 5
+                    if result["exec_tag"] == 3:
+                        myprocesstask.content = "接口" + script_name + "调用过程中，长时间未获取到Commvault状态，请检查Commvault恢复情况。"
+                        myprocesstask.save()
+                    return 0
                 script.endtime = datetime.datetime.now()
                 script.state = "DONE"
                 script.save()
@@ -692,7 +715,6 @@ def runstep(steprun, if_repeat=False):
                 myprocesstask.state = "1"
                 myprocesstask.content = "接口" + script_name + "完成。"
                 myprocesstask.save()
-
             if steprun.step.approval == "1" or steprun.verifyitemsrun_set.all():
                 steprun.state = "CONFIRM"
                 steprun.endtime = datetime.datetime.now()
@@ -742,14 +764,13 @@ def runstep(steprun, if_repeat=False):
                     if_repeat = True
                 else:
                     if_repeat = False
-
                 nextreturn = runstep(nextsteprun, if_repeat)
-
                 if nextreturn == 0:
                     return 0
                 if nextreturn == 2:
                     return 2
-
+                if nextreturn == 5:
+                    return 5
         return 1
     else:
         return 3
@@ -770,65 +791,10 @@ def exec_process(processrunid, if_repeat=False):
 
     dm = SQLApi.CustomFilter(settings.sql_credit)
     ret = dm.get_oracle_backup_job_list(cur_client)
-    curSCN = ""
 
-    process = processrun.process
-
-    # copy_priority
-    copy_priority = 1
-    steps = process.step_set.exclude(state='9')
-    for step in steps:
-        scripts = step.script_set.exclude(state='9')
-        for script in scripts:
-            if script.interface_type == "commvault":
-                origin_id = script.origin.id
-
-                try:
-                    c_origin = Origin.objects.get(id=origin_id)
-                except Origin.DoesNotExist:
-                    pass
-                else:
-                    copy_priority = c_origin.copy_priority
-
-                break
-    
-    # 区分主动流程与定时流程
-    if processrun.copy_priority != copy_priority and processrun.copy_priority:
-        copy_priority = processrun.copy_priority
-
-    # 区分是当前时间还是选择时间点 > 从备份记录中匹配到对应SCN号
-    recover_time = '{:%Y-%m-%d %H:%M:%S}'.format(processrun.recover_time) if processrun.recover_time else ""
-    # print('~~~~~ %s' % recover_time)        
-    if recover_time:
-        for i in ret:
-            if i["subclient"] == "default" and i['LastTime'] == recover_time:
-                # print('>>>>>')
-                curSCN = i["cur_SCN"]
-                break
-    else:
-        # 当前时间点，选择最新的SCN号
-        for i in ret:
-            if i["subclient"] == "default":
-                # print('>>>>>')
-                curSCN = i["cur_SCN"]
-                break
-
-    # 辅助拷贝优先的恢复
-    if copy_priority == 2:
-        aux_data = dm.get_oracle_backup_job_list(cur_client, aux=True)
-        if aux_data:
-            curSCN = aux_data[0]["cur_SCN"]
-            processrun.recover_time = datetime.datetime.strptime(aux_data[0]["StartTime"], "%Y-%m-%d %H:%M:%S") if aux_data[0]["StartTime"] else None
-
-    dm.close()
-
-    processrun.curSCN = curSCN
-    processrun.save()
-
-    steprunlist = StepRun.objects.exclude(state="9").filter(processrun=processrun, step__last=None, step__pnode=None)
-    if len(steprunlist) > 0:
-        end_step_tag = runstep(steprunlist[0], if_repeat)
-    else:
+    # 无联机全备记录，请修改配置，完成联机全备后，待辅助拷贝结束后重启
+    if not ret:
+        end_step_tag = 0
         myprocesstask = ProcessTask()
         myprocesstask.processrun = processrun
         myprocesstask.starttime = datetime.datetime.now()
@@ -836,11 +802,95 @@ def exec_process(processrunid, if_repeat=False):
         myprocesstask.receiveuser = processrun.creatuser
         myprocesstask.type = "ERROR"
         myprocesstask.state = "0"
-        myprocesstask.content = "流程配置错误，请处理。"
+        myprocesstask.content = "无联机全备记录，请修改配置，完成联机全备后，待辅助拷贝结束后重启。"
         myprocesstask.save()
+    else:
+        curSCN = None
+
+        process = processrun.process
+
+        # copy_priority
+        copy_priority = 1
+        steps = process.step_set.exclude(state='9')
+        for step in steps:
+            scripts = step.script_set.exclude(state='9')
+            for script in scripts:
+                if script.interface_type == "commvault":
+                    origin_id = script.origin.id
+
+                    try:
+                        c_origin = Origin.objects.get(id=origin_id)
+                    except Origin.DoesNotExist:
+                        pass
+                    else:
+                        copy_priority = c_origin.copy_priority
+
+                    break
+
+        # 区分主动流程与定时流程
+        if processrun.copy_priority != copy_priority and processrun.copy_priority:
+            copy_priority = processrun.copy_priority
+
+        # 区分是当前时间还是选择时间点 > 从备份记录中匹配到对应SCN号
+        recover_time = '{:%Y-%m-%d %H:%M:%S}'.format(processrun.recover_time) if processrun.recover_time else ""
+        # print('~~~~~ %s' % recover_time)
+        if recover_time:
+            for i in ret:
+                if i["subclient"] == "default" and i['LastTime'] == recover_time:
+                    # print('>>>>>')
+                    curSCN = i["cur_SCN"]
+                    break
+        else:
+            # 当前时间点，选择最新的SCN号
+            for i in ret:
+                if i["subclient"] == "default":
+                    curSCN = i["cur_SCN"]
+                    break
+
+        # print('~~~~%s curSCN: %s' % (copy_priority, curSCN))
+        # 辅助拷贝优先的恢复
+        if copy_priority == 2:
+            if not recover_time:
+                tmp_tag = 0
+                for orcl_copy in ret:
+                    if orcl_copy["idataagent"] == "Oracle Database":
+                        if dm.has_auxiliary_job(orcl_copy['jobId']):
+                            orcl_copy_starttime = datetime.datetime.strptime(orcl_copy['StartTime'],
+                                                                             "%Y-%m-%d %H:%M:%S") + datetime.timedelta(
+                                hours=2)
+                            curSCN = orcl_copy['cur_SCN']
+                            processrun.recover_time = orcl_copy_starttime if orcl_copy_starttime else None
+
+                            if tmp_tag > 0:
+                                break
+                            tmp_tag += 1
+                    else:
+                        break
+
+        dm.close()
+
+        processrun.curSCN = curSCN
+        processrun.save()
+
+        steprunlist = StepRun.objects.exclude(state="9").filter(processrun=processrun, step__last=None,
+                                                                step__pnode=None)
+        if len(steprunlist) > 0:
+            end_step_tag = runstep(steprunlist[0], if_repeat)
+        else:
+            myprocesstask = ProcessTask()
+            myprocesstask.processrun = processrun
+            myprocesstask.starttime = datetime.datetime.now()
+            myprocesstask.senduser = processrun.creatuser
+            myprocesstask.receiveuser = processrun.creatuser
+            myprocesstask.type = "ERROR"
+            myprocesstask.state = "0"
+            myprocesstask.content = "流程配置错误，请处理。"
+            myprocesstask.save()
+
     if end_step_tag == 0:
         processrun.state = "ERROR"
         processrun.save()
+
     if end_step_tag == 1:
         processrun.state = "DONE"
         processrun.endtime = datetime.datetime.now()
@@ -889,6 +939,9 @@ def exec_process(processrunid, if_repeat=False):
         processrun.rto = delta_time
         processrun.save()
 
+    if end_step_tag == 5:
+        processrun.state = "STOP"
+        processrun.save()
 
 @shared_task
 def create_process_run(*args, **kwargs):

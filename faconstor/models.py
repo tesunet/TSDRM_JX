@@ -151,6 +151,7 @@ class ProcessRun(models.Model):
     db_open = models.IntegerField("是否打开数据库", default=1, null=True)
 
     rto = models.IntegerField("流程RTO", default=0, null=True)
+    recover_end_time = models.DateTimeField("恢复结束时间", blank=True, null=True)
 
 
 class StepRun(models.Model):
