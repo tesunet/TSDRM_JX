@@ -3880,7 +3880,12 @@ def cv_oracle_run(request):
                     myprocessrun.origin = origin
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
-
+                    # 是否回滚归档日志
+                    log_restore = 1
+                    origin = Origin.objects.exclude(state='9').filter(client_name=origin)
+                    if origin:
+                        log_restore = origin[0].log_restore
+                    myprocessrun.log_restore = log_restore
                     myprocessrun.save()
                     mystep = process[0].step_set.exclude(state="9").order_by("sort")
                     if (len(mystep) <= 0):
@@ -6544,6 +6549,7 @@ def origin_data(request):
                 "copy_priority": origin.copy_priority,
                 "db_open": origin.db_open,
                 "data_path": origin.data_path,
+                "log_restore": origin.log_restore,
             })
 
         return JsonResponse({"data": all_origin_list})
@@ -6564,6 +6570,8 @@ def origin_save(request):
         copy_priority = request.POST.get("copy_priority", "")
         db_open = request.POST.get("db_open", "")
         data_path = request.POST.get("data_path", "")
+        log_restore = request.POST.get("log_restore", "")
+
         ret = 0
         info = ""
         try:
@@ -6607,6 +6615,12 @@ def origin_save(request):
                                 cur_origin.copy_priority = copy_priority
                                 cur_origin.db_open = db_open
                                 cur_origin.data_path = data_path
+                                try:
+                                    log_restore = int(log_restore)
+                                except:
+                                    pass
+                                else:
+                                    cur_origin.log_restore = log_restore
                                 cur_origin.save()
                             except Exception as e:
                                 print(e)
@@ -6634,6 +6648,12 @@ def origin_save(request):
                                     cur_origin.db_open = db_open
                                     cur_origin.data_path = data_path
                                     cur_origin.target_id = target_id
+                                    try:
+                                        log_restore = int(log_restore)
+                                    except:
+                                        pass
+                                    else:
+                                        cur_origin.log_restore = log_restore
                                     cur_origin.save()
                                 except:
                                     ret = 0

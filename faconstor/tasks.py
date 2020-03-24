@@ -986,7 +986,7 @@ def create_process_run(*args, **kwargs):
                 myprocesstask.logtype = "END"
                 myprocesstask.state = "0"
                 myprocesstask.processrun = running_process[0]
-                myprocesstask.content = "计划流程({0})已运行或者错误流程未处理，无法按计划创建恢复流程任务。".format(running_process[0].process.name)
+                myprocesstask.content = "计划流程({0})已运行，无法按计划创建恢复流程任务。".format(running_process[0].process.name)
                 myprocesstask.save()
                 # result["res"] = '流程启动失败，该流程正在进行中，请勿重复启动。'
             else:
@@ -1000,6 +1000,14 @@ def create_process_run(*args, **kwargs):
                 myprocessrun.copy_priority = copy_priority
                 myprocessrun.db_open = db_open
                 myprocessrun.origin = origin_name
+
+                # 是否回滚归档日志
+                log_restore = 1
+                origin = Origin.objects.exclude(state='9').filter(client_name=origin_name)
+                if origin:
+                    log_restore = origin[0].log_restore
+
+                myprocessrun.log_restore = log_restore
                 myprocessrun.save()
                 mystep = cur_process.step_set.exclude(state="9")
                 if not mystep.exists():

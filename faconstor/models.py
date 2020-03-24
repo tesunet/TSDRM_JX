@@ -103,6 +103,12 @@ class Origin(models.Model):
     )
     db_open = models.IntegerField(
         "是否恢复完成后打开数据库：1：默认打开数据库；2：不打开数据库", null=True, default=1, choices=db_open_choices)
+    log_restore_choices = (
+        (1, "是"),
+        (2, "否")
+    )
+    log_restore = models.IntegerField(
+        "是否回滚日志", null=True, default=1, choices=log_restore_choices)
 
 
 class HostsManage(models.Model):
@@ -152,7 +158,7 @@ class ProcessRun(models.Model):
 
     rto = models.IntegerField("流程RTO", default=0, null=True)
     recover_end_time = models.DateTimeField("恢复结束时间", blank=True, null=True)
-
+    log_restore = models.IntegerField("是否回滚日志", null=True, default=1)
 
 class StepRun(models.Model):
     step = models.ForeignKey(Step, blank=True, null=True)
@@ -245,4 +251,3 @@ class ProcessSchedule(models.Model):
         (3, "每月"),
     )
     schedule_type = models.IntegerField(choices=schedule_type_choices, default=1, null=True)
-

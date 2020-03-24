@@ -2723,6 +2723,13 @@ class CV_Backupset(CV_Client):
         copy_priority = operator["copy_priority"]
         curSCN = operator["curSCN"] if operator["curSCN"] else ""
         db_open = operator["db_open"]
+        restoreTime = operator["restoreTime"]
+        log_restore = operator["log_restore"]
+
+        if str(log_restore) == '1':
+            log_restore = 'true'
+        else:
+            log_restore = 'false'
 
         try:
             copy_priority = int(copy_priority)
@@ -2757,12 +2764,14 @@ class CV_Backupset(CV_Client):
             '''
         data_path_xml = '''
         <redirectItemsPresent>false</redirectItemsPresent>
+        <validate>false</validate>
         <renamePathForAllTablespaces></renamePathForAllTablespaces>
         <redirectAllItemsSelected>false</redirectAllItemsSelected>
         '''
         if data_path:
             data_path_xml = '''
             <redirectItemsPresent>true</redirectItemsPresent>
+            <validate>false</validate>
             <renamePathForAllTablespaces>{data_path}</renamePathForAllTablespaces>
             <redirectAllItemsSelected>true</redirectAllItemsSelected>
             '''.format(data_path=data_path)
@@ -2900,7 +2909,7 @@ class CV_Backupset(CV_Client):
                                     <openDatabase>{db_open}</openDatabase>
                                     <osID>2</osID>
                                     <partialRestore>false</partialRestore>
-                                    <recover>true</recover>
+                                    <recover>{log_restore}</recover>
                                     <recoverFrom>2</recoverFrom>
                                     <recoverSCN>{curSCN}</recoverSCN>
                                     <recoverTime>
@@ -2915,12 +2924,14 @@ class CV_Backupset(CV_Client):
                                     <restoreData>true</restoreData>
                                     <restoreDataTag>false</restoreDataTag>
                                     <restoreFailover>false</restoreFailover>
-                                    <restoreFrom>0</restoreFrom>
+                                    <restoreFrom>{restoreFrom}</restoreFrom>
                                     <restoreSPFile>false</restoreSPFile>
                                     <restoreStream>1</restoreStream>
                                     <restoreTablespace>false</restoreTablespace>
                                     <restoreTag></restoreTag>
-                                    <restoreTime/>
+                                    <restoreTime>
+                                      <timeValue>{restoreTime}</timeValue>
+                                    </restoreTime>
                                     <setDBId>true</setDBId>
                                     <skipTargetConnection>false</skipTargetConnection>
                                     <spFileBackupPiece></spFileBackupPiece>
@@ -2941,7 +2952,6 @@ class CV_Backupset(CV_Client):
                                     <useEndLog>false</useEndLog>
                                     <useStartLSN>false</useStartLSN>
                                     <useStartLog>true</useStartLog>
-                                    <validate>false</validate>
                                 </oracleOpt>
                                 <volumeRstOption>
                                     <volumeLeveRestore>false</volumeLeveRestore>
@@ -2966,9 +2976,11 @@ class CV_Backupset(CV_Client):
                     </task>
                 </taskInfo>
             </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
-                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()),
+                                             restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(restoreTime if restoreTime else
+                                                                                        datetime.datetime.now()),
                                              copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
-                                             curSCN=curSCN, db_open=db_open)
+                                             curSCN=curSCN, db_open=db_open, restoreFrom='1' if restoreTime else '0',
+                                             log_restore=log_restore)
 
         try:
             root = ET.fromstring(restoreoracleXML)
@@ -3030,12 +3042,13 @@ class CV_Backupset(CV_Client):
         data_path = operator["data_path"]
         copy_priority = operator["copy_priority"]
         db_open = operator["db_open"]
-        # recover_end_time = ""
+        log_restore = operator["log_restore"]
 
-        # try:
-        #     recover_end_time = operator["recover_end_time"]
-        # except Exception as e:
-        #     pass
+        if str(log_restore) == '1':
+            log_restore = 'true'
+        else:
+            log_restore = 'false'
+
         recover_time = operator["recover_time"]
         curSCN = operator["curSCN"] if operator["curSCN"] else ""
 
@@ -3224,7 +3237,7 @@ class CV_Backupset(CV_Client):
                                     <partialRestore>false</partialRestore>
                                     <racDataStreamAllcation>1 0</racDataStreamAllcation>
                                     <racDataStreamAllcation>2 0</racDataStreamAllcation>
-                                    <recover>true</recover>
+                                    <recover>{log_restore}</recover>
                                     <recoverFrom>{recover_from}</recoverFrom>
                                     <recoverSCN>{curSCN}</recoverSCN>
                                     <recoverTime>
@@ -3297,7 +3310,7 @@ class CV_Backupset(CV_Client):
                                                  recover_time if recover_time else datetime.datetime.now()),
                                              copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
                                              curSCN=curSCN, db_open=db_open, recover_from=recover_from,
-                                             restoreFrom="1" if recover_time else "0")
+                                             restoreFrom="1" if recover_time else "0", log_restore=log_restore)
 
         try:
             root = ET.fromstring(restoreoracleRacXML)
@@ -3937,7 +3950,7 @@ def run(origin, target, instance, processrun_id):
     recovery_result = {}
 
     credit_sql = "SELECT t.content FROM {db_name}.faconstor_vendor t;".format(**{"db_name": db_name})
-    recovery_sql = """SELECT recover_time, browse_job_id, data_path, copy_priority, curSCN, db_open, recover_end_time FROM {db_name}.faconstor_processrun
+    recovery_sql = """SELECT recover_time, browse_job_id, data_path, copy_priority, curSCN, db_open, recover_end_time, log_restore FROM {db_name}.faconstor_processrun
                       WHERE state!='9' AND id={processrun_id};""".format(
         **{"processrun_id": processrun_id, "db_name": db_name})
 
@@ -3954,6 +3967,7 @@ def run(origin, target, instance, processrun_id):
     recover_time = ""
     recover_end_time = ""
     db_open = ""
+    log_restore = 2
 
     if recovery_result:
         browse_job_id = recovery_result["browse_job_id"]
@@ -3963,6 +3977,7 @@ def run(origin, target, instance, processrun_id):
         curSCN = recovery_result["curSCN"]
         recover_time = recovery_result["recover_time"]
         recover_end_time = recovery_result["recover_end_time"]
+        log_restore = recovery_result["log_restore"]
 
     webaddr = ""
     port = ""
@@ -4004,13 +4019,15 @@ def run(origin, target, instance, processrun_id):
                                             {'browseJobId': browse_job_id, 'data_path': data_path,
                                              "copy_priority": copy_priority, "curSCN": curSCN,
                                              "db_open": db_open, "recover_time": recover_time,
-                                             "recover_end_time": recover_end_time})
+                                             "recover_end_time": recover_end_time, "log_restore": log_restore})
     # jobId = 4553295
     if jobId == -1:
         print("oracleRac恢复接口调用失败。")
         exit(1)
     else:
         temp_tag = 0
+        waiting_times = 0
+
         while True:
             ret = []
             try:
@@ -4019,10 +4036,15 @@ def run(origin, target, instance, processrun_id):
                 temp_tag += 1
             for i in ret:
                 if str(i["jobId"]) == str(jobId):
-                    if i['status'] in ['运行', '等待']:
-                        continue
+                    if i['status'] in ['运行']:
+                        break
+                    elif i['status'] in ['等待', '未决']:
+                        if waiting_times > 450:
+                            print(jobId)
+                            exit(2)
+                        waiting_times += 1
+                        break
                     elif i['status'].upper() == '完成':
-                        print(jobId)
                         exit(0)
                     else:
                         # oracle恢复出现异常

@@ -3858,15 +3858,19 @@ if __name__ == "__main__":
     cvToken = CV_RestApi_Token()
 
     cvToken.login(info)
-    # cvAPI = CV_API(cvToken)
-    cvAPI = CV_OperatorInterFace(cvToken)
+    cvAPI = CV_API(cvToken)
+    # cvAPI = CV_OperatorInterFace(cvToken)
 
     # ret = cvAPI.getClient("10.64.7.43")  # backup status
     # ret = cvAPI.getClientInfo(3)
-    # ret = cvAPI.getClientList()
-    ret = cvAPI.kill_job('585784')
+    ret = cvAPI.getJobList('jxxd_bf', type='restore')
+    tmp = []
+    for i in ret:
+        if i['status'] != "完成":
+            tmp.append(i)
+    # ret = cvAPI.kill_job('585784')
 
-    print(ret)
+    print(tmp)
     # import json
 
     # with open(r"C:\Users\Administrator\Desktop\ret.json", "w") as f:
