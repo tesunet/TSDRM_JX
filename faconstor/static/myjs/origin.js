@@ -76,6 +76,8 @@ $(document).ready(function() {
         $("#copy_priority").val(data.copy_priority);
         $("#db_open").val(data.db_open);
         $("#data_path").val(data.data_path);
+        console.log(data.log_restore)
+        $("#log_restore").val(data.log_restore);
     });
 
     var oracle_data = JSON.parse($("#oracle_data").val());
@@ -111,11 +113,12 @@ $(document).ready(function() {
         $("#copy_priority").val(1);
         $("#db_open").val(1);
         $("#data_path").val("");
+
+        $('#log_restore').val(1);
     });
 
     $('#save').click(function() {
         var table = $('#origin_dt').DataTable();
-        console.log($("#db_open").val())
         $.ajax({
             type: "POST",
             dataType: 'json',
@@ -133,8 +136,9 @@ $(document).ready(function() {
                 // 拷贝优先级/数据重定向路径
                 copy_priority: $("#copy_priority").val(),
                 db_open: $("#db_open").val(),
-                data_path: $("#data_path").val()
+                data_path: $("#data_path").val(),
 
+                log_restore: $("#log_restore").val(),
             },
             success: function(data) {
                 if (data.ret == 1) {
