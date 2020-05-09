@@ -1080,6 +1080,25 @@ class CV_OperatorInterFace(CV_RestApi):
         retCode = self.qCmd("QCommand/" + command, "")
         return retCode
 
+    def kill_job(self, job_id):
+        command = "Job/{job_id}/action/kill".format(job_id=job_id)
+        self.postCmd(command)
+        # try:
+        #     resp = ET.fromstring(retString)
+        # except Exception as e:
+        #     self.msg = "job kill xml format is error"
+        #     return False
+        # err_list = resp.findall(".//errList")
+        # if err_list:
+        #     node = err_list[0]
+        #     attrib = node.attrib
+        #     print(attrib["errorCode"])
+        #     if attrib["errorCode"] == '0':
+        #         return True
+        #     else:
+        #         return False
+        return True
+
 
 class CV_VMRestore(object):
     def __init__(self, et):
@@ -2958,8 +2977,8 @@ class CV_Backupset(CV_Client):
                 </taskInfo>
             </TMMsg_CreateTaskReq>'''.format(sourceClient=sourceClient, destClient=destClient, instance=instance,
                                              restoreTime="{0:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.now()),
-                                             copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml, curSCN=curSCN)
-
+                                             copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
+                                             curSCN=curSCN)
 
         try:
             root = ET.fromstring(restoreoracleXML)
@@ -3839,13 +3858,19 @@ if __name__ == "__main__":
     cvToken = CV_RestApi_Token()
 
     cvToken.login(info)
-    cvAPI = CV_Client(cvToken)
+    cvAPI = CV_API(cvToken)
+    # cvAPI = CV_OperatorInterFace(cvToken)
 
-    ret = cvAPI.getClient("10.64.7.43")  # backup status
+    # ret = cvAPI.getClient("10.64.7.43")  # backup status
     # ret = cvAPI.getClientInfo(3)
-    # ret = cvAPI.getClientList()
+    ret = cvAPI.getJobList('jxxd_bf', type='restore')
+    tmp = []
+    for i in ret:
+        if i['status'] != "完成":
+            tmp.append(i)
+    # ret = cvAPI.kill_job('585784')
 
-    print(ret)
+    print(tmp)
     # import json
 
     # with open(r"C:\Users\Administrator\Desktop\ret.json", "w") as f:

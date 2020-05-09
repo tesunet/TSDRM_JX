@@ -595,12 +595,16 @@ def get_c_process_run_tasks(current_processrun_id):
     """
     # 当前系统任务
     current_process_task_info = []
+    rows = []
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+            select t.starttime, t.content, t.type, t.state, t.logtype from faconstor_processtask as t where t.processrun_id = '{0}' order by t.starttime desc;
+            """.format(current_processrun_id))
+            rows = cursor.fetchall()
+    finally:
+        connection.close()
 
-    cursor = connection.cursor()
-    cursor.execute("""
-    select t.starttime, t.content, t.type, t.state, t.logtype from faconstor_processtask as t where t.processrun_id = '{0}' order by t.starttime desc;
-    """.format(current_processrun_id))
-    rows = cursor.fetchall()
     if len(rows) > 0:
         for task in rows:
             time = task[0]
@@ -629,15 +633,20 @@ def index(request, funid):
             for fun in allfunlist:
                 funlist.append(fun)
         else:
-            cursor = connection.cursor()
-            cursor.execute(
-                "select faconstor_fun.id from faconstor_group,faconstor_fun,faconstor_userinfo,faconstor_userinfo_group,faconstor_group_fun "
-                "where faconstor_group.id=faconstor_userinfo_group.group_id and faconstor_group.id=faconstor_group_fun.group_id and "
-                "faconstor_group_fun.fun_id=faconstor_fun.id and faconstor_userinfo.id=faconstor_userinfo_group.userinfo_id and userinfo_id= "
-                + str(request.user.userinfo.id) + " order by faconstor_fun.sort"
-            )
+            rows = []
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "select faconstor_fun.id from faconstor_group,faconstor_fun,faconstor_userinfo,faconstor_userinfo_group,faconstor_group_fun "
+                        "where faconstor_group.id=faconstor_userinfo_group.group_id and faconstor_group.id=faconstor_group_fun.group_id and "
+                        "faconstor_group_fun.fun_id=faconstor_fun.id and faconstor_userinfo.id=faconstor_userinfo_group.userinfo_id and userinfo_id= "
+                        + str(request.user.userinfo.id) + " order by faconstor_fun.sort"
+                    )
 
-            rows = cursor.fetchall()
+                    rows = cursor.fetchall()
+            finally:
+                connection.close()
+
             for row in rows:
                 try:
                     fun = Fun.objects.get(id=row[0])
@@ -650,11 +659,16 @@ def index(request, funid):
         funlist = sorted(funlist, key=lambda fun: fun.sort)
         # 最新操作
         alltask = []
-        cursor = connection.cursor()
-        cursor.execute("""
-        select t.starttime, t.content, t.type, t.state, t.logtype, p.name, p.color from faconstor_processtask as t left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where r.state!='9' order by t.starttime desc;
-        """)
-        rows = cursor.fetchall()
+
+        rows = []
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                select t.starttime, t.content, t.type, t.state, t.logtype, p.name, p.color from faconstor_processtask as t left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where r.state!='9' order by t.starttime desc;
+                """)
+                rows = cursor.fetchall()
+        finally:
+            connection.close()
 
         cvsql = SQLApi.CVApi(settings.sql_credit)
         cvsql.updateCVUTC()
@@ -681,9 +695,9 @@ def index(request, funid):
                 if len(alltask) >= 50:
                     break
         # 成功率，恢复次数，平均RTO，最新切换
-        all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP"))
+        all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="ERROR") | Q(state="STOP"))
         successful_processruns = ProcessRun.objects.filter(state="DONE")
-        processrun_times_obj = ProcessRun.objects.exclude(state__in=["RUN", "REJECT"]).exclude(state="9")
+        processrun_times_obj = ProcessRun.objects.exclude(state__in=["RUN", "REJECT", "STOP"]).exclude(state="9")
 
         success_rate = "%.0f" % (len(successful_processruns) / len(
             all_processrun_objs) * 100) if all_processrun_objs and successful_processruns else 0
@@ -786,11 +800,22 @@ def monitor(request, ):
         global funlist
         # 最新操作
         alltask = []
-        cursor = connection.cursor()
-        cursor.execute("""
-        select t.starttime, t.content, t.type, t.state, t.logtype, p.name, p.color from faconstor_processtask as t left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where r.state!='9' order by t.starttime desc;
-        """)
-        rows = cursor.fetchall()
+
+        rows = []
+        try:
+            with connection.cursor() as cursor:
+                # Read a single record
+                sql = """select t.starttime, t.content, t.type, t.state, t.logtype, p.name, p.color from faconstor_processtask as t left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where r.state!='9' order by t.starttime desc;"""
+                cursor.execute(sql)
+                rows = cursor.fetchall()
+        finally:
+            connection.close()
+
+        # cursor = connection.cursor()
+        # cursor.execute("""
+        # select t.starttime, t.content, t.type, t.state, t.logtype, p.name, p.color from faconstor_processtask as t left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where r.state!='9' order by t.starttime desc;
+        # """)
+        # rows = cursor.fetchall()
 
         if len(rows) > 0:
             for task in rows:
@@ -927,7 +952,7 @@ def get_monitor_data(request):
                 pass
             else:
                 today_datetime = today_datetime - datetime.timedelta(days=i)
-            today_drills = ProcessRun.objects.exclude(state__in=["RUN", "REJECT", "9"]).filter(
+            today_drills = ProcessRun.objects.exclude(state__in=["RUN", "REJECT", "9", "STOP"]).filter(
                 starttime__startswith=today_datetime.date())
             drill_day.append("{0:%m-%d}".format(today_datetime.date()))
             drill_times.append(len(today_drills))
@@ -968,7 +993,7 @@ def get_monitor_data(request):
         drill_name = []
         drill_time = []
         for process in all_process:
-            process_runs = process.processrun_set.exclude(state__in=["RUN", "REJECT", "9"])
+            process_runs = process.processrun_set.exclude(state__in=["RUN", "REJECT", "9", "STOP"])
             cur_drill_time = len(process_runs)
 
             if drill_time:
@@ -991,7 +1016,7 @@ def get_monitor_data(request):
         }
         # print(drill_top_time)
         # 演练成功率
-        all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="STOP"))
+        all_processrun_objs = ProcessRun.objects.filter(Q(state="DONE") | Q(state="ERROR")| Q(state='STOP'))
         successful_processruns = ProcessRun.objects.filter(state="DONE")
 
         success_rate = "%.0f" % (len(successful_processruns) / len(
@@ -1016,7 +1041,7 @@ def get_monitor_data(request):
                 "content": process_task.content
             })
         # 今日作业
-        running_job, success_job, error_job = 0, 0, 0
+        running_job, success_job, error_job, stop_job = 0, 0, 0, 0
         all_processes = Process.objects.exclude(state="9").filter(type="cv_oracle")
         has_run_process = 0
         for process in all_processes:
@@ -1028,16 +1053,22 @@ def get_monitor_data(request):
                 if process_run.last().state == "RUN":
                     running_job += 1
 
+                # 成功流程，最后一个流程成功
                 if process_run.last().state=="DONE":
                     success_job += 1
+
+                # 失败流程：最后一次失败
+                if process_run.last().state == "ERROR":
+                    error_job += 1
+
+               # 终止流程
+                if process_run.last().state == "STOP":
+                    stop_job += 1
 
         not_running = 0
         try:
             # 未启动
-            not_running = len(all_processes) - has_run_process
-
-            # 失败：总的-成功-运行中-未启动
-            error_job = len(all_processes) - success_job - running_job - not_running
+            not_running = len(all_processes) - running_job - success_job - error_job - stop_job
         except:
             pass
 
@@ -1217,12 +1248,14 @@ def get_process_run_facts(request):
 
             all_process_run = cur_process.processrun_set.filter(state__in=["DONE", "STOP", "ERROR"]).filter(
                 starttime__startswith=today_date)
-            process_run_today = 2
+            process_run_today = 3
             
             if all_process_run.exists():
                 cur_process_run = all_process_run.last()
                 if cur_process_run.state == "DONE":
                     process_run_today = 0
+                elif cur_process_run.state == "STOP":
+                    process_run_today = 2
                 else:
                     process_run_today = 1
             # 平均RTO
@@ -3777,15 +3810,19 @@ def oracle_restore_data(request):
             "": "",
         }
 
-        cursor = connection.cursor()
+        rows = []
+        try:
+            with connection.cursor() as cursor:
+                exec_sql = """
+                select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url, p.type from faconstor_processrun as r 
+                left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state != 'REJECT' and r.process_id = {0} order by r.starttime desc;
+                """.format(process_id)
 
-        exec_sql = """
-        select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url, p.type from faconstor_processrun as r 
-        left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state != 'REJECT' and r.process_id = {0} order by r.starttime desc;
-        """.format(process_id)
+                cursor.execute(exec_sql)
+                rows = cursor.fetchall()
+        finally:
+            connection.close()
 
-        cursor.execute(exec_sql)
-        rows = cursor.fetchall()
         for processrun_obj in rows:
             if processrun_obj[9] == "cv_oracle":
                 create_users = processrun_obj[2] if processrun_obj[2] else ""
@@ -3872,7 +3909,12 @@ def cv_oracle_run(request):
                     myprocessrun.origin = origin
                     myprocessrun.recover_time = datetime.datetime.strptime(recovery_time,
                                                                            "%Y-%m-%d %H:%M:%S") if recovery_time else None
-
+                    # 是否回滚归档日志
+                    log_restore = 1
+                    origin = Origin.objects.exclude(state='9').filter(client_name=origin)
+                    if origin:
+                        log_restore = origin[0].log_restore
+                    myprocessrun.log_restore = log_restore
                     myprocessrun.save()
                     mystep = process[0].step_set.exclude(state="9").order_by("sort")
                     if (len(mystep) <= 0):
@@ -5559,8 +5601,6 @@ def restore_search_data(request):
         end_time = (datetime.datetime.strptime(enddate, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
             seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 
-        cursor = connection.cursor()
-
         exec_sql = """
         select r.starttime, r.endtime, r.creatuser, r.state, r.process_id, r.id, r.run_reason, p.name, p.url from faconstor_processrun as r 
         left join faconstor_process as p on p.id = r.process_id where r.state != '9' and r.state!='REJECT' and r.starttime between '{0}' and '{1}' order by r.starttime desc;
@@ -5634,8 +5674,14 @@ def restore_search_data(request):
             "SIGN": "签到",
             "": "",
         }
-        cursor.execute(exec_sql)
-        rows = cursor.fetchall()
+        rows = []
+        try:
+            with connection.cursor() as cursor:
+                # Read a single record
+                cursor.execute(exec_sql)
+                rows = cursor.fetchall()
+        finally:
+            connection.close()
 
         for processrun_obj in rows:
             create_users = processrun_obj[2] if processrun_obj[2] else ""
@@ -5684,7 +5730,6 @@ def tasksearchdata(request):
         end_time = (datetime.datetime.strptime(enddate, '%Y-%m-%d') + datetime.timedelta(days=1) - datetime.timedelta(
             seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
 
-        cursor = connection.cursor()
         exec_sql = """
         select t.id, t.content, t.starttime, t.endtime, t.type, t.processrun_id, p.name, p.url, t.state from faconstor_processtask as t 
         left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where t.type!='INFO' and r.state!='9' and t.starttime between '{0}' and '{1}' order by t.starttime desc;
@@ -5708,8 +5753,15 @@ def tasksearchdata(request):
             left join faconstor_processrun as r on t.processrun_id = r.id left join faconstor_process as p on p.id = r.process_id where t.type='{0}' and r.state!='9' and t.starttime between '{1}' and '{2}' order by t.starttime desc;
             """.format(task_type, start_time, end_time)
 
-        cursor.execute(exec_sql)
-        rows = cursor.fetchall()
+        rows = []
+        try:
+            with connection.cursor() as cursor:
+                # Read a single record
+                cursor.execute(exec_sql)
+                rows = cursor.fetchall()
+        finally:
+            connection.close()
+
         type_dict = {
             "SIGN": "签到",
             "RUN": "操作",
@@ -6536,6 +6588,7 @@ def origin_data(request):
                 "copy_priority": origin.copy_priority,
                 "db_open": origin.db_open,
                 "data_path": origin.data_path,
+                "log_restore": origin.log_restore,
             })
 
         return JsonResponse({"data": all_origin_list})
@@ -6556,6 +6609,8 @@ def origin_save(request):
         copy_priority = request.POST.get("copy_priority", "")
         db_open = request.POST.get("db_open", "")
         data_path = request.POST.get("data_path", "")
+        log_restore = request.POST.get("log_restore", "")
+
         ret = 0
         info = ""
         try:
@@ -6599,6 +6654,12 @@ def origin_save(request):
                                 cur_origin.copy_priority = copy_priority
                                 cur_origin.db_open = db_open
                                 cur_origin.data_path = data_path
+                                try:
+                                    log_restore = int(log_restore)
+                                except:
+                                    pass
+                                else:
+                                    cur_origin.log_restore = log_restore
                                 cur_origin.save()
                             except Exception as e:
                                 print(e)
@@ -6626,6 +6687,12 @@ def origin_save(request):
                                     cur_origin.db_open = db_open
                                     cur_origin.data_path = data_path
                                     cur_origin.target_id = target_id
+                                    try:
+                                        log_restore = int(log_restore)
+                                    except:
+                                        pass
+                                    else:
+                                        cur_origin.log_restore = log_restore
                                     cur_origin.save()
                                 except:
                                     ret = 0
@@ -7220,6 +7287,7 @@ def dooraclerecovery(request):
                                 if end_tag:
                                     break
 
+                dm.close()
                 # print('Rac %s' % curSCN)
                 oraRestoreOperator = {"curSCN": curSCN, "browseJobId": None, "data_path": data_path, "copy_priority": copy_priority, "restoreTime": restoreTime}
                 # print("> %s > %s, %s, %s" % (oraRestoreOperator, sourceClient, destClient, instance))

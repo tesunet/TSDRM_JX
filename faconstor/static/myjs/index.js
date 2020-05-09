@@ -20,8 +20,8 @@ var Dashboard = function () {
                     xAxis: {
                         title: {
                             text: '次数 (次)'
-                        },
-                        reversed: true,
+                        }, categories: ['1', '2', '3', '4', '5', '6',
+                            '7', '8', '9', '10', '11', '12']
                     },
                     colors: [
                         '#3598dc',
@@ -66,13 +66,6 @@ var Dashboard = function () {
                             "color": data.data[i].color,
                         });
                     }
-                    // 动态生成横坐标
-                    // 从1开始
-                    var category_list = [];
-                    for (var j = 1; j <= 50; j++) {
-                        category_list.push(j)
-                    }
-                    chart.xAxis[0].setCategories(category_list);
                 }
 
             });
@@ -171,7 +164,7 @@ var Dashboard = function () {
                         }
                     });
                 },
-                timeFormat: 'H:mm',
+                timeFormat: "H:mm",
                 eventAfterAllRender: function (view) {
                     $(".fc-day-grid-event.fc-h-event.fc-event.fc-start.fc-end.invite.fc-draggable").each(function () {
                         var processName = $(this).find('.fc-title').text();
@@ -222,7 +215,7 @@ $("ul#locate_task").on("click", " li", function () {
     $("#processrunreason").val($("#a".replace("a", task_id)).find("input#process_run_reason").val());
 });
 
-// 演练概况
+
 $.ajax({
     type: 'POST',
     dataType: 'json',
@@ -240,6 +233,8 @@ $.ajax({
                 labelStatus = '<span title="演练成功"><i class="fa fa-check" style="color:#26C281;"></i></span>';
             } else if (whole_list[i].process_run_today == 1) {
                 labelStatus = '<span title="演练失败"><i class="fa fa-times" style="color:#c51b26;"></i></span>';
+            } else if (whole_list[i].process_run_today == 2) {
+                labelStatus = '<span title="演练中止"><i class="fa fa-pause" style="color:grey;"></i></span>';
             } else {
                 labelStatus = '<span title="未演练"><i class="fa fa-circle-o" style="color:#F1C40F;"></i></span>';
             }

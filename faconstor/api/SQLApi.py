@@ -813,7 +813,7 @@ class CVApi(DataMonitor):
     def get_oracle_backup_job_list(self, client_name):
         oracle_backup_sql = """SELECT DISTINCT [jobid],[backuplevel],[startdate],[enddate],[instance], [nextSCN], [idataagent], [subclient], [storagePolicy], [numbytesuncomp]
                             FROM [CommServ].[dbo].[CommCellOracleBackupInfo] 
-                            WHERE [jobstatus]='Success' AND [clientname]='{0}' ORDER BY [startdate] DESC;""".format(client_name)
+                            WHERE [jobstatus]='Success' AND [clientname]='{0}' AND [subclient]='default' AND [backuplevel]='Online Full' ORDER BY [startdate] DESC;""".format(client_name)
         content = self.fetch_all(oracle_backup_sql)
         oracle_backuplist = []
         for i in content:
@@ -856,9 +856,29 @@ class CVApi(DataMonitor):
                 "cur_SCN": cur_SCN,
                 "subclient": i[7],
                 "data_sp": i[8],
-                "numbytesuncomp": i[9]
+                "numbytesuncomp": i[9],
+                "idataagent": idataagent,
             })
         return oracle_backuplist
+
+    def has_auxiliary_job(self, backup_job_id):
+        """
+        判断是否可以选择辅助拷贝来恢复
+        :param backup_job_id:
+        :return:
+        """
+        tmp_sql = """
+        SELECT [jobId], [auxCopyJobId], [status], [copiedTime]
+        FROM [commserv].[dbo].[JMJobDataStats]
+        WHERE [jobId] = {backup_job_id}
+        """.format(backup_job_id=backup_job_id)
+        content = self.fetch_all(tmp_sql)
+        ret = False
+        for c in content:
+            if c[1] and c[2] == 100 and c[3]:
+                ret = True
+                break
+        return ret
 
     def get_job_controller(self):
         job_controller_sql = """SELECT [jobID],[operation],[clientComputer],[agentType],[subclient]
@@ -1319,7 +1339,7 @@ def remove_duplicate_for_status(dict_list):
 
 if __name__ == '__main__':
     credit = {
-        "host": "192.168.100.149\COMMVAULT",
+        "host": "gl.sjbh.jx\COMMVAULT",
         "user": "sa_cloud",
         "password": "1qaz@WSX",
         "database": "CommServ",
@@ -1365,7 +1385,7 @@ if __name__ == '__main__':
     # ret, row_dict = dm.custom_all_backup_content()
     # ret = dm.get_all_backup_content()
     # ret = dm.get_all_backup_jobs()
-    ret = dm.get_all_auxcopys()
+    ret = dm.has_auxiliary_job(585069)
     # if ret[0]['startdate']< datetime.datetime.now():
     #     print(1)
     # else:
