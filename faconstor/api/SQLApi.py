@@ -901,13 +901,19 @@ class CVApi(DataMonitor):
         return job_controller_list
 
     def updateCVUTC(self):
-        utc_sql = """SELECT [timeZone] 
-                                FROM [CommServ].[dbo].[APP_CommCell] where [id]=2;"""
+        # utc_sql = """SELECT [timeZone]  FROM [CommServ].[dbo].[APP_CommCell],[CommServ].[dbo].[SchedTimeZone] where [timeZone]='0:-480:'  + [timeZonename] and  [id]=2 and TimeZoneStdName='China Standard Time';"""
+        # content = self.fetch_all(utc_sql)
+        # job_controller_list = []
+        # if len(content) > 0 and content[0][0] != "0:-480:(UTC+08:00) 北京，重庆，香港特别行政区，乌鲁木齐":
+        #     update_sql = """update [CommServ].[dbo].[APP_CommCell] set [timeZone] =N'0:-480:(UTC+08:00) 北京，重庆，香港特别行政区，乌鲁木齐'
+        #                                  where [id]=2;"""
+        #     self.execute(update_sql)
+        utc_sql = """SELECT [timeZone]  FROM [CommServ].[dbo].[APP_CommCell],[CommServ].[dbo].[SchedTimeZone] where [timeZone]='0:-480:'  + [timeZonename] and  [id]=2 and TimeZoneStdName='China Standard Time';"""
         content = self.fetch_all(utc_sql)
         job_controller_list = []
-        if len(content) > 0 and content[0][0] != "0:-480:(UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐":
-            update_sql = """update [CommServ].[dbo].[APP_CommCell] set [timeZone] =N'0:-480:(UTC+08:00)北京，重庆，香港特别行政区，乌鲁木齐'
-                                         where [id]=2;"""
+        if len(content) <= 0:
+            update_sql = """update [CommServ].[dbo].[APP_CommCell] set [timeZone] =N'0:-480:(UTC+08:00) 北京，重庆，香港特别行政区，乌鲁木齐'
+                                             where [id]=2;"""
             self.execute(update_sql)
 
 
