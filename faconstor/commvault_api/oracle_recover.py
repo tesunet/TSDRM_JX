@@ -3064,7 +3064,6 @@ class CV_Backupset(CV_Client):
                                              copyPrecedence_xml=copyPrecedence_xml, data_path_xml=data_path_xml,
                                              curSCN=curSCN, db_open=db_open, restoreFrom='1' if restoreTime else '0',
                                              log_restore=log_restore)
-
         try:
             root = ET.fromstring(restoreoracleXML)
         except:
