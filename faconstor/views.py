@@ -670,9 +670,9 @@ def index(request, funid):
         finally:
             connection.close()
 
-        cvsql = SQLApi.CVApi(settings.sql_credit)
-        cvsql.updateCVUTC()
-        cvsql.close()
+        # cvsql = SQLApi.CVApi(settings.sql_credit)
+        # cvsql.updateCVUTC()
+        # cvsql.close()
 
         if len(rows) > 0:
             for task in rows:
