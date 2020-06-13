@@ -912,7 +912,7 @@ class CVApi(DataMonitor):
         content = self.fetch_all(utc_sql)
         job_controller_list = []
         if len(content) <= 0:
-            update_sql = """update [CommServ].[dbo].[APP_CommCell] set [timeZone] =N'0:-480:(UTC+08:00) 北京，重庆，香港特别行政区，乌鲁木齐'
+            update_sql = """update [CommServ].[dbo].[APP_CommCell] set [timeZone] ='0:-480:' + (select [timeZonename] from [CommServ].[dbo].[SchedTimeZone] where TimeZoneStdName='China Standard Time')
                                              where [id]=2;"""
             self.execute(update_sql)
 
