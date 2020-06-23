@@ -227,17 +227,24 @@ $(document).ready(function () {
 
     $("#schedule_type").change(function () {
         var schedule_type = $(this).val();
+        // 日
         if (schedule_type == 1) {
             $("#per_week_div").hide();
             $("#per_month_div").hide();
+            $("#per_week").val('');
+            $("#per_month").val('');
         }
+        // 周
         if (schedule_type == 2) {
             $("#per_week").val(1);
+            $("#per_month").val('');
             $("#per_week_div").show();
             $("#per_month_div").hide();
         }
+        // 月
         if (schedule_type == 3) {
             $("#per_month").val(1);
+            $("#per_week").val('');
             $("#per_week_div").hide();
             $("#per_month_div").show();
         }
