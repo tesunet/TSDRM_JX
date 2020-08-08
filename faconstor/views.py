@@ -1121,14 +1121,27 @@ def get_monitor_data(request):
                         cur_schedule = "{0}:{1}".format(cur_schedule_hour, cur_schedule_minute)
                 except:
                     pass
-                drill_monitor.append({
-                    "process_name": process.name,
-                    "state": "未演练",
-                    "schedule_time": cur_schedule,
-                    "start_time": "",
-                    "end_time": "",
-                    "percent": "0%"
-                })
+                
+                # 判断当前流程是否因辅助拷贝不存在而没有启动
+                pro_excs = ProcessException.objects.exclude(state="9").filter(process=process).filter(starttime__startswith=datetime.datetime.now().date())
+                if pro_excs.exists():
+                    drill_monitor.append({
+                        "process_name": process.name,
+                        "state": "AUX_NOT_COMPLETE",
+                        "schedule_time": cur_schedule,
+                        "start_time": "",
+                        "end_time": "",
+                        "percent": "0%"
+                    })
+                else:
+                    drill_monitor.append({
+                        "process_name": process.name,
+                        "state": "未演练",
+                        "schedule_time": cur_schedule,
+                        "start_time": "",
+                        "end_time": "",
+                        "percent": "0%"
+                    })
 
         # 待处理异常
         error_processrun_list = []

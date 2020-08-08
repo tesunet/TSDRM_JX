@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from logging import log
 from celery import shared_task
 import pymssql
 from faconstor.models import *
@@ -941,6 +942,7 @@ def exec_process(processrunid, if_repeat=False):
         processrun.state = "STOP"
         processrun.save()
 
+
 @shared_task
 def create_process_run(*args, **kwargs):
     """
@@ -988,6 +990,26 @@ def create_process_run(*args, **kwargs):
                 myprocesstask.save()
                 # result["res"] = '流程启动失败，该流程正在进行中，请勿重复启动。'
             else:
+                # 查看辅助拷贝是否完成
+                #   完成，执行以下流程
+                #   未完成，在ProcessException表中存入信息
+                #       最近的jobId对应的辅助拷贝状态
+                if copy_priority == 2:
+                    dm = SQLApi.CustomFilter(settings.sql_credit)
+                    ret = dm.get_oracle_backup_job_list(origin_name)
+                    aux_completed = False
+                    for orcl_copy in ret:
+                        if dm.has_auxiliary_job(orcl_copy['jobId']):
+                            aux_completed = True
+                        break
+                    if not aux_completed:
+                        # 存表 不往下执行
+                        try:
+                            ProcessException.objects.create(**{"process_id": process_id, "starttime": datetime.datetime.now()})
+                        except Exception as e:
+                            pass
+                        return
+                
                 myprocessrun = ProcessRun()
                 myprocessrun.creatuser = kwargs["creatuser"]
                 myprocessrun.process = cur_process

@@ -251,3 +251,10 @@ class ProcessSchedule(models.Model):
         (3, "每月"),
     )
     schedule_type = models.IntegerField(choices=schedule_type_choices, default=1, null=True)
+
+
+class ProcessException(models.Model):
+    process = models.ForeignKey(Process, null=True, verbose_name="流程预案")
+    starttime = models.DateTimeField("开始时间", blank=True, null=True)
+    state = models.CharField("状态", blank=True, null=True, max_length=20)
+
