@@ -289,6 +289,9 @@ $(document).ready(function () {
                 } else if (data.drill_monitor[i].state == "REJECT") {
                     status_label = "label-warning";
                     status_name = "已取消";
+                } else if (data.drill_monitor[i].state == "AUX_NOT_COMPLETE"){
+                    status_label = "label-primary";
+                    status_name = "辅助拷贝未完成，取消演练";
                 } else {
                     status_label = "label-primary";
                     status_name = "未演练";
