@@ -1002,6 +1002,7 @@ def create_process_run(*args, **kwargs):
                         if dm.has_auxiliary_job(orcl_copy['jobId']):
                             aux_completed = True
                         break
+                    dm.close()
                     if not aux_completed:
                         # 存表 不往下执行
                         try:

@@ -1099,17 +1099,27 @@ def get_monitor_data(request):
                         cur_schedule = "{0}:{1}".format(cur_schedule_hour, cur_schedule_minute)
                 except:
                     pass
-
-                drill_monitor.append({
-                    "process_name": process.name,
-                    "state": today_process_run.state,
-                    "schedule_time": cur_schedule,
-                    "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(
-                        today_process_run.starttime) if today_process_run.starttime else "",
-                    "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(
-                        today_process_run.endtime) if today_process_run.endtime else "",
-                    "percent": "{0}%".format((int(process_rate)))
-                })
+                pro_excs = ProcessException.objects.exclude(state="9").filter(process=process).filter(starttime__startswith=datetime.datetime.now().date())
+                if pro_excs.exists() and pro_excs[0].starttime > today_process_run.endtime:
+                    drill_monitor.append({
+                        "process_name": process.name,
+                        "state": "AUX_NOT_COMPLETE",
+                        "schedule_time": cur_schedule,
+                        "start_time": "",
+                        "end_time": "",
+                        "percent": "0%"
+                    })
+                else:
+                    drill_monitor.append({
+                        "process_name": process.name,
+                        "state": today_process_run.state,
+                        "schedule_time": cur_schedule,
+                        "start_time": "{0:%Y-%m-%d %H:%M:%S}".format(
+                            today_process_run.starttime) if today_process_run.starttime else "",
+                        "end_time": "{0:%Y-%m-%d %H:%M:%S}".format(
+                            today_process_run.endtime) if today_process_run.endtime else "",
+                        "percent": "{0}%".format((int(process_rate)))
+                    })
             else:
                 # 策略时间
                 cur_schedule = ""
